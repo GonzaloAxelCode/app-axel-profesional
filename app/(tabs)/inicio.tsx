@@ -5,9 +5,18 @@ import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useAuthStore } from '@/State/store/useAuthStore';
+import { Link, useRouter } from 'expo-router';
+import { Button, } from 'react-native-paper';
 
-export default function HomeScreen() {
+export default function InicioScreen() {
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = async () => {
+    await logout();          // Limpia tokens y estado
+    router.replace('/welcome'); // Redirige a pantalla pública
+  };
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -37,9 +46,9 @@ export default function HomeScreen() {
         </ThemedText>
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
+        <Link href="/hacerventa">
           <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
+            <ThemedText type="subtitle">HACER VENTA</ThemedText>
           </Link.Trigger>
           <Link.Preview />
           <Link.Menu>
@@ -73,6 +82,10 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
+        <Button mode="contained" onPress={handleLogout} style={styles.button}>
+          Cerrar sesión
+        </Button>
+
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -87,6 +100,9 @@ const styles = StyleSheet.create({
   stepContainer: {
     gap: 8,
     marginBottom: 8,
+  },
+  button: {
+    marginTop: 10,
   },
   reactLogo: {
     height: 178,
