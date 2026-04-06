@@ -19,7 +19,8 @@ export const URLS = {
     PRODUCTOS: URL_BASE + '/api/productos/',
     IMAGE_URL_BASE: URL_BASE,
     IMAGE_URL_PLACEHOLDER: 'https://sublimac.com/wp-content/uploads/2017/11/default-placeholder.png',
-
+    CLIENTES: URL_BASE + '/api/clientes/',
+    CLIENTE_BY_DOCUMENT: URL_BASE + '/api/consulta-documento/',
     // Ventas
     VENTAS_HOY: URL_BASE + '/api/ventas/hoy/',
     VENTAS_POR_TIENA: URL_BASE + '/api/ventas/tienda/',

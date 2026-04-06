@@ -1,5 +1,5 @@
 // hooks/useVentas.ts
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     anularVenta,
     cancelarVenta,
@@ -42,9 +42,27 @@ export const useVentas = () => {
         queryFn: getTopProductosMasVendidosHoy,
     });
 
-    const ventasPorTiendaQuery = useQuery({
+    const ventasPorTiendaQuery_old = useQuery({
         queryKey: ['ventasPorTienda'],
-        queryFn: () => getVentasPorTienda([2026, 3, 1], [2026, 3, 3]), // Ejemplo de fechas, puedes parametrizar
+        queryFn: () => getVentasPorTienda([2025, 1, 1], [2027, 1, 1], 4), // el terce parametro es el page_size
+    });
+    const ventasPorTiendaQuery = useInfiniteQuery({
+        queryKey: ['ventasPorTiendaInfinite'],
+        queryFn: ({ pageParam }) => {
+            console.log('🔄 Fetching page:', pageParam);
+            return getVentasPorTienda([2025, 1, 1], [2027, 1, 1], pageParam, 30);
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            const nextPage = allPages.length + 1;  // 👈 calculamos la página nosotros
+            console.log('📄 nextPage:', nextPage, '/ total:', lastPage?.length_pages);
+
+            return nextPage <= lastPage?.length_pages ? nextPage : undefined;
+        },
+        initialPageParam: 1,
+    });
+    const ventasPorRangoQuery = useQuery({
+        queryKey: ['ventasPorRango'],
+        queryFn: () => getVentasPorRangoFechasTienda(new Date(2025, 1, 1), new Date(2027, 1, 1)),
     });
 
     // Mutaciones
@@ -98,20 +116,35 @@ export const useVentas = () => {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['resumenVentas'] }),
     });
 
-    const ventasPorRangoMutation = useMutation({
-        mutationFn: ({ fromDate, toDate }: { fromDate: Date; toDate: Date }) =>
-            getVentasPorRangoFechasTienda(fromDate, toDate),
-    });
 
+    const fetchNextVentasPage = () => ventasPorTiendaQuery.fetchNextPage();
+    const hasNextVentasPage = ventasPorTiendaQuery.hasNextPage;
+    const isFetchingNextVentasPage = ventasPorTiendaQuery.isFetchingNextPage;
+
+
+
+    console.log('pages:', ventasPorTiendaQuery.data?.pages);
     return {
         // Queries
-        ventasHoy: ventasHoyQuery.data,
+        ventasHoy: ventasHoyQuery.data?.results,
         resumenVentas: resumenVentasQuery.data,
-        topProductosHoy: topProductosQuery.data,
-        ventasPorTienda: ventasPorTiendaQuery.data,
+        topProductosHoy: topProductosQuery.data?.topProductoMostSales,
+
+        ventasPorTienda: ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [],
+
+
+        fetchNextVentasPage,
+        hasNextVentasPage,
+        isFetchingNextVentasPage,
+        //inifnity ventas
+
+
+        ventasPorRangoFechasTienda: ventasPorRangoQuery.data,
+
         loadingVentasHoy: ventasHoyQuery.isLoading,
         loadingResumenVentas: resumenVentasQuery.isLoading,
         loadingTopProductosHoy: topProductosQuery.isLoading,
+        loadingVentasPorRango: ventasPorRangoQuery.isLoading,
 
         // Mutaciones
         createVenta: createVentaMutation.mutate,
@@ -122,7 +155,6 @@ export const useVentas = () => {
         anularVenta: anularVentaMutation.mutate,
         generarComprobante: generarComprobanteMutation.mutate,
         getResumenVentasByDate: resumenVentasByDateMutation.mutate,
-        getVentasPorRango: ventasPorRangoMutation.mutate,
 
         // Estados de mutaciones
         loadingCreateVenta: createVentaMutation.isPending,

@@ -17,6 +17,9 @@ export interface VentaResponse {
     length_pages: number;
 }
 
+
+
+
 // Ventas hoy
 export async function getVentasHoy(): Promise<{ results: Venta[] }> {
     return fetchWithAuth(`${API_URL}/ventas/hoy/`);

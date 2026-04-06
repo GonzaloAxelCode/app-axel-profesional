@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<any> => {
     const accessToken = await AsyncStorage.getItem('access');
-    console.log(accessToken)
+
     const res = await fetch(url, {
         ...options,
         headers: {
@@ -12,7 +12,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}): Pro
             ...(options.headers || {}),
         },
     });
-    console.log(res)
+
     if (res.status === 401) {
 
         throw new Error('Unauthorized');

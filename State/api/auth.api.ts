@@ -8,7 +8,7 @@ export const loginApi = async (username: string, password: string) => {
         headers: { 'Content-Type': 'application/json' },
     });
     if (!res.ok) {
-        console.log(res)
+
         throw new Error('Login failed');
     }
     return res.json(); // { access, refresh }

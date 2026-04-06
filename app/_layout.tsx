@@ -6,17 +6,28 @@ import "../global.css";
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/State/store/useAuthStore';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
-  MD3LightTheme, PaperProvider
+  PaperProvider
 } from 'react-native-paper';
-import { queryClient } from './queryclient';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 
 export const unstable_settings = {
   anchor: '(tabs)',
+
 };
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutos
+    },
+  },
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -33,26 +44,146 @@ export default function RootLayout() {
   }, []);
 
   if (loading) {
-    return <Stack>
-      <Stack.Screen name="loader" options={{ headerShown: false }} />
-    </Stack>;
+    return <QueryClientProvider client={queryClient}>
+
+
+      <SafeAreaProvider>
+        <Stack>
+          <Stack.Screen name="loader" options={{ headerShown: false }} />
+        </Stack>
+
+      </SafeAreaProvider>
+
+    </QueryClientProvider>
   }
 
-  return (
-    <PaperProvider theme={MD3LightTheme}>
+  return (<QueryClientProvider client={queryClient}>
+    <SafeAreaProvider>
 
 
-      <QueryClientProvider client={queryClient}>
+      <PaperProvider>
+
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             {!isAuthenticated && <Stack.Screen name="welcome" options={{ headerShown: false }} />}
             {!isAuthenticated && <Stack.Screen name="login" options={{ headerShown: false }} />}
             {isAuthenticated && <Stack.Screen name="(tabs)" options={{ headerShown: false }} />}
-            {isAuthenticated && <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', header: () => null, }} />}
+
+            {isAuthenticated && (
+              <Stack.Screen
+                name="hacerventa"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="productodetail"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/perfil"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/categorias"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/comprobantes"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/exportar"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/seguridad"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/stock-alertas"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/tienda"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
+            {isAuthenticated && (
+              <Stack.Screen
+                name="settings/usuaiors"
+                options={{
+                  presentation: 'modal',
+                  headerShown: false,
+                  headerBackVisible: false,
+                  headerTitle: '',
+                }}
+              />
+            )}
           </Stack>
-          <StatusBar style="auto" />
+
+          <StatusBar style="auto" backgroundColor="transparent" translucent />
         </ThemeProvider>
-      </QueryClientProvider>
-    </PaperProvider>
+
+      </PaperProvider>               </SafeAreaProvider>  </QueryClientProvider>
   );
 }
