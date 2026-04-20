@@ -51,7 +51,7 @@ interface VentaStore {
     createVenta: (ventaData: any) => Promise<void>;
     generateComprobante: (ventaId: number) => Promise<void>;
     cancelVenta: (ventaId: number) => Promise<void>;
-    anularVenta: (ventaId: number) => Promise<void>;
+    anularVenta: (ventaId: number, options: any) => Promise<void>;
     loadResumenVentas: () => Promise<void>;
     loadTopProductosVentasHoy: () => Promise<void>;
     loadVentasRangoFechas: (startDate: string, endDate: string) => Promise<void>;
@@ -166,13 +166,14 @@ export const useVentaStore = create<VentaStore>((set, get) => ({
         }
     },
 
-    anularVenta: async (ventaId) => {
+    anularVenta: async (ventaId: number, options: any) => {
         set({ loadingNotaCredito: true, error: null });
         try {
-            const res = await fetchWithAuth(`${URLS.ANULAR_VENTA}/${ventaId}`, { method: 'POST' });
+            const res = await fetchWithAuth(`${URLS.ANULAR_VENTA}/`, { method: 'POST', body: JSON.stringify(options) });
             set((state) => ({
                 ventas: state.ventas.map(v => v.id === ventaId ? { ...v, comprobante_nota_credito: res.comprobante_nota_credito } : v),
                 ventasToday: state.ventasToday.map(v => v.id === ventaId ? { ...v, comprobante_nota_credito: res.comprobante_nota_credito } : v),
+                temporaryVenta: { ...state.temporaryVenta, comprobante_nota_credito: res.comprobante_nota_credito, venta_estado: res.venta_estado, estado: res.venta_estado },
                 loadingNotaCredito: false,
             }));
         } catch (error) {

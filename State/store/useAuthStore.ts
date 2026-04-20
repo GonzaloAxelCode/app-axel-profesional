@@ -16,6 +16,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ loading: true });
         try {
             const tokens = await loginApi(username, password);
+
+            if (!tokens?.access || !tokens?.refresh) {
+                throw new Error('Tokens inválidos');
+            }
+
             await AsyncStorage.setItem('access', tokens.access);
             await AsyncStorage.setItem('refresh', tokens.refresh);
 
@@ -34,6 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     logout: async () => {
         await AsyncStorage.removeItem('access');
         await AsyncStorage.removeItem('refresh');
+
         set({
             accessToken: null,
             refreshToken: null,

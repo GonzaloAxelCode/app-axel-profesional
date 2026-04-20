@@ -1,96 +1,152 @@
-import { Inventario } from '@/State/models/inventario.models';
+import { InventarioCart } from '@/State/models/inventario.models';
 import { URLS } from '@/State/utils/endpoints';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { IconButton, MD3Colors, Text } from 'react-native-paper';
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import ImageViewing from 'react-native-image-viewing';
+import { Text } from 'react-native-paper';
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ProductosCard.tsx
+// ═══════════════════════════════════════════════════════════════════════════════
+import { C } from '@/State/utils/c';
 
 interface ProductosCardProps {
-  cart: Inventario[];
+  cart: InventarioCart[];
   onAgregar: () => void;
   onChangeQty: (id: number, delta: number) => void;
   onRemove: (id: number) => void;
+  onChangeDiscount: (id: number, discount: number) => void;
 }
 
-const getImagenProducto = (producto: Inventario) =>
-  producto.imagen_producto
-    ? URLS.BASE + producto.imagen_producto
-    : URLS.IMAGE_URL_PLACEHOLDER;
+const getImagenProducto = (producto: InventarioCart) =>
+  producto.imagen_producto ? URLS.BASE + producto.imagen_producto : URLS.IMAGE_URL_PLACEHOLDER;
 
-export function ProductosCard({ cart, onAgregar, onChangeQty, onRemove }: ProductosCardProps) {
+function ProductRow({
+  item, onChangeQty, onRemove, onChangeDiscount, onImagePress,
+}: {
+  item: InventarioCart;
+  onChangeQty: (id: number, delta: number) => void;
+  onRemove: (id: number) => void;
+  onChangeDiscount: (id: number, discount: number) => void;
+  onImagePress: (uri: string) => void;
+}) {
+  const [discountText, setDiscountText] = useState(item.descuento ? String(item.descuento) : '0');
+  const subtotal = item.costo_venta * item.cantidad;
+  const descuento = parseFloat(discountText) || 0;
+  const total = Math.max(0, subtotal - descuento);
+
+  const handleDiscountDelta = (delta: number) => {
+    const current = parseFloat(discountText) || 0;
+    const maxDiscount = Math.max(0, subtotal - 1);
+    const next = Math.max(0, Math.min(maxDiscount, current + delta));
+    setDiscountText(next === 0 ? '0' : String(next));
+    onChangeDiscount(item.id, next);
+  };
+
+  return (
+    <View style={pStyles.container}>
+      {/* Top: imagen + info + close */}
+      <View style={pStyles.topRow}>
+        <TouchableOpacity onPress={() => onImagePress(getImagenProducto(item))}>
+          <Image source={{ uri: getImagenProducto(item) }} style={pStyles.image} contentFit="cover" />
+        </TouchableOpacity>
+        <View style={pStyles.info}>
+          <Text style={pStyles.nombre} numberOfLines={2}>{item.producto_nombre}</Text>
+          {item.producto_sku && (
+            <View style={pStyles.codigoWrap}>
+              <Icon name="barcode" size={12} color={C.textMuted} />
+              <Text style={pStyles.codigo}>{item.producto_sku}</Text>
+            </View>
+          )}
+          <Text style={pStyles.precio}>S/ {item.costo_venta}</Text>
+        </View>
+        <TouchableOpacity style={pStyles.closeBtn} onPress={() => onRemove(item.id)}>
+          <Icon name="close" size={15} color={C.red} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Qty + Discount */}
+      <View style={pStyles.controlsRow}>
+        <View style={pStyles.controlBlock}>
+          <Text style={pStyles.fieldLabel}>Cantidad</Text>
+          <View style={pStyles.stepper}>
+            <TouchableOpacity style={pStyles.stepBtn} onPress={() => onChangeQty(item.id, -1)}>
+              <Icon name="minus" size={14} color={C.textSecondary} />
+            </TouchableOpacity>
+            <Text style={pStyles.stepNum}>{item.cantidad}</Text>
+            <TouchableOpacity style={pStyles.stepBtn} onPress={() => onChangeQty(item.id, 1)}>
+              <Icon name="plus" size={14} color={C.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={pStyles.controlBlock}>
+          <Text style={pStyles.fieldLabel}>Descuento</Text>
+          <View style={pStyles.stepper}>
+            <TouchableOpacity style={pStyles.stepBtn} onPress={() => handleDiscountDelta(-1)}>
+              <Icon name="minus" size={14} color={C.textSecondary} />
+            </TouchableOpacity>
+            <Text style={pStyles.stepNum}>S/ {descuento.toFixed(0)}</Text>
+            <TouchableOpacity style={pStyles.stepBtn} onPress={() => handleDiscountDelta(1)}>
+              <Icon name="plus" size={14} color={C.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Total */}
+      <View style={pStyles.totalRow}>
+        <Text style={pStyles.totalLabel}>Total</Text>
+        <Text style={pStyles.totalValue}>S/ {total.toFixed(2)}</Text>
+      </View>
+    </View>
+  );
+}
+
+export function ProductosCard({ cart, onAgregar, onChangeQty, onRemove, onChangeDiscount }: ProductosCardProps) {
   const [imageVisible, setImageVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
 
   return (
     <>
-      <View style={styles.card}>
-        <View style={styles.cardHead}>
-          <Text style={styles.secLabel}>PRODUCTOS</Text>
-          <TouchableOpacity style={styles.secAction} onPress={onAgregar}>
-            <Icon name="plus" size={11} color="#fff" />
-            <Text style={styles.secActionText}>Agregar</Text>
+      <View style={prodStyles.card}>
+        <View style={prodStyles.cardHead}>
+          <Text style={prodStyles.secLabel}>PRODUCTOS</Text>
+          <TouchableOpacity style={prodStyles.secAction} onPress={onAgregar}>
+            <Icon name="plus" size={12} color={C.bg} />
+            <Text style={prodStyles.secActionText}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {cart.length === 0 ? (
-          <View style={styles.ghostRow}>
-            <View style={styles.ghostIcon}>
-              <Icon name="plus" size={13} color="#ccc" />
+          <TouchableOpacity style={prodStyles.ghostRow} onPress={onAgregar} activeOpacity={0.7}>
+            <View style={prodStyles.ghostIcon}>
+              <Icon name="plus" size={16} color={C.textMuted} />
             </View>
-            <Text style={styles.ghostText}>Toca Agregar para añadir productos</Text>
-          </View>
+            <Text style={prodStyles.ghostText}>Toca Agregar para añadir productos</Text>
+          </TouchableOpacity>
         ) : (
-          cart.map((item) => (
-            <View key={item.id} style={styles.prodRow}>
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedImage(getImagenProducto(item));
-                  setImageVisible(true);
-                }}
-              >
-                <Image
-                  source={{ uri: getImagenProducto(item) }}
-                  style={styles.cardImage}
-                  contentFit="cover"
+          <View style={prodStyles.list}>
+            {cart.map((item, idx) => (
+              <View key={item.id}>
+                <ProductRow
+                  item={item}
+                  onChangeQty={onChangeQty}
+                  onRemove={onRemove}
+                  onChangeDiscount={onChangeDiscount}
+                  onImagePress={(uri) => { setSelectedImage(uri); setImageVisible(true); }}
                 />
-              </TouchableOpacity>
-
-              <View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.prodName, { width: '50%' }]} numberOfLines={3}>
-                    {item.producto_nombre}
-                  </Text>
-                  <Text style={styles.prodMeta}>S/.{item.costo_venta} c/u</Text>
-                </View>
-
-                <View style={styles.qtyCtrl}>
-                  <TouchableOpacity style={styles.qtyBtn} onPress={() => onChangeQty(item.id, -1)}>
-                    <Text style={styles.qtyBtnText}>−</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.qtyNum}>{item.cantidad}</Text>
-                  <TouchableOpacity style={styles.qtyBtn} onPress={() => onChangeQty(item.id, 1)}>
-                    <Text style={styles.qtyBtnText}>+</Text>
-                  </TouchableOpacity>
-                </View>
+                {idx < cart.length - 1 && <View style={prodStyles.separator} />}
               </View>
-
-              <View style={{ position: 'absolute', right: 10, bottom: 10 }}>
-                <Text style={styles.prodPrice}>S/.{item.costo_venta * item.cantidad}</Text>
-              </View>
-
-              <View style={{ position: 'absolute', right: 2, top: 2 }}>
-                <IconButton
-                  icon="close"
-                  size={20}
-                  mode="contained-tonal"
-                  onPress={() => onRemove(item.id)}
-                  iconColor={MD3Colors.error50}
-                />
-              </View>
-            </View>
-          ))
+            ))}
+          </View>
         )}
       </View>
 
@@ -104,22 +160,66 @@ export function ProductosCard({ cart, onAgregar, onChangeQty, onRemove }: Produc
   );
 }
 
-const styles = StyleSheet.create({
-  card: { borderRadius: 20, backgroundColor: '#f7f7f7', overflow: 'hidden' },
-  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, paddingHorizontal: 18 },
-  secLabel: { fontSize: 14, fontWeight: '800', color: '#000', letterSpacing: 1 },
-  secAction: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#000', borderRadius: 22, paddingHorizontal: 16, paddingVertical: 9 },
-  secActionText: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  ghostRow: { flexDirection: 'row', alignItems: 'center', padding: 10, paddingHorizontal: 18, paddingBottom: 14, gap: 12 },
-  ghostIcon: { width: 36, height: 36, borderRadius: 10, borderWidth: 2, borderColor: '#ddd', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
-  ghostText: { fontSize: 15, color: 'gray' },
-  prodRow: { flexDirection: 'row', alignItems: 'center', padding: 10, paddingHorizontal: 18, paddingBottom: 14, gap: 14, position: 'relative' },
-  cardImage: { width: 90, height: 90, borderRadius: 10 },
-  prodName: { fontSize: 16, fontWeight: '700', color: '#000', flexShrink: 1 },
-  prodMeta: { fontSize: 14, color: 'black', marginTop: 2 },
-  prodPrice: { fontSize: 20, fontWeight: '900', color: '#000', minWidth: 56, textAlign: 'right' },
-  qtyCtrl: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  qtyBtn: { width: 40, height: 40, backgroundColor: 'white', borderWidth: 1, borderColor: '#f0f0f0', borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  qtyBtnText: { fontSize: 18, fontWeight: '300', color: '#000', lineHeight: 22 },
-  qtyNum: { fontSize: 16, fontWeight: '700', width: 26, textAlign: 'center', color: '#000' },
+const prodStyles = StyleSheet.create({
+  card: {
+    borderRadius: 16, backgroundColor: C.surface,
+    borderWidth: 1, borderColor: C.border, overflow: 'hidden',
+  },
+  cardHead: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 14, paddingHorizontal: 16,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  secLabel: { fontSize: 10, fontWeight: '800', color: C.textMuted, letterSpacing: 1.2, textTransform: 'uppercase' },
+  secAction: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: C.accent, borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 7,
+  },
+  secActionText: { fontSize: 13, fontWeight: '700', color: C.bg },
+  ghostRow: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  ghostIcon: {
+    width: 38, height: 38, borderRadius: 10,
+    borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.surfaceAlt,
+  },
+  ghostText: { fontSize: 14, color: C.textMuted },
+  list: { paddingVertical: 4 },
+  separator: { height: 1, backgroundColor: C.border, marginHorizontal: 16 },
+});
+
+const pStyles = StyleSheet.create({
+  container: { padding: 14, gap: 12 },
+  topRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  image: { width: 68, height: 68, borderRadius: 12, backgroundColor: C.surfaceAlt },
+  info: { flex: 1, gap: 3 },
+  nombre: { fontSize: 14, fontWeight: '700', color: C.textPrimary, lineHeight: 19 },
+  codigoWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  codigo: { fontSize: 11, color: C.textMuted },
+  precio: { fontSize: 13, fontWeight: '700', color: C.accent },
+  closeBtn: {
+    width: 30, height: 30, borderRadius: 9,
+    backgroundColor: C.red + '12',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: C.red + '25',
+  },
+  controlsRow: { flexDirection: 'row', gap: 10 },
+  controlBlock: { flex: 1, gap: 6 },
+  fieldLabel: { fontSize: 10, fontWeight: '700', color: C.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 },
+  stepper: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: C.surfaceAlt, borderRadius: 12,
+    borderWidth: 1, borderColor: C.border,
+    paddingHorizontal: 10, paddingVertical: 10,
+  },
+  stepBtn: {
+    width: 28, height: 28, borderRadius: 8,
+    backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  stepNum: { fontSize: 14, fontWeight: '700', color: C.textPrimary },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 2 },
+  totalLabel: { fontSize: 12, color: C.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
+  totalValue: { fontSize: 22, fontWeight: '900', color: C.accent, letterSpacing: -0.5 },
 });

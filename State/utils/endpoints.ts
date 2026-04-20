@@ -1,6 +1,6 @@
 
 
-export const URL_DESA = 'http://10.153.172.42:8000';
+export const URL_DESA = 'http://10.200.250.246:8000';
 export const URL_PROD = 'https://inventarioaxel.duckdns.org';
 
 export const PRODUCTION = true; // Cambia a false para desarrollo
@@ -33,7 +33,7 @@ export const URLS = {
     CREAR_VENTA_ANONIMA: URL_BASE + '/api/ventas/crear/anonima/',
     CANCELAR_VENTA: (ventaId: number) => URL_BASE + `/api/ventas/cancelar/${ventaId}/`,
     SEARCH_VENTAS: URL_BASE + '/api/ventas/search/',
-    ANULAR_VENTA: URL_BASE + '/api/nota-credito/registrar/',
+    ANULAR_VENTA: URL_BASE + '/api/nota-credito/registrar',
     GENERAR_COMPROBANTE: URL_BASE + '/api/ventas/generar-comprobante/',
 };
 

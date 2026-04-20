@@ -79,7 +79,7 @@ export async function getVentasPorTienda(
 }
 
 // Crear venta
-export async function createVenta(venta: CreateVenta): Promise<Venta> {
+export async function createVenta(venta: any): Promise<Venta> {
     return fetchWithAuth(`${API_URL}/ventas/crear/`, { method: 'POST', body: JSON.stringify(venta) });
 }
 

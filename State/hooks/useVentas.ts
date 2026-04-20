@@ -122,6 +122,7 @@ export const useVentas = () => {
     const isFetchingNextVentasPage = ventasPorTiendaQuery.isFetchingNextPage;
 
 
+    const refetchVentas = () => ventasPorTiendaQuery.refetch(); // ← agregar esto
 
     console.log('pages:', ventasPorTiendaQuery.data?.pages);
     return {
@@ -131,6 +132,7 @@ export const useVentas = () => {
         topProductosHoy: topProductosQuery.data?.topProductoMostSales,
 
         ventasPorTienda: ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [],
+        refetchVentas: refetchVentas, // ← agregar esto
 
 
         fetchNextVentasPage,

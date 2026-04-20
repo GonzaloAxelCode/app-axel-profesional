@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { fetchInventariosPorTienda } from '../api/inventario.api';
-import { Inventario } from '../models/inventario.models';
+import { Inventario, InventarioCart } from '../models/inventario.models';
 import { useInventarioStore } from '../store/useInventarioStore';
 
 
@@ -19,7 +19,7 @@ export const useInventario = () => {
     });
 
     return {
-        productos: query.data ?? [],
+        productos: query.data ?? [] as InventarioCart[],
         isLoading: query.isLoading,
         isError: query.isError,
     };

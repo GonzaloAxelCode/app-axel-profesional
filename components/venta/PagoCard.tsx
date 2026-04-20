@@ -1,12 +1,16 @@
+import { C } from '@/State/utils/c';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Icon, Text } from 'react-native-paper';
 
-export type PayMethod = 'efectivo' | 'tarjeta' | 'yape';
+// ═══════════════════════════════════════════════════════════════════════════════
+// PagoCard.tsx
+// ═══════════════════════════════════════════════════════════════════════════════
+export type PayMethod = 'Efectivo' | 'PLIN' | 'YAPE';
 
-const PAY_OPTIONS: { key: PayMethod; label: string }[] = [
-  { key: 'efectivo', label: 'Efectivo' },
-  { key: 'tarjeta', label: 'Tarjeta' },
-  { key: 'yape', label: 'Yape' },
+const PAY_OPTIONS: { key: PayMethod; label: string; icon: string }[] = [
+  { key: 'Efectivo', label: 'Efectivo', icon: 'cash' },
+  { key: 'PLIN', label: 'PLIN', icon: 'cellphone' },
+  { key: 'YAPE', label: 'YAPE', icon: 'qrcode-scan' },
 ];
 
 interface PagoCardProps {
@@ -16,34 +20,56 @@ interface PagoCardProps {
 
 export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHead}>
-        <Text style={styles.secLabel}>PAGO</Text>
+    <View style={pagoStyles.card}>
+      <View style={pagoStyles.cardHead}>
+        <Text style={pagoStyles.secLabel}>MÉTODO DE PAGO</Text>
       </View>
-      <View style={styles.payRow}>
-        {PAY_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.key}
-            style={[styles.payOpt, payMethod === opt.key && styles.payActive]}
-            onPress={() => onSelect(opt.key)}
-          >
-            <Text style={[styles.payLabel, payMethod === opt.key && styles.payLabelActive]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <View style={pagoStyles.optRow}>
+        {PAY_OPTIONS.map((opt) => {
+          const isActive = payMethod === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              style={[pagoStyles.opt, isActive && pagoStyles.optActive]}
+              onPress={() => onSelect(opt.key)}
+              activeOpacity={0.8}
+            >
+              <Icon
+                source={opt.icon as any}
+                size={16}
+                color={isActive ? C.bg : C.textSecondary}
+              />
+              <Text style={[pagoStyles.optLabel, isActive && pagoStyles.optLabelActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: { borderRadius: 20, backgroundColor: '#f7f7f7', overflow: 'hidden' },
-  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, paddingHorizontal: 18 },
-  secLabel: { fontSize: 14, fontWeight: '800', color: '#000', letterSpacing: 1 },
-  payRow: { flexDirection: 'row', gap: 8, padding: 10, paddingHorizontal: 16, paddingBottom: 16 },
-  payOpt: { flex: 1, paddingVertical: 12, borderRadius: 50, alignItems: 'center', backgroundColor: '#fff' },
-  payActive: { backgroundColor: '#000' },
-  payLabel: { fontSize: 15, fontWeight: '700', color: 'black' },
-  payLabelActive: { color: '#fff' },
+const pagoStyles = StyleSheet.create({
+  card: {
+    borderRadius: 16, backgroundColor: C.surface,
+    borderWidth: 1, borderColor: C.border, overflow: 'hidden',
+  },
+  cardHead: {
+    padding: 14, paddingHorizontal: 16,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  secLabel: { fontSize: 10, fontWeight: '800', color: C.textMuted, letterSpacing: 1.2, textTransform: 'uppercase' },
+  optRow: { flexDirection: 'row', gap: 8, padding: 12, paddingHorizontal: 14 },
+  opt: {
+    flex: 1, paddingVertical: 11, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.surfaceAlt,
+    borderWidth: 1, borderColor: C.border,
+    flexDirection: 'row', gap: 6,
+  },
+  optActive: { backgroundColor: C.accent, borderColor: C.accent },
+  optLabel: { fontSize: 13, fontWeight: '700', color: C.textSecondary },
+  optLabelActive: { color: C.bg },
 });
+
