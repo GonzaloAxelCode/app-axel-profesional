@@ -1,10 +1,10 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import "../global.css";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
@@ -30,14 +30,14 @@ const modalOptions = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+
 
 
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <PaperProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ThemeProvider value={DarkTheme}>
             <Stack>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="welcome" options={{ headerShown: false }} />
@@ -52,7 +52,7 @@ export default function RootLayout() {
               <Stack.Screen name="settings/seguridad" options={modalOptions} />
               <Stack.Screen name="settings/stock-alertas" options={modalOptions} />
               <Stack.Screen name="settings/tienda" options={modalOptions} />
-              <Stack.Screen name="settings/usuaiors" options={modalOptions} />
+              <Stack.Screen name="settings/usuarios" options={modalOptions} />
             </Stack>
             <StatusBar style="auto" backgroundColor="transparent" translucent />
           </ThemeProvider>

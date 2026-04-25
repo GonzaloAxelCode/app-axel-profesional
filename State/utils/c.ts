@@ -16,168 +16,119 @@ const B = {
     borderAccent: 'transparent',
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TEMAS PRO — modernos, sobrios y elegantes
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── 11. Slate Minimal (tipo Notion dark) ─────────────────────────────────────
-const slateMinimal: Theme = {
+// ── 1. Lima oscuro (original) ────────────────────────────────────────────────
+const limaOscuro: Theme = {
     ...B,
-    bg: '#0b0c0f', surface: '#121318', surfaceAlt: '#1a1c22', surfaceDeep: '#08090c',
-    accent: '#e5e7eb', accentDim: 'rgba(229,231,235,0.06)', accentText: '#111827',
-    textPrimary: '#f9fafb', textSecondary: '#9ca3af', textMuted: '#6b7280',
+    bg: '#0f1117', surface: '#1a1d27', surfaceAlt: '#222636', surfaceDeep: '#0d0f14',
+    accent: '#c8e64a', accentDim: 'rgba(200,230,74,0.08)', accentText: '#2d3a08',
+    textPrimary: '#f0f2ff', textSecondary: '#8b8fa8', textMuted: '#555870',
     green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
-    purple: '#8b5cf6', yellow: '#eab308', amber: '#f59e0b',
+    purple: '#a78bfa', yellow: '#fcd34d', amber: '#f59e0b',
 };
 
-// ── 12. Carbon Blue (tipo Stripe) ────────────────────────────────────────────
-const carbonBlue: Theme = {
+// ── 2. Cian neón ─────────────────────────────────────────────────────────────
+const cianNeon: Theme = {
     ...B,
-    bg: '#0a0f1c', surface: '#121a2b', surfaceAlt: '#17223a', surfaceDeep: '#060a14',
-    accent: '#4f8cff', accentDim: 'rgba(79,140,255,0.08)', accentText: '#0a1f44',
-    textPrimary: '#eef4ff', textSecondary: '#7c8db5', textMuted: '#4a5875',
-    green: '#22c55e', red: '#ef4444', blue: '#60a5fa',
-    purple: '#818cf8', yellow: '#fde047', amber: '#f59e0b',
+    bg: '#080d10', surface: '#101820', surfaceAlt: '#162030', surfaceDeep: '#050a0c',
+    accent: '#00dcff', accentDim: 'rgba(0,220,255,0.08)', accentText: '#002830',
+    textPrimary: '#e8f8ff', textSecondary: '#6a90a0', textMuted: '#3a5060',
+    green: '#22c55e', red: '#ef4444', blue: '#38bdf8',
+    purple: '#a78bfa', yellow: '#fcd34d', amber: '#f59e0b',
 };
 
-// ── 13. Graphite Clean ───────────────────────────────────────────────────────
-const graphiteClean: Theme = {
+// ── 3. Violeta profundo ───────────────────────────────────────────────────────
+const violetaProfundo: Theme = {
     ...B,
-    bg: '#0e0e10', surface: '#1a1a1d', surfaceAlt: '#232326', surfaceDeep: '#09090b',
-    accent: '#ffffff', accentDim: 'rgba(255,255,255,0.05)', accentText: '#111111',
-    textPrimary: '#fafafa', textSecondary: '#a1a1aa', textMuted: '#52525b',
+    bg: '#0d0a18', surface: '#160f2a', surfaceAlt: '#1e1638', surfaceDeep: '#090614',
+    accent: '#a78bfa', accentDim: 'rgba(167,139,250,0.08)', accentText: '#1a0a40',
+    textPrimary: '#f0ecff', textSecondary: '#8878b8', textMuted: '#504870',
     green: '#4ade80', red: '#f87171', blue: '#60a5fa',
-    purple: '#a78bfa', yellow: '#fde047', amber: '#fb923c',
+    purple: '#c084fc', yellow: '#fde047', amber: '#fbbf24',
 };
 
-// ── 14. Indigo Modern ────────────────────────────────────────────────────────
-const indigoModern: Theme = {
+// ── 4. Coral sunset ──────────────────────────────────────────────────────────
+const coralSunset: Theme = {
     ...B,
-    bg: '#0c0e1a', surface: '#151832', surfaceAlt: '#1c2044', surfaceDeep: '#080a12',
-    accent: '#6366f1', accentDim: 'rgba(99,102,241,0.08)', accentText: '#1e1b4b',
-    textPrimary: '#eef2ff', textSecondary: '#8b8fc7', textMuted: '#555a88',
-    green: '#34d399', red: '#f87171', blue: '#60a5fa',
-    purple: '#a78bfa', yellow: '#fde047', amber: '#f59e0b',
+    bg: '#120d0a', surface: '#1e1410', surfaceAlt: '#281c18', surfaceDeep: '#0e0908',
+    accent: '#fb7185', accentDim: 'rgba(251,113,133,0.08)', accentText: '#3a0a10',
+    textPrimary: '#fff0f2', textSecondary: '#a87880', textMuted: '#604848',
+    green: '#4ade80', red: '#f43f5e', blue: '#60a5fa',
+    purple: '#c084fc', yellow: '#fde047', amber: '#fb923c',
 };
 
-// ── 15. Soft Neutral (UI tipo Linear) ────────────────────────────────────────
-const softNeutral: Theme = {
+// ── 5. Esmeralda forestal ─────────────────────────────────────────────────────
+const esmeraldaForestal: Theme = {
     ...B,
-    bg: '#0d0f14', surface: '#151821', surfaceAlt: '#1d2230', surfaceDeep: '#090b10',
-    accent: '#a1a1aa', accentDim: 'rgba(161,161,170,0.06)', accentText: '#18181b',
-    textPrimary: '#f4f4f5', textSecondary: '#a1a1aa', textMuted: '#6b7280',
-    green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
-    purple: '#8b5cf6', yellow: '#eab308', amber: '#f59e0b',
+    bg: '#070f0b', surface: '#0e1a14', surfaceAlt: '#14251c', surfaceDeep: '#040a06',
+    accent: '#34d399', accentDim: 'rgba(52,211,153,0.08)', accentText: '#022018',
+    textPrimary: '#edfff8', textSecondary: '#5a9070', textMuted: '#345040',
+    green: '#4ade80', red: '#f87171', blue: '#38bdf8',
+    purple: '#a78bfa', yellow: '#fde047', amber: '#fbbf24',
 };
 
-// ── 16. Midnight Purple SaaS ────────────────────────────────────────────────
-const midnightPurple: Theme = {
+// ── 6. Azul medianoche ───────────────────────────────────────────────────────
+const azulMedianoche: Theme = {
     ...B,
-    bg: '#0a0612', surface: '#140d24', surfaceAlt: '#1c1534', surfaceDeep: '#06030a',
-    accent: '#a855f7', accentDim: 'rgba(168,85,247,0.08)', accentText: '#2e1065',
-    textPrimary: '#f5f3ff', textSecondary: '#a78bfa', textMuted: '#6b5c9a',
+    bg: '#070c18', surface: '#0e1428', surfaceAlt: '#141d38', surfaceDeep: '#040810',
+    accent: '#60a5fa', accentDim: 'rgba(96,165,250,0.08)', accentText: '#05183a',
+    textPrimary: '#eef4ff', textSecondary: '#6080b0', textMuted: '#384870',
+    green: '#34d399', red: '#f87171', blue: '#38bdf8',
+    purple: '#a78bfa', yellow: '#fde047', amber: '#fbbf24',
+};
+
+// ── 7. Ámbar oscuro ───────────────────────────────────────────────────────────
+const ambarOscuro: Theme = {
+    ...B,
+    bg: '#120e06', surface: '#1e170a', surfaceAlt: '#2a1e0e', surfaceDeep: '#0d0904',
+    accent: '#fbbf24', accentDim: 'rgba(251,191,36,0.08)', accentText: '#3a2600',
+    textPrimary: '#fff8e8', textSecondary: '#a08040', textMuted: '#604a20',
     green: '#4ade80', red: '#f87171', blue: '#60a5fa',
     purple: '#c084fc', yellow: '#fde047', amber: '#fb923c',
 };
 
-// ── 17. Ocean Glass ──────────────────────────────────────────────────────────
-const oceanGlass: Theme = {
+// ── 8. Rosa cuarzo ────────────────────────────────────────────────────────────
+const rosaCuarzo: Theme = {
     ...B,
-    bg: '#06121a', surface: '#0d1f2a', surfaceAlt: '#132a38', surfaceDeep: '#030a10',
-    accent: '#22d3ee', accentDim: 'rgba(34,211,238,0.08)', accentText: '#083344',
-    textPrimary: '#ecfeff', textSecondary: '#67a6b5', textMuted: '#3b6a75',
-    green: '#34d399', red: '#f87171', blue: '#38bdf8',
-    purple: '#a78bfa', yellow: '#fde047', amber: '#f59e0b',
-};
-
-// ── 18. Emerald Premium ─────────────────────────────────────────────────────
-const emeraldPremium: Theme = {
-    ...B,
-    bg: '#06110c', surface: '#0d1f17', surfaceAlt: '#142a20', surfaceDeep: '#030a07',
-    accent: '#10b981', accentDim: 'rgba(16,185,129,0.08)', accentText: '#022c22',
-    textPrimary: '#ecfdf5', textSecondary: '#6ea89a', textMuted: '#3d6f63',
-    green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
-    purple: '#8b5cf6', yellow: '#fde047', amber: '#f59e0b',
-};
-
-// ── 19. Warm Gray Luxury ─────────────────────────────────────────────────────
-const warmGrayLuxury: Theme = {
-    ...B,
-    bg: '#111110', surface: '#1c1c1a', surfaceAlt: '#252523', surfaceDeep: '#0a0a09',
-    accent: '#e7e5e4', accentDim: 'rgba(231,229,228,0.06)', accentText: '#292524',
-    textPrimary: '#fafaf9', textSecondary: '#a8a29e', textMuted: '#6b7280',
+    bg: '#120810', surface: '#1e1020', surfaceAlt: '#28182c', surfaceDeep: '#0e060c',
+    accent: '#e879f9', accentDim: 'rgba(232,121,249,0.08)', accentText: '#300838',
+    textPrimary: '#fdf0ff', textSecondary: '#9868a8', textMuted: '#584060',
     green: '#4ade80', red: '#f87171', blue: '#60a5fa',
-    purple: '#a78bfa', yellow: '#fde047', amber: '#fb923c',
+    purple: '#c084fc', yellow: '#fde047', amber: '#fbbf24',
 };
 
-// ── 20. Deep Red Fintech ─────────────────────────────────────────────────────
-const deepRedFintech: Theme = {
+// ── 9. Gris titanio ───────────────────────────────────────────────────────────
+const grisTitanio: Theme = {
     ...B,
-    bg: '#140a0a', surface: '#1f1212', surfaceAlt: '#2a1818', surfaceDeep: '#0a0404',
-    accent: '#ef4444', accentDim: 'rgba(239,68,68,0.08)', accentText: '#450a0a',
-    textPrimary: '#fef2f2', textSecondary: '#b87171', textMuted: '#6f4444',
-    green: '#22c55e', red: '#f87171', blue: '#60a5fa',
-    purple: '#a78bfa', yellow: '#fde047', amber: '#f59e0b',
-};
-
-// ── 21. Sky Soft UI ──────────────────────────────────────────────────────────
-const skySoft: Theme = {
-    ...B,
-    bg: '#0b1220', surface: '#121a2c', surfaceAlt: '#18233a', surfaceDeep: '#060a12',
-    accent: '#38bdf8', accentDim: 'rgba(56,189,248,0.08)', accentText: '#082f49',
-    textPrimary: '#f0f9ff', textSecondary: '#7aa8c0', textMuted: '#456a80',
-    green: '#22c55e', red: '#ef4444', blue: '#60a5fa',
-    purple: '#818cf8', yellow: '#fde047', amber: '#f59e0b',
-};
-
-// ── 22. Mono Clean ───────────────────────────────────────────────────────────
-const monoClean: Theme = {
-    ...B,
-    bg: '#000000', surface: '#111111', surfaceAlt: '#1a1a1a', surfaceDeep: '#050505',
-    accent: '#ffffff', accentDim: 'rgba(255,255,255,0.05)', accentText: '#000000',
-    textPrimary: '#ffffff', textSecondary: '#aaaaaa', textMuted: '#666666',
-    green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
-    purple: '#8b5cf6', yellow: '#eab308', amber: '#f59e0b',
-};
-
-// ── 23. Soft Purple Glass ────────────────────────────────────────────────────
-const softPurpleGlass: Theme = {
-    ...B,
-    bg: '#0e0a14', surface: '#181022', surfaceAlt: '#211632', surfaceDeep: '#07040a',
-    accent: '#c084fc', accentDim: 'rgba(192,132,252,0.08)', accentText: '#3b0764',
-    textPrimary: '#faf5ff', textSecondary: '#b794d4', textMuted: '#6b5a8c',
+    bg: '#0c0c0e', surface: '#161618', surfaceAlt: '#1e1e22', surfaceDeep: '#080809',
+    accent: '#f5f5f5', accentDim: 'rgba(255,255,255,0.06)', accentText: '#1a1a1a',
+    textPrimary: '#ffffff', textSecondary: '#888890', textMuted: '#505058',
     green: '#4ade80', red: '#f87171', blue: '#60a5fa',
-    purple: '#d8b4fe', yellow: '#fde047', amber: '#fb923c',
+    purple: '#a78bfa', yellow: '#fde047', amber: '#fbbf24',
 };
 
-// ── 24. Steel Blue ───────────────────────────────────────────────────────────
-const steelBlue: Theme = {
+// ── 10. Teal cyberpunk ────────────────────────────────────────────────────────
+const tealCyberpunk: Theme = {
     ...B,
-    bg: '#0c1116', surface: '#141b22', surfaceAlt: '#1b2530', surfaceDeep: '#070b0f',
-    accent: '#64748b', accentDim: 'rgba(100,116,139,0.08)', accentText: '#0f172a',
-    textPrimary: '#f1f5f9', textSecondary: '#94a3b8', textMuted: '#64748b',
-    green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
-    purple: '#8b5cf6', yellow: '#eab308', amber: '#f59e0b',
+    bg: '#060e12', surface: '#0c181e', surfaceAlt: '#122028', surfaceDeep: '#04080c',
+    accent: '#14b8a6', accentDim: 'rgba(20,184,166,0.08)', accentText: '#012820',
+    textPrimary: '#e8fffe', textSecondary: '#4a8880', textMuted: '#2a5048',
+    green: '#4ade80', red: '#f87171', blue: '#38bdf8',
+    purple: '#a78bfa', yellow: '#fde047', amber: '#fbbf24',
 };
 
-// ── 25. Gold Premium Dark ────────────────────────────────────────────────────
-const goldPremium: Theme = {
-    ...B,
-    bg: '#0f0c05', surface: '#1a150a', surfaceAlt: '#241d0f', surfaceDeep: '#080603',
-    accent: '#facc15', accentDim: 'rgba(250,204,21,0.08)', accentText: '#422006',
-    textPrimary: '#fefce8', textSecondary: '#b8a76a', textMuted: '#6f5f2e',
-    green: '#22c55e', red: '#ef4444', blue: '#60a5fa',
-    purple: '#a78bfa', yellow: '#fde047', amber: '#f59e0b',
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// SELECTOR — cambia el tema aquí
+// ─────────────────────────────────────────────────────────────────────────────
+//
+//  1  limaOscuro         Verde lima    · azul-negro
+//  2  cianNeon           Cian          · negro carbón
+//  3  violetaProfundo    Violeta       · morado oscuro
+//  4  coralSunset        Coral/rosa    · marrón-negro
+//  5  esmeraldaForestal  Esmeralda     · verde oscuro
+//  6  azulMedianoche     Azul hielo    · azul marino
+//  7  ambarOscuro        Ámbar dorado  · marrón cálido
+//  8  rosaCuarzo         Rosa chicle   · negro rosado
+//  9  grisTitanio        Blanco puro   · gris neutro
+// 10  tealCyberpunk      Turquesa      · negro azulado
 
-// ── 26. Neutral Blue Gray ────────────────────────────────────────────────────
-const neutralBlueGray: Theme = {
-    ...B,
-    bg: '#0f172a', surface: '#1e293b', surfaceAlt: '#273449', surfaceDeep: '#020617',
-    accent: '#94a3b8', accentDim: 'rgba(148,163,184,0.08)', accentText: '#0f172a',
-    textPrimary: '#f8fafc', textSecondary: '#94a3b8', textMuted: '#64748b',
-    green: '#22c55e', red: '#ef4444', blue: '#3b82f6',
-    purple: '#8b5cf6', yellow: '#eab308', amber: '#f59e0b',
-};
-
-export const C: Theme = graphiteClean; // ← cambia aquí
+export const C2: Theme = tealCyberpunk; // ← cambia aquí

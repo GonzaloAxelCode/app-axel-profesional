@@ -34,11 +34,11 @@ export default function ProductoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [imageVisible, setImageVisible] = useState(false);
-  const { data, isLoading } = useProductos(1, 100);
+  const { productos, isLoading } = useProductos(200);
 
   const producto: Producto | undefined = useMemo(
-    () => data?.results.find((p) => p.id.toString() === id),
-    [data, id]
+    () => productos?.find((p) => p.id.toString() === id),
+    [productos, id]
   );
 
   const handleShare = async () => {

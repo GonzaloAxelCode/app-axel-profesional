@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/State/store/useAuthStore";
-import { C } from "@/State/utils/c";
+import T from "@/constants/THEME";
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -12,23 +12,21 @@ import {
 } from "react-native";
 import { Text } from "react-native-paper";
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
-
-
-// ─── Feature Item ─────────────────────────────────────────────────────────────
-function FeatureItem({ icon, text }: { icon: string; text: string }) {
+// ─── Feature Item ─────────────────────────────────────────────
+function FeatureItem({ icon, text, color }: { icon: string; text: string; color: string }) {
     return (
         <View style={styles.featureItem}>
-            <View style={styles.featureIcon}>
-                <Icon name={icon as any} size={16} color={C.accent} />
+            <View style={[styles.featureIcon, { backgroundColor: color + '15', borderColor: color + '30' }]}>
+                <Icon name={icon as any} size={16} color={color} />
             </View>
             <Text style={styles.featureText}>{text}</Text>
         </View>
     );
 }
 
-// ─── Stat Pill ────────────────────────────────────────────────────────────────
+// ─── Stat Pill ────────────────────────────────────────────────
 function StatPill({ num, label }: { num: string; label: string }) {
     return (
         <View style={styles.statPill}>
@@ -38,7 +36,7 @@ function StatPill({ num, label }: { num: string; label: string }) {
     );
 }
 
-// ─── BienvenidaScreen ─────────────────────────────────────────────────────────
+// ─── Screen ───────────────────────────────────────────────────
 export default function BienvenidaScreen() {
     const router = useRouter();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -53,104 +51,75 @@ export default function BienvenidaScreen() {
             return;
         }
         Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                damping: 18,
-                stiffness: 120,
-                useNativeDriver: true,
-            }),
-            Animated.spring(scaleAnim, {
-                toValue: 1,
-                damping: 18,
-                stiffness: 120,
-                useNativeDriver: true,
-            }),
+            Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+            Animated.spring(slideAnim, { toValue: 0, damping: 18, stiffness: 120, useNativeDriver: true }),
+            Animated.spring(scaleAnim, { toValue: 1, damping: 18, stiffness: 120, useNativeDriver: true }),
         ]).start();
     }, [isAuthenticated]);
 
     return (
         <View style={styles.container}>
 
-            {/* Background decorations */}
+            {/* BG */}
             <View style={styles.bgCircle1} />
             <View style={styles.bgCircle2} />
-            <View style={styles.bgDot} />
 
             <Animated.View style={[
                 styles.content,
                 { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
             ]}>
 
-                {/* Logo / Brand area */}
+                {/* Logo */}
                 <View style={styles.logoArea}>
                     <View style={styles.logoIcon}>
-                        <Icon name="store-outline" size={32} color={C.bg} />
+                        <Icon name="store-outline" size={30} color={T.bg} />
                     </View>
                     <Text style={styles.brandName}>Inventario</Text>
-                    <View style={styles.versionBadge}>
-                        <Text style={styles.versionText}>v2.4.1</Text>
-                    </View>
                 </View>
 
                 {/* Headline */}
                 <View style={styles.headlineArea}>
-                    <Text style={styles.headline}>Gestiona tu{'\n'}negocio con{'\n'}
+                    <Text style={styles.headline}>
+                        Gestiona tu{'\n'}negocio con{'\n'}
                         <Text style={styles.headlineAccent}>inteligencia</Text>
                     </Text>
                     <Text style={styles.subtitle}>
-                        Ventas, inventario y clientes{'\n'}en un solo lugar.
+                        Ventas, inventario y clientes en un solo lugar.
                     </Text>
                 </View>
 
-                {/* Stats row */}
+                {/* Stats */}
                 <Animated.View style={[styles.statsRow, { transform: [{ scale: scaleAnim }] }]}>
                     <StatPill num="1,284" label="Ventas" />
-                    <View style={styles.statDivider} />
                     <StatPill num="342" label="Productos" />
-                    <View style={styles.statDivider} />
                     <StatPill num="98" label="Clientes" />
                 </Animated.View>
 
                 {/* Features */}
                 <View style={styles.featuresCard}>
-                    <FeatureItem icon="lightning-bolt" text="Comprobantes electrónicos SUNAT" />
-                    <FeatureItem icon="chart-bar" text="Reportes y estadísticas en tiempo real" />
-                    <FeatureItem icon="account-group-outline" text="Gestión de clientes y proveedores" />
-                    <FeatureItem icon="package-variant-closed" text="Control de stock con alertas" />
+                    <FeatureItem icon="lightning-bolt" text="SUNAT electrónico" color={T.accent} />
+                    <FeatureItem icon="chart-bar" text="Reportes en tiempo real" color={T.accent2} />
+                    <FeatureItem icon="account-group-outline" text="Clientes y proveedores" color={T.accent3} />
+                    <FeatureItem icon="package-variant-closed" text="Control de stock" color={T.accent4} />
                 </View>
 
             </Animated.View>
 
-            {/* Bottom CTA */}
+            {/* CTA */}
             <Animated.View style={[styles.bottomArea, { opacity: fadeAnim }]}>
                 <TouchableOpacity
                     style={styles.btnPrimary}
                     onPress={() => router.replace("/login")}
-                    activeOpacity={0.88}
                 >
                     <Text style={styles.btnPrimaryText}>Iniciar sesión</Text>
-                    <View style={styles.btnArrow}>
-                        <Icon name="arrow-right" size={18} color={C.bg} />
-                    </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.btnSecondary}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.btnSecondaryText}>Crear cuenta nueva</Text>
+                <TouchableOpacity style={styles.btnSecondary}>
+                    <Text style={styles.btnSecondaryText}>Crear cuenta</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.terms}>
-                    Al continuar aceptas los{' '}
-                    <Text style={styles.termsLink}>Términos de uso</Text>
-                    {' '}y{' '}
-                    <Text style={styles.termsLink}>Privacidad</Text>
+                    Al continuar aceptas los términos y privacidad
                 </Text>
             </Animated.View>
 
@@ -158,22 +127,21 @@ export default function BienvenidaScreen() {
     );
 }
 
-// ─── styles ───────────────────────────────────────────────────────────────────
+// ─── STYLES ───────────────────────────────────────────────────
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: C.bg,
+        backgroundColor: T.bg,
         justifyContent: 'space-between',
         paddingBottom: 48,
     },
 
-    // BG decorations
     bgCircle1: {
         position: 'absolute',
         width: 320,
         height: 320,
         borderRadius: 160,
-        backgroundColor: '#c8f13508',
+        backgroundColor: T.accent + '10',
         top: -80,
         right: -80,
     },
@@ -182,123 +150,78 @@ const styles = StyleSheet.create({
         width: 200,
         height: 200,
         borderRadius: 100,
-        backgroundColor: '#6ee7b705',
-        bottom: 160,
+        backgroundColor: T.accent2 + '10',
+        bottom: 120,
         left: -60,
-    },
-    bgDot: {
-        position: 'absolute',
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: C.accent,
-        top: height * 0.18,
-        left: 28,
     },
 
     content: {
-        paddingTop: 72,
+        paddingTop: 80,
         paddingHorizontal: 24,
-        flex: 1,
     },
 
-    // Logo
     logoArea: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 44,
+        marginBottom: 40,
     },
     logoIcon: {
         width: 52,
         height: 52,
-        borderRadius: 16,
-        backgroundColor: C.accent,
+        borderRadius: T.radiusMd,
+        backgroundColor: T.accent,
         alignItems: 'center',
         justifyContent: 'center',
+        ...T.shadowAccent,
     },
     brandName: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: '800',
-        color: C.textPrimary,
+        color: T.textPrimary,
         marginLeft: 14,
-        letterSpacing: -0.5,
-    },
-    versionBadge: {
-        marginLeft: 10,
-        backgroundColor: C.surface,
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderWidth: 1,
-        borderColor: C.border,
-    },
-    versionText: {
-        fontSize: 10,
-        color: C.textMuted,
-        fontWeight: '600',
     },
 
-    // Headline
-    headlineArea: { marginBottom: 32 },
+    headlineArea: { marginBottom: 28 },
     headline: {
-        fontSize: 46,
-        fontWeight: '800',
-        color: C.textPrimary,
-        letterSpacing: -1.5,
-        lineHeight: 52,
-        marginBottom: 16,
+        fontSize: 42,
+        fontWeight: '900',
+        color: T.textPrimary,
+        lineHeight: 48,
     },
-    headlineAccent: {
-        color: C.accent,
-    },
+    headlineAccent: { color: T.accent },
     subtitle: {
-        fontSize: 16,
-        color: C.textSecondary,
-        lineHeight: 24,
+        fontSize: 15,
+        color: T.textSecondary,
+        marginTop: 10,
     },
 
-    // Stats
     statsRow: {
         flexDirection: 'row',
-        backgroundColor: C.surface,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: C.border,
+        backgroundColor: T.surfaceElevated,
+        borderRadius: T.radiusLg,
         paddingVertical: 18,
-        paddingHorizontal: 8,
         marginBottom: 20,
-        alignItems: 'center',
         justifyContent: 'space-around',
+        ...T.shadowCard,
     },
-    statPill: { alignItems: 'center', flex: 1 },
+    statPill: { alignItems: 'center' },
     statNum: {
         fontSize: 22,
         fontWeight: '800',
-        color: C.textPrimary,
-        letterSpacing: -0.5,
+        color: T.textPrimary,
     },
     statLabel: {
         fontSize: 10,
-        color: C.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: 0.8,
-        fontWeight: '600',
-        marginTop: 2,
-    },
-    statDivider: {
-        width: 1,
-        height: 28,
-        backgroundColor: C.border,
+        color: T.textMuted,
+        marginTop: 4,
     },
 
-    // Features
     featuresCard: {
-        backgroundColor: C.surface,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: C.border,
+        backgroundColor: T.surface,
+        borderRadius: T.radiusLg,
         padding: 16,
         gap: 12,
+        ...T.shadowCard,
     },
     featureItem: {
         flexDirection: 'row',
@@ -306,74 +229,48 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     featureIcon: {
-        width: 30,
-        height: 30,
-        borderRadius: 8,
-        backgroundColor: C.accent + '15',
+        width: 32,
+        height: 32,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: C.accent + '25',
     },
     featureText: {
         fontSize: 13,
-        color: C.textSecondary,
+        color: T.textSecondary,
         flex: 1,
-        fontWeight: '500',
     },
 
-    // Bottom CTA
     bottomArea: {
         paddingHorizontal: 24,
         gap: 12,
     },
     btnPrimary: {
-        backgroundColor: C.accent,
-        borderRadius: 16,
+        backgroundColor: T.accent,
+        borderRadius: T.radiusMd,
         paddingVertical: 16,
-        paddingHorizontal: 24,
-        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        ...T.shadowAccent,
     },
     btnPrimaryText: {
-        fontSize: 16,
+        color: T.bg,
         fontWeight: '800',
-        color: C.bg,
-        flex: 1,
-        textAlign: 'center',
-        letterSpacing: -0.3,
-    },
-    btnArrow: {
-        width: 32,
-        height: 32,
-        borderRadius: 10,
-        backgroundColor: C.bg + '30',
-        alignItems: 'center',
-        justifyContent: 'center',
+        fontSize: 16,
     },
     btnSecondary: {
-        borderRadius: 16,
-        paddingVertical: 15,
-        backgroundColor: C.surface,
-        borderWidth: 1,
-        borderColor: C.border,
+        borderRadius: T.radiusMd,
+        paddingVertical: 14,
+        backgroundColor: T.surface,
         alignItems: 'center',
     },
     btnSecondaryText: {
-        fontSize: 15,
+        color: T.textSecondary,
         fontWeight: '600',
-        color: C.textSecondary,
     },
     terms: {
         fontSize: 11,
-        color: C.textMuted,
+        color: T.textMuted,
         textAlign: 'center',
-        marginTop: 4,
-        lineHeight: 18,
-    },
-    termsLink: {
-        color: C.textSecondary,
-        fontWeight: '600',
     },
 });

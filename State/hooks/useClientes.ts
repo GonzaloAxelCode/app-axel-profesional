@@ -60,7 +60,7 @@ export const useClientes = () => {
         clientes: clientesQuery.data?.results || [],
         loading: clientesQuery.isLoading,
         error: clientesQuery.error,
-
+        loadClientes: clientesQuery.refetch,
         // 🔹 ACTIONS (tipo NgRx dispatch pero directo)
         getClienteByDocument,
 

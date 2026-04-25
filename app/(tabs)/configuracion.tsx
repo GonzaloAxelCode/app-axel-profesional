@@ -1,8 +1,8 @@
+import T from '@/constants/THEME';
 import { useAuthStore } from '@/State/store/useAuthStore';
-import { C } from '@/State/utils/c';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -11,7 +11,7 @@ import {
     View,
 } from 'react-native';
 import { Text } from 'react-native-paper';
-
+import { queryClient } from '../_layout';
 
 
 // ─── tipos ────────────────────────────────────────────────────────────────────
@@ -27,23 +27,33 @@ type RowItem = {
 
 // ─── ProfileCard ──────────────────────────────────────────────────────────────
 function ProfileCard() {
+    const { user, tienda, loadSession } = useAuthStore();
     const router = useRouter();
+    useEffect(() => {
+        loadSession();
+    }, []);
     return (
         <TouchableOpacity
             style={styles.profileCard}
             onPress={() => router.push('/settings/perfil')}
             activeOpacity={0.85}
         >
-            <View style={styles.profileAvatar}>
-                <Text style={styles.profileAvatarText}>JR</Text>
+            {/* Avatar grande al estilo de las imágenes */}
+            <View style={styles.profileAvatarWrap}>
+                <View style={styles.profileAvatar}>
+                    <Text style={styles.profileAvatarText}> {user?.username.charAt(0) || ''}</Text>
+                </View>
+                <View style={styles.profileOnlineDot} />
             </View>
             <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>Juan Rodríguez</Text>
-                <Text style={styles.profileRole}>Administrador</Text>
-                <Text style={styles.profileStore}>Tienda Centro · Lima</Text>
+                <Text style={styles.profileName}>{user?.first_name}</Text>
+                <View style={styles.profileRoleBadge}>
+                    <Text style={styles.profileRole}>{user?.is_staff ? 'Administrador' : 'Empleado'}</Text>
+                </View>
+                <Text style={styles.profileStore}>{tienda?.nombre} · {tienda?.direccion}</Text>
             </View>
             <View style={styles.profileArrow}>
-                <Icon name="chevron-right" size={18} color={C.textSecondary} />
+                <Icon name="chevron-right" size={18} color={T.textSecondary} />
             </View>
         </TouchableOpacity>
     );
@@ -52,14 +62,17 @@ function ProfileCard() {
 // ─── StatsRow ─────────────────────────────────────────────────────────────────
 function StatsRow() {
     const stats = [
-        { num: '1,284', label: 'Ventas' },
-        { num: '342', label: 'Productos' },
-        { num: '98', label: 'Clientes' },
+        { num: '1,284', label: 'Ventas', icon: 'cart-outline', color: T.accent },
+        { num: '342', label: 'Productos', icon: 'cube-outline', color: T.blue },
+        { num: '98', label: 'Clientes', icon: 'account-group-outline', color: T.purple },
     ];
     return (
         <View style={styles.statsRow}>
             {stats.map((s, i) => (
-                <View key={s.label} style={[styles.statBox, i < stats.length - 1 && { marginRight: 10 }]}>
+                <View key={s.label} style={[styles.statBox, i < stats.length - 1 && { marginRight: 8 }]}>
+                    <View style={[styles.statIcon, { backgroundColor: s.color + '18' }]}>
+                        <Icon name={s.icon as any} size={16} color={s.color} />
+                    </View>
                     <Text style={styles.statNum}>{s.num}</Text>
                     <Text style={styles.statLbl}>{s.label}</Text>
                 </View>
@@ -80,7 +93,11 @@ function SettingRow({ icon, iconBg, iconColor, title, subtitle, onPress, right }
                 <Text style={styles.rowSub}>{subtitle}</Text>
             </View>
             <View style={styles.rowRight}>
-                {right ?? <Icon name="chevron-right" size={18} color={C.textMuted} />}
+                {right ?? (
+                    <View style={styles.rowChevron}>
+                        <Icon name="chevron-right" size={15} color={T.textMuted} />
+                    </View>
+                )}
             </View>
         </TouchableOpacity>
     );
@@ -104,8 +121,8 @@ function SectionLabel({ label }: { label: string }) {
 }
 
 function Badge({ text, color = 'default' }: { text: string; color?: 'default' | 'green' | 'accent' }) {
-    const bgMap = { default: C.surfaceAlt, green: C.green + '18', accent: C.accentDim };
-    const fgMap = { default: C.textSecondary, green: C.green, accent: C.accent };
+    const bgMap = { default: T.surfaceAlt, green: T.green + '18', accent: T.accentDim };
+    const fgMap = { default: T.textSecondary, green: T.green, accent: T.accent };
     return (
         <View style={[styles.badge, { backgroundColor: bgMap[color], borderColor: fgMap[color] + '30' }]}>
             <Text style={[styles.badgeText, { color: fgMap[color] }]}>{text}</Text>
@@ -119,38 +136,41 @@ export default function SettingsScreen() {
     const { logout } = useAuthStore();
 
     const handleLogOut = async () => {
-        await logout();
-        router.replace('/login');
+        await logout();           // 1. primero mata sesión
+        queryClient.clear();
+        queryClient.removeQueries(); // 2. luego limpia cache
+        router.replace('/login'); // 3. navega
     };
-
     const negocioItems: RowItem[] = [
         {
             icon: 'store-outline',
-            iconBg: '#3b30c415',
-            iconColor: '#a78bfa',
+            iconBg: T.purple + '18',
+            iconColor: T.purple,
             title: 'Mi tienda',
             subtitle: 'Tienda Centro · RUC 20512345678',
             onPress: () => router.push('/settings/tienda'),
         },
         {
             icon: 'receipt-outline',
-            iconBg: '#c8f13515',
-            iconColor: C.accent,
+            iconBg: T.accentDim,
+            iconColor: T.accent,
             title: 'Comprobantes',
             subtitle: 'Series, IGV y configuración SUNAT',
             onPress: () => router.push('/settings/comprobantes'),
         },
         {
             icon: 'account-group-outline',
-            iconBg: '#93c5fd15',
-            iconColor: '#93c5fd',
+            iconBg: T.blue + '18',
+            iconColor: T.blue,
             title: 'Usuarios y roles',
             subtitle: 'Gestiona accesos del equipo',
             onPress: () => router.push('/settings/usuarios'),
             right: (
                 <View style={styles.rowRight}>
                     <Badge text="3" />
-                    <Icon name="chevron-right" size={18} color={C.textMuted} />
+                    <View style={styles.rowChevron}>
+                        <Icon name="chevron-right" size={15} color={T.textMuted} />
+                    </View>
                 </View>
             ),
         },
@@ -159,7 +179,7 @@ export default function SettingsScreen() {
     const inventarioItems: RowItem[] = [
         {
             icon: 'tag-outline',
-            iconBg: '#f9a8d415',
+            iconBg: '#f9a8d4' + '18',
             iconColor: '#f9a8d4',
             title: 'Categorías',
             subtitle: 'Organiza tus productos',
@@ -167,22 +187,24 @@ export default function SettingsScreen() {
         },
         {
             icon: 'chart-bar',
-            iconBg: '#22c55e15',
-            iconColor: C.green,
+            iconBg: T.green + '18',
+            iconColor: T.green,
             title: 'Alertas de stock',
             subtitle: 'Mínimo para notificarte',
             onPress: () => router.push('/settings/stock-alertas'),
             right: (
                 <View style={styles.rowRight}>
                     <Badge text="Activo" color="green" />
-                    <Icon name="chevron-right" size={18} color={C.textMuted} />
+                    <View style={styles.rowChevron}>
+                        <Icon name="chevron-right" size={15} color={T.textMuted} />
+                    </View>
                 </View>
             ),
         },
         {
             icon: 'download-outline',
-            iconBg: '#fcd34d15',
-            iconColor: '#fcd34d',
+            iconBg: T.yellow + '18',
+            iconColor: T.yellow,
             title: 'Exportar datos',
             subtitle: 'Excel, PDF o CSV',
             onPress: () => router.push('/settings/exportar'),
@@ -192,40 +214,40 @@ export default function SettingsScreen() {
     const preferenciaItems: RowItem[] = [
         {
             icon: 'weather-night',
-            iconBg: C.surfaceAlt,
-            iconColor: C.textSecondary,
+            iconBg: T.surfaceAlt,
+            iconColor: T.textSecondary,
             title: 'Modo oscuro',
             subtitle: 'Tema de la aplicación',
             right: (
                 <Switch
                     value={true}
                     onValueChange={() => { }}
-                    trackColor={{ false: C.border, true: C.accent }}
-                    thumbColor={C.bg}
-                    ios_backgroundColor={C.border}
+                    trackColor={{ false: T.border, true: T.accent }}
+                    thumbColor={T.bg}
+                    ios_backgroundColor={T.border}
                 />
             ),
         },
         {
             icon: 'bell-outline',
-            iconBg: C.surfaceAlt,
-            iconColor: C.textSecondary,
+            iconBg: T.surfaceAlt,
+            iconColor: T.textSecondary,
             title: 'Notificaciones',
             subtitle: 'Alertas y recordatorios',
             right: (
                 <Switch
                     value={true}
                     onValueChange={() => { }}
-                    trackColor={{ false: C.border, true: C.accent }}
-                    thumbColor={C.bg}
-                    ios_backgroundColor={C.border}
+                    trackColor={{ false: T.border, true: T.accent }}
+                    thumbColor={T.bg}
+                    ios_backgroundColor={T.border}
                 />
             ),
         },
         {
             icon: 'lock-outline',
-            iconBg: C.surfaceAlt,
-            iconColor: C.textSecondary,
+            iconBg: T.surfaceAlt,
+            iconColor: T.textSecondary,
             title: 'Seguridad',
             subtitle: 'PIN y biometría',
             onPress: () => router.push('/settings/seguridad'),
@@ -243,7 +265,7 @@ export default function SettingsScreen() {
                 contentContainerStyle={styles.scrollContent}
             >
                 <ProfileCard />
-                <StatsRow />
+
 
                 <SectionLabel label="Negocio" />
                 <Group items={negocioItems} />
@@ -257,16 +279,18 @@ export default function SettingsScreen() {
                 <SectionLabel label="Cuenta" />
                 <TouchableOpacity style={styles.dangerGroup} activeOpacity={0.8} onPress={handleLogOut}>
                     <View style={styles.dangerIcon}>
-                        <Icon name="logout" size={17} color={C.red} />
+                        <Icon name="logout" size={17} color={T.red} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={{ flex: 1, marginLeft: 12, }}>
                         <Text style={styles.dangerText}>Cerrar sesión</Text>
-                        <Text style={styles.dangerSub}>Juan Rodríguez · Administrador</Text>
+
                     </View>
-                    <Icon name="chevron-right" size={18} color={C.red + '60'} />
+                    <View style={[styles.rowChevron, { borderColor: T.red + '20' }]}>
+                        <Icon name="chevron-right" size={15} color={T.red + '80'} />
+                    </View>
                 </TouchableOpacity>
 
-                <Text style={styles.version}>v2.4.1 · Inventario App</Text>
+
             </ScrollView>
         </View>
     );
@@ -274,118 +298,130 @@ export default function SettingsScreen() {
 
 // ─── styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: C.bg },
+    screen: { flex: 1, backgroundColor: T.bg },
 
     header: {
-        paddingHorizontal: 24, paddingTop: 56, paddingBottom: 20,
-        backgroundColor: C.bg,
-        borderBottomWidth: 1, borderBottomColor: C.border,
+        paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20,
+        backgroundColor: T.bg, borderBottomWidth: 1, borderBottomColor: T.border,
     },
-    headerTitle: { fontSize: 28, fontWeight: '700', color: C.textPrimary, letterSpacing: -0.8 },
+    headerTitle: { fontSize: 30, fontWeight: '900', color: T.textPrimary, letterSpacing: -1 },
 
     scrollContent: { paddingBottom: 100 },
 
     // profile
     profileCard: {
-        margin: 20,
-        marginBottom: 0,
-        backgroundColor: C.surface,
-        borderRadius: 20,
+        margin: 20, marginBottom: 0,
+        backgroundColor: T.surface,
+        borderRadius: T.radiusXl,
         padding: 18,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: C.border,
+        flexDirection: 'row', alignItems: 'center',
+        borderWidth: 1, borderColor: T.border,
     },
+    profileAvatarWrap: { position: 'relative' },
     profileAvatar: {
-        width: 52, height: 52, borderRadius: 16,
-        backgroundColor: C.accent + '18',
+        width: 56, height: 56, borderRadius: 18,
+        backgroundColor: T.accentDim,
         alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1.5, borderColor: C.accent + '35',
+        borderWidth: 2, borderColor: T.accent + '40',
     },
-    profileAvatarText: { fontSize: 20, fontWeight: '800', color: C.accent },
+    profileAvatarText: { fontSize: 20, fontWeight: '900', color: T.accent },
+    profileOnlineDot: {
+        position: 'absolute', bottom: 2, right: 2,
+        width: 10, height: 10, borderRadius: 5,
+        backgroundColor: T.green, borderWidth: 2, borderColor: T.surface,
+    },
     profileInfo: { flex: 1, marginLeft: 14 },
-    profileName: { fontSize: 16, fontWeight: '800', color: C.textPrimary, letterSpacing: -0.3 },
-    profileRole: { fontSize: 12, color: C.accent, marginTop: 3, fontWeight: '600' },
-    profileStore: { fontSize: 12, color: C.textMuted, marginTop: 2 },
+    profileName: { fontSize: 16, fontWeight: '800', color: T.textPrimary, letterSpacing: -0.3 },
+    profileRoleBadge: {
+        alignSelf: 'flex-start',
+        backgroundColor: T.accentDim, borderRadius: 20,
+        paddingHorizontal: 8, paddingVertical: 2, marginTop: 4,
+        borderWidth: 1, borderColor: T.accent + '30',
+    },
+    profileRole: { fontSize: 11, color: T.accent, fontWeight: '700' },
+    profileStore: { fontSize: 12, color: T.textMuted, marginTop: 4 },
     profileArrow: {
-        width: 30, height: 30, borderRadius: 10,
-        backgroundColor: C.surfaceAlt,
+        width: 32, height: 32, borderRadius: 10,
+        backgroundColor: T.surfaceAlt,
         alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: C.border,
+        borderWidth: 1, borderColor: T.border,
     },
 
     // stats
     statsRow: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 14 },
     statBox: {
-        flex: 1, backgroundColor: C.surface, borderRadius: 14,
+        flex: 1, backgroundColor: T.surface, borderRadius: T.radiusMd,
         padding: 14, alignItems: 'center',
-        borderWidth: 1, borderColor: C.border,
+        borderWidth: 1, borderColor: T.border, gap: 4,
     },
-    statNum: { fontSize: 19, fontWeight: '800', color: C.textPrimary, letterSpacing: -0.5 },
-    statLbl: { fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: '700', marginTop: 3 },
+    statIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+    statNum: { fontSize: 18, fontWeight: '900', color: T.textPrimary, letterSpacing: -0.5 },
+    statLbl: { fontSize: 9, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: '700' },
 
     // section
     sectionLabel: {
-        fontSize: 10, color: C.textMuted, textTransform: 'uppercase',
-        letterSpacing: 1, fontWeight: '700',
-        marginTop: 10, marginBottom: 10,
+        fontSize: 10, color: T.textMuted, textTransform: 'uppercase',
+        letterSpacing: 1.5, fontWeight: '700',
+        marginTop: 20, marginBottom: 10,
         paddingHorizontal: 20,
     },
 
     // group
     group: {
         marginHorizontal: 20,
-        backgroundColor: C.surface,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: C.border,
+        backgroundColor: T.surface,
+        borderRadius: T.radiusLg,
+        borderWidth: 1, borderColor: T.border,
         overflow: 'hidden',
     },
-    groupDivider: { height: 1, backgroundColor: C.border, marginLeft: 60 },
+    groupDivider: { height: 1, backgroundColor: T.border, marginLeft: 62 },
 
     // row
-    row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13 },
+    row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 14 },
     rowIcon: {
-        width: 34, height: 34, borderRadius: 10,
+        width: 36, height: 36, borderRadius: 11,
         alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        borderWidth: 1, borderColor: C.border,
+        borderWidth: 1, borderColor: T.border,
     },
     rowContent: { flex: 1, marginLeft: 12 },
-    rowTitle: { fontSize: 14, fontWeight: '700', color: C.textPrimary },
-    rowSub: { fontSize: 12, color: C.textMuted, marginTop: 1 },
-    rowRight: { flexDirection: 'row', alignItems: 'center' },
+    rowTitle: { fontSize: 14, fontWeight: '700', color: T.textPrimary },
+    rowSub: { fontSize: 12, color: T.textMuted, marginTop: 1 },
+    rowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    rowChevron: {
+        width: 26, height: 26, borderRadius: 8,
+        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: T.border,
+    },
 
     // badge
     badge: {
-        borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3,
-        marginRight: 8, borderWidth: 1,
+        borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3,
+        borderWidth: 1,
     },
     badgeText: { fontSize: 11, fontWeight: '700' },
 
     // danger
     dangerGroup: {
+        marginBottom: 12,
         marginHorizontal: 20,
-        backgroundColor: C.red + '08',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: C.red + '25',
-        flexDirection: 'row',
-        alignItems: 'center',
+        backgroundColor: T.red + '0a',
+        borderRadius: T.radiusLg,
+        borderWidth: 1, borderColor: T.red + '25',
+        flexDirection: 'row', alignItems: 'center',
         padding: 14,
     },
     dangerIcon: {
-        width: 34, height: 34, borderRadius: 10,
-        backgroundColor: C.red + '15',
+        width: 36, height: 36, borderRadius: 11,
+        backgroundColor: T.red + '18',
         alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: C.red + '25',
+        borderWidth: 1, borderColor: T.red + '30',
     },
-    dangerText: { fontSize: 14, fontWeight: '700', color: C.red },
-    dangerSub: { fontSize: 12, color: C.red + '70', marginTop: 1 },
+    dangerText: { fontSize: 14, fontWeight: '700', color: T.red },
+    dangerSub: { fontSize: 12, color: T.red + '70', marginTop: 1 },
 
     version: {
-        textAlign: 'center', fontSize: 12,
-        color: C.textMuted, letterSpacing: 0.3,
+        textAlign: 'center', fontSize: 11,
+        color: T.textMuted, letterSpacing: 0.5, fontWeight: '500',
         marginTop: 28, marginBottom: 12,
     },
 });

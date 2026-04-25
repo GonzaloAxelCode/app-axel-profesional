@@ -1,8 +1,6 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// ClienteCard.tsx
-// ═══════════════════════════════════════════════════════════════════════════════
+
+import T from '@/constants/THEME';
 import { Cliente } from '@/State/models/cliente.models';
-import { C } from '@/State/utils/c';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
@@ -13,92 +11,174 @@ interface ClienteCardProps {
 }
 
 const initials = (name: string) =>
-  name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+  name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
-const AVATAR_COLORS = [C.accent, '#6ee7b7', '#93c5fd', '#f9a8d4', C.yellow, C.purple];
+const AVATAR_COLORS = [
+  T.accent,
+  T.blue,
+  T.green,
+  T.purple,
+  T.amber,
+  T.accent6,
+];
+
 const getAvatarColor = (seed: string) =>
   AVATAR_COLORS[(seed?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 
 export function ClienteCard({ cliente, onBuscar }: ClienteCardProps) {
   const hasCliente = cliente && (cliente.fullname !== '' || cliente.document !== '');
-  const avatarColor = hasCliente ? getAvatarColor(cliente?.fullname || '') : C.textMuted;
+  const avatarColor = hasCliente
+    ? getAvatarColor(cliente?.fullname || '')
+    : T.textMuted;
 
   return (
-    <View style={cStyles.card}>
-      <View style={cStyles.cardHead}>
-        <Text style={cStyles.secLabel}>CLIENTE</Text>
-        <TouchableOpacity style={cStyles.secAction} onPress={onBuscar}>
-          <Icon name="magnify" size={12} color={C.bg} />
-          <Text style={cStyles.secActionText}>Buscar</Text>
+    <View style={styles.card}>
+      <View style={styles.head}>
+        <Text style={styles.label}>CLIENTE</Text>
+
+        <TouchableOpacity style={styles.action} onPress={onBuscar}>
+          <Icon name="magnify" size={14} color={T.bg} />
+          <Text style={styles.actionText}>Buscar</Text>
         </TouchableOpacity>
       </View>
 
       {hasCliente ? (
-        <View style={cStyles.clientRow}>
-          <View style={[cStyles.avatar, { backgroundColor: avatarColor + '20', borderColor: avatarColor + '40', borderWidth: 1.5 }]}>
-            <Text style={[cStyles.avatarText, { color: avatarColor }]}>{initials(cliente?.fullname || '')}</Text>
+        <View style={styles.row}>
+          <View
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: avatarColor + '20',
+                borderColor: avatarColor + '50',
+              },
+            ]}
+          >
+            <Text style={[styles.avatarText, { color: avatarColor }]}>
+              {initials(cliente?.fullname || '')}
+            </Text>
           </View>
+
           <View style={{ flex: 1 }}>
-            <Text style={cStyles.clientName}>{cliente?.fullname}</Text>
-            <Text style={cStyles.prodMeta}>Documento · {cliente?.document}</Text>
+            <Text style={styles.name}>{cliente?.fullname}</Text>
+            <Text style={styles.meta}>Documento · {cliente?.document}</Text>
           </View>
-          <View style={cStyles.checkBadge}>
-            <Icon name="check" size={14} color={C.green} />
+
+          <View style={styles.ok}>
+            <Icon name="check" size={14} color={T.green} />
           </View>
         </View>
       ) : (
-        <View style={cStyles.clientRow}>
-          <View style={[cStyles.avatar, { backgroundColor: C.surfaceAlt, borderColor: C.border, borderWidth: 1 }]}>
-            <Icon name="account-outline" size={18} color={C.textMuted} />
+        <View style={styles.row}>
+          <View style={styles.avatarEmpty}>
+            <Icon name="account-outline" size={18} color={T.textMuted} />
           </View>
-          <Text style={cStyles.ghostText}>Selecciona un cliente</Text>
-          <Icon name="chevron-right" size={16} color={C.textMuted} />
+          <Text style={styles.empty}>Selecciona un cliente</Text>
+          <Icon name="chevron-right" size={16} color={T.textMuted} />
         </View>
       )}
     </View>
   );
 }
 
-const cStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    backgroundColor: C.surface,
+    backgroundColor: T.surface,
+    borderRadius: T.radiusLg,
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: T.border,
     overflow: 'hidden',
+    ...T.shadowCard,
   },
-  cardHead: {
+
+  head: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
     padding: 14,
-    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: C.border,
+    borderBottomColor: T.border,
+    backgroundColor: T.surfaceAlt,
   },
-  secLabel: { fontSize: 10, fontWeight: '800', color: C.textMuted, letterSpacing: 1.2, textTransform: 'uppercase' },
-  secAction: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: C.accent, borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 7,
+
+  label: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: T.textMuted,
+    letterSpacing: 1.2,
   },
-  secActionText: { fontSize: 13, fontWeight: '700', color: C.bg },
-  clientRow: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: 14, paddingHorizontal: 16, gap: 12,
+
+  action: {
+    flexDirection: 'row',
+    gap: 6,
+    backgroundColor: T.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: T.radiusFull,
+    alignItems: 'center',
   },
+
+  actionText: {
+    color: T.bg,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+
   avatar: {
-    width: 42, height: 42, borderRadius: 13,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: 44,
+    height: 44,
+    borderRadius: T.radiusMd,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
   },
-  avatarText: { fontSize: 15, fontWeight: '800' },
-  clientName: { fontSize: 15, fontWeight: '700', color: C.textPrimary },
-  prodMeta: { fontSize: 12, color: C.textSecondary, marginTop: 2 },
-  ghostText: { fontSize: 14, color: C.textMuted, flex: 1 },
-  checkBadge: {
-    width: 28, height: 28, borderRadius: 8,
-    backgroundColor: C.green + '15',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: C.green + '30',
+
+  avatarText: {
+    fontWeight: '800',
+  },
+
+  avatarEmpty: {
+    width: 44,
+    height: 44,
+    borderRadius: T.radiusMd,
+    backgroundColor: T.surfaceAlt,
+    borderWidth: 1,
+    borderColor: T.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  name: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: T.textPrimary,
+  },
+
+  meta: {
+    fontSize: 12,
+    color: T.textSecondary,
+    marginTop: 2,
+  },
+
+  empty: {
+    flex: 1,
+    color: T.textMuted,
+    fontSize: 14,
+  },
+
+  ok: {
+    width: 28,
+    height: 28,
+    borderRadius: T.radiusSm,
+    backgroundColor: T.green + '18',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: T.green + '30',
   },
 });

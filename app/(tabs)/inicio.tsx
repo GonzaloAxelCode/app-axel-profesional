@@ -1,12 +1,13 @@
 
-import { VentasUltimos30DiasChart } from '@/components/venta/VentasChart';
+import TopProductsMostSales from '@/components/venta/TopProductsMostSales';
+import { VentasChart } from '@/components/venta/VentasChart';
+import { VentasChart2 } from '@/components/venta/VentasChart copy';
+import T from '@/constants/THEME';
 import { useVentas } from '@/State/hooks/useVentas';
 import { Venta } from '@/State/models/venta.models';
-import { useVentaStore } from '@/State/store/useVentaStore';
-import { C } from '@/State/utils/c';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { memo, useEffect, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import {
     Dimensions,
     Platform,
@@ -17,13 +18,12 @@ import {
     View,
 } from 'react-native';
 
+
 const { width: W } = Dimensions.get('window');
-
-
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
-    `S/. ${n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
 const getInitials = (name: string) =>
     name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
@@ -49,6 +49,20 @@ const StatPill = memo(({ label, value }: { label: string; value: string }) => (
 ));
 StatPill.displayName = 'StatPill';
 
+// ─── ServiceChip ─────────────────────────────────────────────────────────────
+const ServiceChip = memo(({ icon, label, time }: { icon: string; label: string; time: string }) => (
+    <View style={styles.serviceChip}>
+        <View style={styles.serviceIconWrap}>
+            <Icon name={icon as any} size={18} color={T.accent} />
+        </View>
+        <View>
+            <Text style={styles.serviceTime}>{time}</Text>
+            <Text style={styles.serviceLabel}>{label}</Text>
+        </View>
+    </View>
+));
+ServiceChip.displayName = 'ServiceChip';
+
 // ─── TopProductRow ────────────────────────────────────────────────────────────
 const TopProductRow = memo(({
     nombre, cantidad, total, rank, maxCantidad,
@@ -56,10 +70,11 @@ const TopProductRow = memo(({
     nombre: string; cantidad: number; total: number; rank: number; maxCantidad: number;
 }) => {
     const pct = maxCantidad > 0 ? cantidad / maxCantidad : 0;
+    const isFirst = rank === 1;
     return (
         <View style={styles.listRow}>
-            <View style={[styles.rankBadge, rank === 1 && styles.rankBadge1]}>
-                <Text style={[styles.rankText, rank === 1 && styles.rankText1]}>{rank}</Text>
+            <View style={[styles.rankBadge, isFirst && styles.rankBadge1]}>
+                <Text style={[styles.rankText, isFirst && styles.rankText1]}>{rank}</Text>
             </View>
             <View style={{ flex: 1 }}>
                 <Text style={styles.listName} numberOfLines={1}>{nombre}</Text>
@@ -75,13 +90,13 @@ TopProductRow.displayName = 'TopProductRow';
 
 // ─── VentaRow ─────────────────────────────────────────────────────────────────
 const ESTADO_COLOR: Record<string, string> = {
-    aceptado: C.green, pendiente: C.accentDim, anulado: C.red, cancelado: C.textSecondary,
+    aceptado: T.green, pendiente: T.amber, anulado: T.red, cancelado: T.textSecondary,
 };
 
 const VentaRow = memo(({ venta }: { venta: Venta }) => {
     const cliente = venta.nombre_cliente || 'Cliente anónimo';
     const initials = getInitials(cliente);
-    const dotColor = ESTADO_COLOR[venta.estado?.toLowerCase()] ?? C.textSecondary;
+    const dotColor = ESTADO_COLOR[venta.estado?.toLowerCase()] ?? T.textSecondary;
 
     return (
         <View style={styles.listRow}>
@@ -111,7 +126,7 @@ function SectionHeader({
         <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{title}</Text>
             {action && (
-                <TouchableOpacity onPress={onAction}>
+                <TouchableOpacity onPress={onAction} style={styles.seeAllBtn}>
                     <Text style={styles.sectionAction}>{action}</Text>
                 </TouchableOpacity>
             )}
@@ -123,17 +138,9 @@ function SectionHeader({
 export default function InicioScreen() {
     const router = useRouter();
     const { resumenVentas, ventasHoy, topProductosHoy } = useVentas();
-    const { loadVentasRangoFechas } = useVentaStore();
 
-    useEffect(() => {
-        const end = new Date();
-        const start = new Date();
-        start.setDate(start.getDate() - 30);
-        loadVentasRangoFechas(
-            start.toISOString().split('T')[0],
-            end.toISOString().split('T')[0],
-        );
-    }, []);
+
+
 
     const todaySales = resumenVentas?.todaySales ?? 0;
     const weekSales = resumenVentas?.thisWeekSales ?? 0;
@@ -154,25 +161,51 @@ export default function InicioScreen() {
         >
             {/* ── Header ── */}
             <View style={styles.header}>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.greeting} numberOfLines={1}>{today}</Text>
-                    <Text style={styles.storeName}>Axel Accesories</Text>
+                <View style={styles.headerLeft}>
+                    <View style={styles.locationRow}>
+                        <Icon name="map-marker-outline" size={12} color={T.textSecondary} />
+                        <Text style={styles.locationText}>Lima, Perú</Text>
+                    </View>
+                    <View style={styles.greetingRow}>
+                        <Text style={styles.greeting}>Hola, </Text>
+                        <Text style={styles.greetingBold}>Bienvenido 👋</Text>
+                    </View>
                 </View>
-                <TouchableOpacity
-                    style={styles.avatarBtn}
-                    onPress={() => router.push('/configuracion')}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.avatarBtnText}>MT</Text>
-                </TouchableOpacity>
+                <View style={styles.headerRight}>
+                    <TouchableOpacity style={styles.iconBtn}>
+                        <Icon name="bell-outline" size={20} color={T.textPrimary} />
+                        <View style={styles.notifDot} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.avatarBtn}
+                        onPress={() => router.push('/configuracion')}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.avatarBtnText}>MT</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* ── Store name ── */}
+            <View style={styles.storeNameWrap}>
+                <Text style={styles.storeName}>Axel Accesories</Text>
+                <Text style={styles.storeSubtitle}>Panel de control · {today}</Text>
             </View>
 
             {/* ── Hero card ── */}
             <View style={styles.heroCard}>
-                <View style={styles.heroDot} />
-                <Text style={styles.heroLabel}>Ventas de Hoy</Text>
-                <Text style={styles.heroValue}>{fmt(todaySales)}</Text>
-                <Text style={styles.heroSub}>Actualizado ahora</Text>
+                <View style={styles.heroGlow} />
+                <View style={styles.heroTopRow}>
+                    <View>
+                        <Text style={styles.heroLabel}>Ventas de Hoy</Text>
+                        <Text style={styles.heroValue}>{fmt(todaySales)}</Text>
+                    </View>
+                    <View style={styles.heroLiveBadge}>
+                        <View style={styles.heroLiveDot} />
+                        <Text style={styles.heroLiveText}>En vivo</Text>
+                    </View>
+                </View>
+                <Text style={styles.heroSub}>Actualizado ahora mismo</Text>
                 <View style={styles.heroRule} />
                 <View style={styles.heroStats}>
                     <StatPill label="Hoy" value={fmt(todaySales)} />
@@ -183,21 +216,55 @@ export default function InicioScreen() {
                 </View>
             </View>
 
-            {/* ── Chart ── */}
-            <SectionHeader title="Estadísticas" />
-            <View style={styles.card}>
+            {/* ── Services row (decorativo como en el diseño) ── */}
+            <SectionHeader title="Servicios rápidos" action="Ver todo" />
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.servicesScroll}
+                style={{ marginBottom: 24 }}
+            >
+                <ServiceChip icon="cart-plus" label="Nueva Venta" time="Rápido" />
+                <ServiceChip icon="package-variant" label="Productos" time="Inventario" />
+                <ServiceChip icon="account-group" label="Clientes" time="Registros" />
+                <ServiceChip icon="chart-line" label="Reportes" time="Estadísticas" />
+            </ScrollView>
 
-                <VentasUltimos30DiasChart />
+            {/* ── Chart ── */}
+            <SectionHeader title="Estadísticas 30 días" />
+            <View style={styles.card}>
+                <VentasChart />
+                <VentasChart2 />
+
             </View>
 
-            {/* ── Top productos ── */}
+            <TopProductsMostSales />
+
+
+
+
+
+
+
+
+
+            {/* ── Recent Laundry style card — Top productos ── */}
             {(topProductosHoy?.length ?? 0) > 0 && (
                 <>
                     <SectionHeader
-                        title="Top productos"
+                        title="Top productos hoy"
                         action={`${topProductosHoy!.length} items`}
                     />
-                    <View style={styles.card}>
+                    <View style={styles.recentCard}>
+                        <View style={styles.recentCardHeader}>
+                            <Text style={styles.recentCardDate}>
+                                Hoy, {new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' })}
+                            </Text>
+                            <View style={styles.recentCardBadge}>
+                                <Icon name="trending-up" size={12} color={T.accent} />
+                                <Text style={styles.recentCardBadgeText}>+12%</Text>
+                            </View>
+                        </View>
                         {topProductosHoy!.slice(0, 5).map((p, i) => (
                             <React.Fragment key={p.producto_id ?? i}>
                                 <TopProductRow
@@ -225,8 +292,11 @@ export default function InicioScreen() {
 
             {ventasDeHoy.length === 0 ? (
                 <View style={styles.emptyState}>
-                    <Icon name="receipt-text-outline" size={28} color={C.textMuted} />
+                    <View style={styles.emptyIconWrap}>
+                        <Icon name="receipt-text-outline" size={28} color={T.accent} />
+                    </View>
                     <Text style={styles.emptyText}>Sin ventas hoy todavía</Text>
+                    <Text style={styles.emptySubText}>Las ventas aparecerán aquí</Text>
                 </View>
             ) : (
                 <View style={[styles.card, { marginBottom: 110 }]}>
@@ -244,98 +314,170 @@ export default function InicioScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: C.bg },
+    root: { flex: 1, backgroundColor: T.bg },
     content: { paddingTop: Platform.OS === 'ios' ? 56 : 24, paddingBottom: 24 },
 
     // Header
     header: {
-        flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: 20, marginBottom: 20, paddingTop: 16, gap: 12,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 20, paddingTop: 16, marginBottom: 8,
     },
-    greeting: { fontSize: 12, color: C.textSecondary, fontWeight: '500', textTransform: 'capitalize', marginBottom: 3 },
-    storeName: { fontSize: 24, fontWeight: '800', color: C.textPrimary, letterSpacing: -0.5 },
-    avatarBtn: {
-        width: 40, height: 40, borderRadius: 20,
-        backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.accent + '40',
+    headerLeft: { flex: 1 },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+    locationText: { fontSize: 11, color: T.textSecondary, fontWeight: '500' },
+    greetingRow: { flexDirection: 'row', alignItems: 'baseline' },
+    greeting: { fontSize: 22, color: T.textSecondary, fontWeight: '500' },
+    greetingBold: { fontSize: 22, color: T.textPrimary, fontWeight: '800', letterSpacing: -0.5 },
+    iconBtn: {
+        width: 40, height: 40, borderRadius: 12,
+        backgroundColor: T.surface, borderWidth: 1, borderColor: T.border,
         alignItems: 'center', justifyContent: 'center',
     },
-    avatarBtnText: { fontSize: 12, fontWeight: '800', color: C.accent },
+    notifDot: {
+        position: 'absolute', top: 8, right: 8,
+        width: 7, height: 7, borderRadius: 4,
+        backgroundColor: T.red, borderWidth: 1.5, borderColor: T.bg,
+    },
+    avatarBtn: {
+        width: 40, height: 40, borderRadius: 12,
+        backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '40',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    avatarBtnText: { fontSize: 13, fontWeight: '800', color: T.accent },
+
+    // Store name
+    storeNameWrap: { paddingHorizontal: 20, marginBottom: 20 },
+    storeName: { fontSize: 32, fontWeight: '900', color: T.textPrimary, letterSpacing: -1.5 },
+    storeSubtitle: { fontSize: 12, color: T.textMuted, marginTop: 4, textTransform: 'capitalize' },
 
     // Hero
     heroCard: {
-        marginHorizontal: 20, backgroundColor: C.surface,
+        marginHorizontal: 20, backgroundColor: T.surface,
         borderRadius: 24, padding: 22, marginBottom: 28,
-        borderWidth: 1, borderColor: C.border,
+        borderWidth: 1, borderColor: T.border,
+        overflow: 'hidden',
     },
-    heroDot: {
-        width: 8, height: 8, borderRadius: 4,
-        backgroundColor: C.accent, marginBottom: 10,
+    heroGlow: {
+        position: 'absolute', top: -40, right: -40,
+        width: 160, height: 160, borderRadius: 80,
+        backgroundColor: T.accent + '08',
     },
-    heroLabel: { fontSize: 13, color: C.textSecondary, marginBottom: 6 },
-    heroValue: { fontSize: 42, fontWeight: '800', color: C.textPrimary, letterSpacing: -2, lineHeight: 46 },
-    heroSub: { fontSize: 12, color: C.textMuted, marginTop: 6 },
-    heroRule: { height: 1, backgroundColor: C.border, marginVertical: 18 },
+    heroTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+    heroLabel: { fontSize: 12, color: T.textSecondary, marginBottom: 8, fontWeight: '500' },
+    heroValue: { fontSize: 40, fontWeight: '900', color: T.textPrimary, letterSpacing: -2, lineHeight: 44 },
+    heroLiveBadge: {
+        flexDirection: 'row', alignItems: 'center', gap: 5,
+        backgroundColor: T.green + '15', borderRadius: 20,
+        paddingHorizontal: 10, paddingVertical: 5,
+        borderWidth: 1, borderColor: T.green + '30',
+    },
+    heroLiveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: T.green },
+    heroLiveText: { fontSize: 11, color: T.green, fontWeight: '700' },
+    heroSub: { fontSize: 11, color: T.textMuted, marginTop: 6 },
+    heroRule: { height: 1, backgroundColor: T.border, marginVertical: 18 },
     heroStats: { flexDirection: 'row' },
-    heroStatDivider: { width: 1, backgroundColor: C.border },
+    heroStatDivider: { width: 1, backgroundColor: T.border },
     statPill: { flex: 1, alignItems: 'center', gap: 4 },
-    statPillVal: { fontSize: 18, fontWeight: '700', color: C.textPrimary },
-    statPillLbl: { fontSize: 11, color: C.textSecondary },
+    statPillVal: { fontSize: 16, fontWeight: '700', color: T.textPrimary },
+    statPillLbl: { fontSize: 10, color: T.textSecondary, fontWeight: '500' },
+
+    // Services
+    servicesScroll: { paddingLeft: 20, paddingRight: 8, gap: 10 },
+    serviceChip: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        backgroundColor: T.surface, borderRadius: 16,
+        borderWidth: 1, borderColor: T.border,
+        paddingHorizontal: 14, paddingVertical: 12,
+    },
+    serviceIconWrap: {
+        width: 36, height: 36, borderRadius: 10,
+        backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '30',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    serviceTime: { fontSize: 9, color: T.accent, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+    serviceLabel: { fontSize: 13, fontWeight: '600', color: T.textPrimary, marginTop: 1 },
 
     // Section
     sectionHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', paddingHorizontal: 20, marginBottom: 12,
     },
-    sectionTitle: { fontSize: 16, fontWeight: '700', color: C.textPrimary },
-    sectionAction: { fontSize: 12, color: C.accent },
+    sectionTitle: { fontSize: 16, fontWeight: '700', color: T.textPrimary, letterSpacing: -0.3 },
+    seeAllBtn: {
+        backgroundColor: T.surface, borderRadius: 20,
+        paddingHorizontal: 12, paddingVertical: 5,
+        borderWidth: 1, borderColor: T.border,
+    },
+    sectionAction: { fontSize: 11, color: T.accent, fontWeight: '600' },
 
     // Card
     card: {
-        marginHorizontal: 20, backgroundColor: C.surface,
-        borderRadius: 20, padding: 0, marginBottom: 24,
-        borderWidth: 1, borderColor: C.border,
+        marginHorizontal: 20, backgroundColor: T.surface,
+        borderRadius: 20, padding: 16, marginBottom: 24,
+        borderWidth: 1, borderColor: T.border,
     },
 
-    // Chart
-    chartTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    chartLabel: { fontSize: 13, color: C.textSecondary },
-    chipAccent: { backgroundColor: C.accentDim, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-    chipAccentText: { fontSize: 12, fontWeight: '700', color: C.accent },
+    // Recent card (PureSpin-style)
+    recentCard: {
+        marginHorizontal: 20, backgroundColor: T.surface,
+        borderRadius: 20, padding: 16, marginBottom: 24,
+        borderWidth: 1, borderColor: T.border,
+    },
+    recentCardHeader: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: 14,
+    },
+    recentCardDate: { fontSize: 11, color: T.textMuted, fontWeight: '500', textTransform: 'capitalize' },
+    recentCardBadge: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        backgroundColor: T.accentDim, borderRadius: 20,
+        paddingHorizontal: 8, paddingVertical: 3,
+    },
+    recentCardBadgeText: { fontSize: 11, color: T.accent, fontWeight: '700' },
 
     // List
     listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-    rowDivider: { height: 1, backgroundColor: C.border },
+    rowDivider: { height: 1, backgroundColor: T.border },
 
     // Rank
     rankBadge: {
-        width: 26, height: 26, borderRadius: 8,
-        backgroundColor: C.surfaceAlt, alignItems: 'center', justifyContent: 'center',
+        width: 28, height: 28, borderRadius: 9,
+        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: T.border,
     },
-    rankBadge1: { backgroundColor: C.accent },
-    rankText: { fontSize: 12, fontWeight: '700', color: C.textSecondary },
-    rankText1: { color: C.bg },
+    rankBadge1: { backgroundColor: T.accent, borderColor: T.accent },
+    rankText: { fontSize: 12, fontWeight: '700', color: T.textSecondary },
+    rankText1: { color: T.bg },
 
     // Progress
-    prog: { height: 2, backgroundColor: C.border, borderRadius: 1, marginTop: 6, overflow: 'hidden' },
-    progFill: { height: '100%', backgroundColor: C.accent, borderRadius: 1 },
+    prog: { height: 3, backgroundColor: T.border, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
+    progFill: { height: '100%', backgroundColor: T.accent, borderRadius: 2 },
 
     // Avatar
     avatarCircle: {
-        width: 36, height: 36, borderRadius: 12,
-        backgroundColor: C.surfaceAlt, alignItems: 'center', justifyContent: 'center',
+        width: 38, height: 38, borderRadius: 12,
+        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: T.border,
     },
-    avatarText: { fontSize: 12, fontWeight: '700', color: C.textSecondary },
+    avatarText: { fontSize: 12, fontWeight: '700', color: T.accent },
 
     // Text
-    listName: { fontSize: 13, fontWeight: '600', color: C.textPrimary },
-    listSub: { fontSize: 11, color: C.textSecondary, marginTop: 2 },
-    listAmt: { fontSize: 14, fontWeight: '700', color: C.textPrimary },
+    listName: { fontSize: 13, fontWeight: '600', color: T.textPrimary },
+    listSub: { fontSize: 11, color: T.textSecondary, marginTop: 2 },
+    listAmt: { fontSize: 14, fontWeight: '700', color: T.textPrimary },
     estadoDot: { width: 6, height: 6, borderRadius: 3 },
 
     // Empty
     emptyState: {
         alignItems: 'center', justifyContent: 'center',
-        gap: 10, paddingVertical: 48, marginBottom: 110,
+        gap: 8, paddingVertical: 48, marginBottom: 110,
     },
-    emptyText: { fontSize: 13, color: C.textMuted },
+    emptyIconWrap: {
+        width: 60, height: 60, borderRadius: 18,
+        backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '30',
+        alignItems: 'center', justifyContent: 'center', marginBottom: 4,
+    },
+    emptyText: { fontSize: 14, color: T.textSecondary, fontWeight: '600' },
+    emptySubText: { fontSize: 12, color: T.textMuted },
 });

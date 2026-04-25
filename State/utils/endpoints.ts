@@ -1,6 +1,6 @@
 
 
-export const URL_DESA = 'http://10.200.250.246:8000';
+export const URL_DESA = 'http://10.203.187.42:8000';
 export const URL_PROD = 'https://inventarioaxel.duckdns.org';
 
 export const PRODUCTION = true; // Cambia a false para desarrollo
@@ -28,6 +28,7 @@ export const URLS = {
     RESUMEN_VENTAS: URL_BASE + '/api/ventas/resumen/',
     RESUMEN_VENTAS_BY_DATE: URL_BASE + '/api/ventas/resumenbymonthorday/',
     TOP_PRODUCTOS_HOY: URL_BASE + '/api/ventas/top-productos-vendidos-hoy/',
+    TOP_PRODUCTOS_VENTAS_BY_DATE: URL_BASE + '/api/ventas/top-productos-vendidos/',
     CREAR_VENTA: URL_BASE + '/api/ventas/crear/',
     CREAR_VENTA_PENDIENTE: URL_BASE + '/api/ventas/crear/pendiente/',
     CREAR_VENTA_ANONIMA: URL_BASE + '/api/ventas/crear/anonima/',

@@ -34,16 +34,11 @@ export const fetchWithAuth = async (url: string, options: FetchOptions = {}) => 
         data = null;
     }
 
-    console.log('📡 RESPONSE:', {
-        url,
-        status: res.status,
-        ok: res.ok,
-        data,
-    });
+
 
     // 🔐 Manejo de 401 (intento de refresh)
     if (res.status === 401 && auth && refreshToken) {
-        console.log('🔄 Intentando refresh token...');
+
 
         try {
             const refreshRes = await fetch('http://10.200.250.246:8000/api/token/refresh/', {
@@ -79,7 +74,7 @@ export const fetchWithAuth = async (url: string, options: FetchOptions = {}) => 
 
             return retryData;
         } catch (err) {
-            console.log('❌ Refresh falló, cerrar sesión');
+
             await AsyncStorage.multiRemove(['access', 'refresh']);
             throw new Error('Sesión expirada');
         }

@@ -1,7 +1,8 @@
-import { VentaDetalleModal } from "@/components/venta/VentaDetailModal";
+import VentaDetalleModal from "@/components/venta/VentaDetailModal";
+import T from "@/constants/THEME";
 import { useVentas } from "@/State/hooks/useVentas";
 import { Venta } from "@/State/models/venta.models";
-import { C } from "@/State/utils/c";
+import { useVentaStore } from "@/State/store/useVentaStore";
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -15,7 +16,7 @@ import {
 } from "react-native";
 import { Text } from "react-native-paper";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── (MISMAS HELPERS, NO CAMBIO) ─────────────────────────────────────────────
 const formatFecha = (fecha: string) => {
     if (!fecha) return '—';
     return new Date(fecha).toLocaleDateString('es-PE', {
@@ -25,10 +26,10 @@ const formatFecha = (fecha: string) => {
 };
 
 const ESTADO_CFG: Record<string, { color: string; bg: string }> = {
-    aceptado: { color: '#4ade80', bg: '#4ade8014' },
-    pendiente: { color: C.amber, bg: C.amber + '14' },
-    anulado: { color: C.red, bg: C.red + '14' },
-    cancelado: { color: C.textSecondary, bg: C.border },
+    aceptado: { color: T.green, bg: T.green + '18' },
+    pendiente: { color: T.amber, bg: T.amber + '18' },
+    anulado: { color: T.red, bg: T.red + '18' },
+    cancelado: { color: T.textSecondary, bg: T.border },
 };
 const getEstado = (e: string) => ESTADO_CFG[e?.toLowerCase()] ?? ESTADO_CFG.cancelado;
 
@@ -40,7 +41,7 @@ const getTipoLabel = (tipo: string) =>
 
 const getInitial = (n: string) => n?.trim()?.charAt(0)?.toUpperCase() ?? '?';
 
-const AVATAR_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+const AVATAR_COLORS = [T.accent, T.green, T.blue, '#f9a8d4', T.amber, T.purple];
 const getAvatarColor = (n: string) =>
     AVATAR_COLORS[(n?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 
@@ -69,7 +70,7 @@ const buildList = (ventas: Venta[]): ListItem[] => {
     return result;
 };
 
-// ─── VentaCard ────────────────────────────────────────────────────────────────
+// ─── CARD PREMIUM ─────────────────────────────────────────────────────────────
 function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
     const estado = getEstado(venta.estado);
     const tipoLabel = getTipoLabel(venta.comprobante?.tipo_comprobante ?? venta.tipo_comprobante);
@@ -78,61 +79,73 @@ function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
     const avatarColor = getAvatarColor(venta.nombre_cliente ?? '');
 
     return (
-        <TouchableOpacity style={styles.ventaCard} onPress={onPress} activeOpacity={0.7}>
-            {/* Top row */}
-            <View style={styles.cardTop}>
-                <View style={[styles.cardAvatar, { backgroundColor: avatarColor + '18' }]}>
-                    <Text style={[styles.cardAvatarText, { color: avatarColor }]}>
+        <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
+
+            {/* TOP */}
+            <View style={styles.topRow}>
+                <View style={[styles.avatar, { backgroundColor: avatarColor + '25' }]}>
+                    <Text style={[styles.avatarText, { color: avatarColor }]}>
                         {getInitial(venta.nombre_cliente)}
                     </Text>
                 </View>
+
                 <View style={{ flex: 1 }}>
-                    <Text style={styles.cardCliente} numberOfLines={1}>
+                    <Text style={styles.cliente} numberOfLines={1}>
                         {venta.nombre_cliente || 'Anónimo'}
                     </Text>
-                    <Text style={styles.cardSerie}>{serie}-{correlativo} · {tipoLabel}</Text>
+
+                    <Text style={styles.serie}>
+                        {serie}-{correlativo} · {tipoLabel}
+                    </Text>
                 </View>
-                <View style={[styles.estadoBadge, { backgroundColor: estado.bg }]}>
-                    <View style={[styles.estadoDot, { backgroundColor: estado.color }]} />
-                    <Text style={[styles.estadoText, { color: estado.color }]}>
-                        {venta.estado?.charAt(0).toUpperCase() + venta.estado?.slice(1)}
+
+                <View style={[styles.badge, { backgroundColor: estado.bg }]}>
+                    <View style={[styles.dot, { backgroundColor: estado.color }]} />
+                    <Text style={[styles.badgeText, { color: estado.color }]}>
+                        {venta.estado}
                     </Text>
                 </View>
             </View>
 
-            {/* Bottom row */}
-            <View style={styles.cardBottom}>
-                <View style={styles.cardMeta}>
-                    <Text style={styles.cardMetaLabel}>MÉTODO</Text>
-                    <Text style={styles.cardMetaValue}>{venta.metodo_pago?.toUpperCase() ?? '—'}</Text>
+            {/* DIVIDER */}
+            <View style={styles.divider} />
+
+            {/* BOTTOM */}
+            <View style={styles.bottomRow}>
+                <View style={styles.meta}>
+                    <Text style={styles.metaLabel}>MÉTODO</Text>
+                    <Text style={styles.metaValue}>{venta.metodo_pago?.toUpperCase()}</Text>
                 </View>
-                <View style={styles.cardMeta}>
-                    <Text style={styles.cardMetaLabel}>FECHA</Text>
-                    <Text style={styles.cardMetaValue}>{formatFecha(venta.fecha_hora)}</Text>
+
+                <View style={styles.meta}>
+                    <Text style={styles.metaLabel}>FECHA</Text>
+                    <Text style={styles.metaValue}>{formatFecha(venta.fecha_hora)}</Text>
                 </View>
-                <View style={[styles.cardMeta, { alignItems: 'flex-end' }]}>
-                    <Text style={styles.cardMetaLabel}>TOTAL</Text>
-                    <Text style={styles.cardTotal}>S/ {venta.total}</Text>
+
+                <View style={[styles.meta, { alignItems: 'flex-end' }]}>
+                    <Text style={styles.metaLabel}>TOTAL</Text>
+                    <Text style={styles.total}>S/ {venta.total}</Text>
                 </View>
             </View>
         </TouchableOpacity>
     );
 }
 
-
-// ─── VentasScreen ─────────────────────────────────────────────────────────────
-export default function VentasScreen() {
+// ─── SCREEN ───────────────────────────────────────────────────────────────────
+export default function VentasScreenPremium() {
     const {
         ventasPorTienda,
         loadingVentasHoy,
         fetchNextVentasPage,
         hasNextVentasPage,
         isFetchingNextVentasPage,
-        refetchVentas,
+        refreshVentasPorTienda,
     } = useVentas();
+
     const router = useRouter();
-    const [selectedVenta, setSelectedVenta] = useState<Venta | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const { temporaryVenta, showVentaDetailTemporary, } = useVentaStore();
+
 
     const listData = useMemo(
         () => buildList(ventasPorTienda ?? []),
@@ -141,14 +154,14 @@ export default function VentasScreen() {
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        try { await refetchVentas(); }
+        try { await refreshVentasPorTienda(); }
         finally { setRefreshing(false); }
     };
 
     if (loadingVentasHoy) {
         return (
             <View style={styles.loadingWrap}>
-                <ActivityIndicator size="large" color={C.accent} />
+                <ActivityIndicator size="large" color={T.accent} />
                 <Text style={styles.loadingText}>Cargando ventas...</Text>
             </View>
         );
@@ -156,21 +169,21 @@ export default function VentasScreen() {
 
     return (
         <View style={styles.screen}>
-            {/* Header */}
+
+            {/* HEADER */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.headerTitle}>Ventas</Text>
-                    <Text style={styles.headerSub}>
-                        {ventasPorTienda?.length} registro{ventasPorTienda?.length !== 1 ? 's' : ''}
+                    <Text style={styles.title}>Ventas</Text>
+                    <Text style={styles.subtitle}>
+                        {ventasPorTienda?.length ?? 0} registros
                     </Text>
                 </View>
+
                 <TouchableOpacity
-                    style={styles.fab}
+                    style={styles.addBtn}
                     onPress={() => router.push('/hacerventa')}
-                    activeOpacity={0.85}
                 >
-                    <Icon name="plus" size={15} color={C.bg} />
-                    <Text style={styles.fabText}>Nueva Venta</Text>
+                    <Icon name="plus" size={18} color={T.bg} />
                 </TouchableOpacity>
             </View>
 
@@ -179,14 +192,13 @@ export default function VentasScreen() {
                 keyExtractor={(item, index) =>
                     item.type === 'divider' ? `d-${item.fecha}` : `v-${item.data.id}`
                 }
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={styles.list}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={handleRefresh}
-                        tintColor={C.accent}
-                        colors={[C.accent]}
+                        tintColor={T.accent}
                     />
                 }
                 onEndReached={() => {
@@ -195,100 +207,179 @@ export default function VentasScreen() {
                 onEndReachedThreshold={0.3}
                 ListFooterComponent={
                     isFetchingNextVentasPage ? (
-                        <ActivityIndicator size="small" color={C.accent} style={{ marginVertical: 16 }} />
+                        <ActivityIndicator size="small" color={T.accent} style={{ marginVertical: 16 }} />
                     ) : null
-                }
-                ListEmptyComponent={
-                    <View style={styles.emptyWrap}>
-                        <Icon name="receipt-text-outline" size={48} color={C.textMuted} />
-                        <Text style={styles.emptyTitle}>Sin ventas</Text>
-                        <Text style={styles.emptySubtitle}>No hay registros para mostrar</Text>
-                    </View>
                 }
                 renderItem={({ item }) => {
                     if (item.type === 'divider') {
                         return (
                             <View style={styles.dividerWrap}>
-                                <View style={styles.dividerLine} />
+                                <View style={styles.line} />
                                 <Text style={styles.dividerText}>{formatDivider(item.fecha)}</Text>
-                                <View style={styles.dividerCount}>
-                                    <Text style={styles.dividerCountText}>{item.count}</Text>
+                                <View style={styles.count}>
+                                    <Text style={styles.countText}>{item.count}</Text>
                                 </View>
-                                <View style={styles.dividerLine} />
+                                <View style={styles.line} />
                             </View>
                         );
                     }
+
                     return (
-                        <VentaCard venta={item.data} onPress={() => setSelectedVenta(item.data)} />
+                        <VentaCard
+                            venta={item.data}
+                            onPress={() => {
+                                useVentaStore.setState({
+                                    temporaryVenta: item.data,
+                                    showVentaDetailTemporary: true
+                                });
+                            }}
+                        />
                     );
                 }}
+                ListEmptyComponent={
+                    <View style={styles.emptyWrap}>
+                        <View style={styles.emptyIcon}>
+                            <Icon name="package-variant-closed" size={32} color={T.accent} />
+                        </View>
+                        <Text style={styles.emptyText}>Sin resultados</Text>
+                        <Text style={styles.emptySub}>No hay ventas</Text>
+                    </View>
+                }
             />
 
             <VentaDetalleModal
-                venta={selectedVenta}
-                visible={!!selectedVenta}
-                onClose={() => setSelectedVenta(null)}
+                venta={temporaryVenta}
+                visible={showVentaDetailTemporary}
+                onClose={() =>
+                    useVentaStore.setState({
+                        showVentaDetailTemporary: false,
+                        temporaryVenta: {} as Venta
+                    })
+                }
             />
         </View>
     );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── STYLES PREMIUM ───────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: C.bg },
-    loadingWrap: { flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center', gap: 12 },
-    loadingText: { fontSize: 14, color: C.textSecondary },
+    screen: { flex: 1, backgroundColor: T.bg },
 
     header: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
-        borderBottomWidth: 1, borderBottomColor: C.border,
+        paddingTop: 60,
+        paddingHorizontal: 20,
+        marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    headerTitle: { fontSize: 28, fontWeight: '800', color: C.textPrimary, letterSpacing: -0.5 },
-    headerSub: { fontSize: 12, color: C.textSecondary, marginTop: 2 },
+    title: { fontSize: 28, fontWeight: '900', color: T.textPrimary },
+    subtitle: { fontSize: 12, color: T.textSecondary },
 
-    fab: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: C.accent, borderRadius: 20,
-        paddingHorizontal: 14, paddingVertical: 10,
+    addBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        backgroundColor: T.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...T.shadowAccent,
     },
-    fabText: { color: C.bg, fontWeight: '700', fontSize: 13 },
 
-    listContent: { padding: 16, paddingBottom: 110 },
+    list: { paddingBottom: 120 },
 
-    ventaCard: {
-        backgroundColor: C.surface, borderRadius: 16,
-        padding: 14, marginBottom: 10,
-        borderWidth: 1, borderColor: C.border,
+    card: {
+        marginHorizontal: 20,
+        marginBottom: 14,
+        padding: 16,
+        borderRadius: T.radiusLg,
+        backgroundColor: T.surface,
+        borderWidth: 1,
+        borderColor: T.border,
+        ...T.shadowCard,
     },
-    cardTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-    cardAvatar: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    cardAvatarText: { fontSize: 16, fontWeight: '800' },
-    cardCliente: { fontSize: 14, fontWeight: '600', color: C.textPrimary },
-    cardSerie: { fontSize: 11, color: C.textSecondary, marginTop: 2 },
 
-    estadoBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 4 },
-    estadoDot: { width: 5, height: 5, borderRadius: 3 },
-    estadoText: { fontSize: 11, fontWeight: '600' },
+    topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 
-    cardBottom: { flexDirection: 'row', alignItems: 'flex-end' },
-    cardMeta: { flex: 1 },
-    cardMetaLabel: { fontSize: 9, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 },
-    cardMetaValue: { fontSize: 12, fontWeight: '500', color: C.textSecondary },
-    cardTotal: { fontSize: 16, fontWeight: '800', color: C.textPrimary },
+    avatar: {
+        width: 52,
+        height: 52,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarText: { fontSize: 20, fontWeight: '900' },
 
-    dividerWrap: { flexDirection: 'row', alignItems: 'center', marginVertical: 14, gap: 8 },
-    dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
-    dividerText: { fontSize: 11, color: C.textSecondary, textTransform: 'capitalize' },
-    dividerCount: { backgroundColor: C.surfaceAlt, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
-    dividerCountText: { fontSize: 10, color: C.textSecondary, fontWeight: '600' },
+    cliente: { fontSize: 15, fontWeight: '800', color: T.textPrimary },
+    serie: { fontSize: 12, color: T.textSecondary, marginTop: 2 },
 
-    emptyWrap: { alignItems: 'center', paddingTop: 80, gap: 10 },
-    emptyTitle: { fontSize: 17, fontWeight: '600', color: C.textSecondary },
-    emptySubtitle: { fontSize: 13, color: C.textMuted },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 20,
+    },
+    dot: { width: 6, height: 6, borderRadius: 3 },
+    badgeText: { fontSize: 11, fontWeight: '700' },
+
+    divider: {
+        height: 1,
+        backgroundColor: T.border,
+        marginVertical: 12,
+    },
+
+    bottomRow: { flexDirection: 'row' },
+
+    meta: { flex: 1 },
+    metaLabel: {
+        fontSize: 10,
+        color: T.textMuted,
+        textTransform: 'uppercase',
+    },
+    metaValue: {
+        fontSize: 13,
+        color: T.textSecondary,
+        marginTop: 3,
+    },
+    total: {
+        fontSize: 20,
+        fontWeight: '900',
+        color: T.accent,
+    },
+
+    dividerWrap: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 18,
+        gap: 10,
+        paddingHorizontal: 20,
+    },
+    line: { flex: 1, height: 1, backgroundColor: T.border },
+    dividerText: { fontSize: 12, color: T.textSecondary },
+    count: {
+        backgroundColor: T.accentDim,
+        borderRadius: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+    },
+    countText: { fontSize: 10, color: T.accent, fontWeight: '700' },
+
+    loadingWrap: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: T.bg,
+        gap: 10,
+    },
+    loadingText: { color: T.textSecondary },
+    emptyWrap: { alignItems: 'center', paddingTop: 60, gap: 10 },
+    emptyIcon: {
+        width: 64, height: 64, borderRadius: 20,
+        backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '30',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    emptyText: { fontSize: 15, color: T.textSecondary, fontWeight: '600' },
+    emptySub: { fontSize: 12, color: T.textMuted },
 });
-
-
-
-
-

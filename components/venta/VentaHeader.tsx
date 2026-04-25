@@ -1,14 +1,14 @@
-import { C } from '@/State/utils/c';
+import T from '@/constants/THEME';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { IconButton, MD3Colors, Text } from 'react-native-paper';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from 'react-native-paper';
 
 interface VentaHeaderProps {
   fecha?: Date;
 }
 
 export function VentaHeader({ fecha = new Date() }: VentaHeaderProps) {
-
   const fechaFormateada = fecha.toLocaleDateString('es-PE', {
     day: 'numeric',
     month: 'short',
@@ -22,57 +22,59 @@ export function VentaHeader({ fecha = new Date() }: VentaHeaderProps) {
 
   return (
     <View style={styles.header}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.hTitle}>Nueva venta</Text>
-          <Text style={styles.hSub}>
-            {fechaFormateada} · {horaFormateada}
-          </Text>
-        </View>
-      </View>
+      {/* BACK BUTTON */}
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Icon name="arrow-left" size={26} color={T.textPrimary} />
+      </TouchableOpacity>
 
-      <IconButton
-        icon="close"
-        size={30}
-        style={styles.closeBtn}
-        onPress={() => router.back()}
-        iconColor={MD3Colors.neutral10}
-      />
+      {/* CONTENT */}
+      <View style={styles.content}>
+        <Text style={styles.title}>Nueva venta</Text>
+        <Text style={styles.subtitle}>
+          {fechaFormateada} · {horaFormateada}
+        </Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 22,
-    paddingTop: 28,
-    paddingBottom: 16,
-    position: 'relative',
-  },
-  headerRow: {
+    display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 32,
+    paddingBottom: 12,
+    backgroundColor: T.bg,
   },
-  hTitle: {
-    fontSize: 34,
-    fontWeight: '800',
-    color: C.textPrimary,
-    letterSpacing: -1,
-    lineHeight: 36,
-    paddingTop: 25,
+
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: T.surfaceAlt,
+    marginTop: 0,
   },
-  hSub: {
-    fontSize: 15,
-    color: C.textSecondary,
+
+  content: {
+    marginTop: 10,
+  },
+
+  title: {
+    fontSize: 30,
+    fontWeight: '900',
+    color: T.textPrimary,
+    letterSpacing: -0.8,
+  },
+
+  subtitle: {
+    fontSize: 14,
+    color: T.textSecondary,
     marginTop: 6,
-  },
-  closeBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 50,
-    position: 'absolute',
-    right: 1,
-    top: 30,
   },
 });

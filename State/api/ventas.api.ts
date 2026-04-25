@@ -1,7 +1,7 @@
 // api/ventas.api.ts
 
 import { CreateVenta, Venta } from '../models/venta.models';
-import { ProductsSales } from '../store/useVentaStore';
+import { ProductoVendidoResumen, ProductsSales } from '../store/useVentaStore';
 import { URL_BASE } from '../utils/endpoints';
 import { fetchWithAuth } from './client';
 
@@ -57,7 +57,12 @@ export async function getTopProductosMasVendidosHoy(): Promise<{ topProductoMost
         body: JSON.stringify({}),
     });
 }
-
+export async function getTopProductosMasVendidos(): Promise<{ topProductoMostSalesByDate: ProductoVendidoResumen }> {
+    return fetchWithAuth(`${API_URL}/ventas/top-productos-vendidos/`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+    });
+}
 // Ventas por tienda con paginación
 export async function getVentasPorTienda(
     from_date: [number, number, number],

@@ -1,11 +1,5 @@
 // hooks/useVentas.ts
-import {
-    useInfiniteQuery,
-    useMutation,
-    useQuery,
-    useQueryClient,
-} from '@tanstack/react-query';
-
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     anularVenta,
     cancelarVenta,
@@ -23,90 +17,80 @@ import {
     VentaResponse,
 } from '../api/ventas.api';
 
-// 🔥 KEY CENTRALIZADA (MUY IMPORTANTE)
-const ventasKeys = {
-    all: ['ventas'] as const,
-    hoy: () => [...ventasKeys.all, 'hoy'] as const,
-    resumen: () => [...ventasKeys.all, 'resumen'] as const,
-    top: () => [...ventasKeys.all, 'top'] as const,
-    tienda: () => [...ventasKeys.all, 'tienda'] as const,
-    rango: () => [...ventasKeys.all, 'rango'] as const,
-};
 
 interface SearchVentasVariables {
     query: any;
     page?: number;
     page_size?: number;
 }
-
-export const useVentas = () => {
+export const useVentas2 = () => {
     const queryClient = useQueryClient();
 
-    // ─── QUERIES ─────────────────────────────────────
-
+    // Consultas
     const ventasHoyQuery = useQuery({
-        queryKey: ventasKeys.hoy(),
+        queryKey: ['ventasHoy'],
         queryFn: getVentasHoy,
     });
 
     const resumenVentasQuery = useQuery({
-        queryKey: ventasKeys.resumen(),
+        queryKey: ['resumenVentas'],
         queryFn: obtenerResumenVentas,
     });
 
     const topProductosQuery = useQuery({
-        queryKey: ventasKeys.top(),
+        queryKey: ['topProductosHoy'],
         queryFn: getTopProductosMasVendidosHoy,
     });
 
     const ventasPorTiendaQuery = useInfiniteQuery({
-        queryKey: ventasKeys.tienda(),
-        queryFn: ({ pageParam = 1 }) =>
-            getVentasPorTienda([2025, 1, 1], [2027, 1, 1], pageParam, 30),
+        queryKey: ['ventasPorTiendaInfinite'],
+        queryFn: ({ pageParam }) => {
 
+            return getVentasPorTienda([2025, 1, 1], [2027, 1, 1], pageParam, 30);
+        },
         getNextPageParam: (lastPage, allPages) => {
-            const nextPage = allPages.length + 1;
+            const nextPage = allPages.length + 1;  // 👈 calculamos la página nosotros
+
+
             return nextPage <= lastPage?.length_pages ? nextPage : undefined;
         },
-
         initialPageParam: 1,
     });
-
     const ventasPorRangoQuery = useQuery({
-        queryKey: ventasKeys.rango(),
-        queryFn: () =>
-            getVentasPorRangoFechasTienda(
-                new Date(2025, 1, 1),
-                new Date(2027, 1, 1)
-            ),
+        queryKey: ['ventasPorRango'],
+        queryFn: () => getVentasPorRangoFechasTienda(new Date(2025, 1, 1), new Date(2027, 1, 1)),
     });
 
-    // ─── MUTACIONES ─────────────────────────────────
-
-    const invalidateAllVentas = () => {
-        queryClient.invalidateQueries({ queryKey: ventasKeys.all });
-    };
-
+    // Mutaciones
     const createVentaMutation = useMutation({
         mutationFn: createVenta,
-        onSuccess: invalidateAllVentas,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ventasHoy'] }),
     });
 
     const createVentaPendienteMutation = useMutation({
         mutationFn: createVentaPendiente,
-        onSuccess: invalidateAllVentas,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ventasHoy'] }),
     });
 
     const createVentaAnonimaMutation = useMutation({
         mutationFn: createVentaAnonima,
-        onSuccess: invalidateAllVentas,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ventasHoy'] }),
     });
 
     const cancelarVentaMutation = useMutation({
         mutationFn: cancelarVenta,
-        onSuccess: invalidateAllVentas,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ventasHoy'] }),
+    });
+    // Mutación para buscar ventas
+    const searchVentasMutation = useMutation<VentaResponse, Error, SearchVentasVariables>({
+        mutationFn: ({ query, page = 1, page_size = 30 }) =>
+            fetchSearchVentas(query, page, page_size),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ventasHoy'] });
+        },
     });
 
+    // Mutación para anular una venta
     const anularVentaMutation = useMutation({
         mutationFn: ({ ventaId, motivo, tipo_motivo, anonima }: {
             ventaId: number;
@@ -114,66 +98,72 @@ export const useVentas = () => {
             tipo_motivo: string;
             anonima: boolean;
         }) => anularVenta(ventaId, motivo, tipo_motivo, anonima),
-        onSuccess: invalidateAllVentas,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ventasHoy'] });
+        },
     });
-
     const generarComprobanteMutation = useMutation({
         mutationFn: generarComprobanteVenta,
-        onSuccess: invalidateAllVentas,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ventasHoy'] }),
     });
 
     const resumenVentasByDateMutation = useMutation({
         mutationFn: getResumenVentasByDate,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ventasKeys.resumen() });
-        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['resumenVentas'] }),
     });
 
-    const searchVentasMutation = useMutation<
-        VentaResponse,
-        Error,
-        SearchVentasVariables
-    >({
-        mutationFn: ({ query, page = 1, page_size = 30 }) =>
-            fetchSearchVentas(query, page, page_size),
-    });
 
-    // ─── RETURN LIMPIO ──────────────────────────────
+    const fetchNextVentasPage = () => ventasPorTiendaQuery.fetchNextPage();
+    const hasNextVentasPage = ventasPorTiendaQuery.hasNextPage;
+    const isFetchingNextVentasPage = ventasPorTiendaQuery.isFetchingNextPage;
+
+
+    const refetchVentas = () => ventasPorTiendaQuery.refetch(); // ← agregar esto
+
 
     return {
-        // DATA
+        // Queries
         ventasHoy: ventasHoyQuery.data?.results,
         resumenVentas: resumenVentasQuery.data,
         topProductosHoy: topProductosQuery.data?.topProductoMostSales,
+        loadResumenVentas: resumenVentasQuery.refetch,
 
-        ventasPorTienda:
-            ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [],
+        loadVentasHoy: ventasHoyQuery.refetch,
+        loadProductosMasVendidosHoy: topProductosQuery.refetch,
+
+        ventasPorTienda: ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [],
+        loadVentasPorTienda: ventasPorTiendaQuery.refetch,
+        refetchVentas: refetchVentas, // ← agregar esto
+
+
+        fetchNextVentasPage,
+        hasNextVentasPage,
+        isFetchingNextVentasPage,
+        //inifnity ventas
+
 
         ventasPorRangoFechasTienda: ventasPorRangoQuery.data,
-        // MANUAL REFETCH
-        refreshVentasPorTienda: ventasPorTiendaQuery.refetch,
-        // LOADING
+        loadVentasPorRangoFechasTienda: ventasPorRangoQuery.refetch,
+
         loadingVentasHoy: ventasHoyQuery.isLoading,
         loadingResumenVentas: resumenVentasQuery.isLoading,
         loadingTopProductosHoy: topProductosQuery.isLoading,
         loadingVentasPorRango: ventasPorRangoQuery.isLoading,
 
-        // INFINITE
-        fetchNextVentasPage: ventasPorTiendaQuery.fetchNextPage,
-        hasNextVentasPage: ventasPorTiendaQuery.hasNextPage,
-        isFetchingNextVentasPage: ventasPorTiendaQuery.isFetchingNextPage,
-
-        // MUTATIONS
+        // Mutaciones
         createVenta: createVentaMutation.mutate,
         createVentaPendiente: createVentaPendienteMutation.mutate,
         createVentaAnonima: createVentaAnonimaMutation.mutate,
         cancelarVenta: cancelarVentaMutation.mutate,
+        searchVentas: searchVentasMutation.mutate,
         anularVenta: anularVentaMutation.mutate,
         generarComprobante: generarComprobanteMutation.mutate,
         getResumenVentasByDate: resumenVentasByDateMutation.mutate,
-        searchVentas: searchVentasMutation.mutate,
 
-        // STATES
+        // Estados de mutaciones
         loadingCreateVenta: createVentaMutation.isPending,
+        loadingCancelarVenta: cancelarVentaMutation.isPending,
+        loadingAnularVenta: anularVentaMutation.isPending,
+        loadingGenerarComprobante: generarComprobanteMutation.isPending,
     };
 };

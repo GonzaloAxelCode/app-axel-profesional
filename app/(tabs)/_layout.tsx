@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import {
   Animated,
@@ -9,20 +8,21 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { C } from '@/State/utils/c';
-import { Icon } from 'react-native-paper';
 import ClientesScreen from './clientes';
 import ConfiguracionScreen from './configuracion';
 import InicioScreen from './inicio';
 import { ProductosScreen } from './productos';
 import VentasScreen from './ventas';
 
-// ─── Paleta del rediseño ──────────────────────────────────────────────────────
+import T from '@/constants/THEME';
+import { MaterialCommunityIcons as MIcon } from '@expo/vector-icons';
 
+// 🔥 NUEVO
+import { useAuthStore } from '@/State/store/useAuthStore';
+import LoadingScreen from '@/components/LoadScreen';
 
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
-
 type Route = {
   key: string;
   title: string;
@@ -33,17 +33,15 @@ type Route = {
 };
 
 // ─── Rutas ────────────────────────────────────────────────────────────────────
-
 const ROUTES: Route[] = [
-  { key: 'inicio', title: 'Inicio', icon: 'home-outline', iconActive: 'home', screen: InicioScreen },
-  { key: 'productos', title: 'Productos', icon: 'cube-outline', iconActive: 'cube', screen: ProductosScreen },
-  { key: 'ventas', title: 'Ventas', icon: 'cart-outline', iconActive: 'cart', screen: VentasScreen, badge: true },
+  { key: 'inicio', title: 'Home', icon: 'home-outline', iconActive: 'home', screen: InicioScreen },
+  { key: 'productos', title: 'Stock', icon: 'cube-outline', iconActive: 'cube', screen: ProductosScreen },
+  { key: 'ventas', title: 'Ventas', icon: 'cart-outline', iconActive: 'cart', screen: VentasScreen },
   { key: 'clientes', title: 'Clientes', icon: 'account-group-outline', iconActive: 'account-group', screen: ClientesScreen },
-  { key: 'configuracion', title: 'Settings', icon: 'cog-outline', iconActive: 'cog', screen: ConfiguracionScreen },
+  { key: 'configuracion', title: 'Perfil', icon: 'account-circle-outline', iconActive: 'account-circle', screen: ConfiguracionScreen },
 ];
 
 // ─── Tab Item ─────────────────────────────────────────────────────────────────
-
 const TabItem = React.memo(function TabItem({
   route,
   active,
@@ -59,72 +57,66 @@ const TabItem = React.memo(function TabItem({
     Animated.spring(anim, {
       toValue: active ? 1 : 0,
       useNativeDriver: true,
-      tension: 220,
-      friction: 12,
-      overshootClamping: false,
+      tension: 250,
+      friction: 14,
     }).start();
   }, [active]);
 
-  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
   const pillOpacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
-  const labelOpacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] });
-  const iconColor = active ? C.accent : C.textMuted;
+  const pillScale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] });
+
+  const iconColor = active ? T.bg : T.textMuted;
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={styles.tabItem}
-      hitSlop={8}
-      android_ripple={null}
-    >
-      {/* Píldora de fondo */}
-      <Animated.View style={[styles.pill, { opacity: pillOpacity }]} />
+    <Pressable onPress={onPress} style={styles.tabItem}>
+      <Animated.View style={[
+        styles.pill,
+        {
+          opacity: pillOpacity,
+          transform: [{ scaleX: pillScale }],
+        }
+      ]} />
 
-      {/* Ícono */}
-      <Animated.View style={{ transform: [{ scale }], alignItems: 'center' }}>
-        <Icon
-          source={active ? route.iconActive : route.icon}
-          size={22}
+      <Animated.View style={[styles.tabInner, { transform: [{ scale }] }]}>
+        <MIcon
+          name={(active ? route.iconActive : route.icon) as any}
+          size={20}
           color={iconColor}
         />
       </Animated.View>
-
-      {/* Etiqueta — Text nativo de react-native (NO de react-native-paper) */}
-      <Animated.Text
-        numberOfLines={1}
-        style={[styles.tabLabel, { opacity: labelOpacity }]}
-      >
-        {route.title}
-      </Animated.Text>
-
-      {/* Badge */}
-      {route.badge && <View style={styles.badge} />}
-
-      {/* Punto indicador activo */}
-      {active && <View style={styles.activeDot} />}
     </Pressable>
   );
 });
 
-// ─── Screens en memo — con displayName explícito para evitar el TypeError ─────
-
+// ─── Screens memo ─────────────────────────────────────────────────────────────
 const MemoScreens = ROUTES.reduce((acc, r) => {
   const Memo = React.memo(r.screen);
-  Memo.displayName = r.key;
   acc[r.key] = Memo;
   return acc;
 }, {} as Record<string, React.MemoExoticComponent<React.ComponentType>>);
 
 // ─── Layout principal ─────────────────────────────────────────────────────────
-
 export default function TabLayout() {
   const [index, setIndex] = React.useState(0);
   const insets = useSafeAreaInsets();
-
   const handlers = React.useMemo(
     () => ROUTES.map((_, i) => () => setIndex(i)),
     [],
   );
+
+
+  const { loading, isAuthenticated } = useAuthStore();
+
+  // 🔥 LOADING GLOBAL
+  if (loading) {
+    return <LoadingScreen text="Cargando aplicación..." />;
+  }
+
+  // 🔥 PROTECCIÓN DE SESIÓN
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const ActiveScreen = MemoScreens[ROUTES[index].key];
 
@@ -134,6 +126,7 @@ export default function TabLayout() {
         <ActiveScreen />
       </View>
 
+      {/* Tab bar */}
       <View style={[styles.tabBarWrapper, { bottom: Math.max(insets.bottom + 10, 18) }]}>
         <View style={styles.tabBar}>
           {ROUTES.map((route, i) => (
@@ -151,39 +144,38 @@ export default function TabLayout() {
 }
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: C.bg,
+    backgroundColor: T.bg,
   },
   screenContainer: {
     flex: 1,
   },
   tabBarWrapper: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 10,
+    right: 10,
   },
   tabBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    height: 68,
+    height: 66,
     borderRadius: 36,
-    backgroundColor: C.surface,
+    backgroundColor: T.surface,
     borderWidth: 1,
-    borderColor: C.border,
-    paddingHorizontal: 8,
+    borderColor: T.border,
+    paddingHorizontal: 6,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.5,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 12,
+        elevation: 16,
       },
     }),
   },
@@ -192,40 +184,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    gap: 3,
-    position: 'relative',
   },
   pill: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(200, 230, 74, 0.10)',
-    borderRadius: 20,
-    marginHorizontal: 4,
-    marginVertical: 8,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: C.accent,
-    letterSpacing: 0.3,
-  },
-  activeDot: {
-    position: 'absolute',
-    bottom: 8,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: C.accent,
-  },
-  badge: {
     position: 'absolute',
     top: 10,
-    right: 10,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#ef4444',
-    borderWidth: 1.5,
-    borderColor: C.surface,
-    zIndex: 10,
+    bottom: 10,
+    left: 4,
+    right: 4,
+    backgroundColor: T.accent,
+    borderRadius: 22,
+  },
+  tabInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

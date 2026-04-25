@@ -12,6 +12,44 @@ export interface ProductsSales {
     cantidad: number
     precio_unitario: number
 }
+
+// ─────────────────────────────────────────────
+// 📦 Producto
+// ─────────────────────────────────────────────
+export interface ProductoSale {
+    id: number;
+    nombre: string;
+    precio: number | null;
+}
+
+// ─────────────────────────────────────────────
+// 📊 Inventario
+// ─────────────────────────────────────────────
+export interface InventarioSale {
+    stock: number;
+    stock_minimo?: number | null;
+}
+
+// ─────────────────────────────────────────────
+// 🧾 Item agregado (lo importante)
+// ─────────────────────────────────────────────
+export interface ProductoVendidoResumen {
+    producto: ProductoSale;
+    inventario: InventarioSale | null;
+    cantidad_total_vendida: number;
+    total_vendido: number;
+}
+
+// ─────────────────────────────────────────────
+// 📅 Respuesta completa de la API
+// ─────────────────────────────────────────────
+export interface ProductosMasVendidosResumenResponse {
+    hoy: ProductoVendidoResumen[];
+    semana: ProductoVendidoResumen[];
+    mes: ProductoVendidoResumen[];
+    anio: ProductoVendidoResumen[];
+}
+
 interface VentaStore {
     ventas: Venta[];
     ventasToday: Venta[];
@@ -23,6 +61,7 @@ interface VentaStore {
     thisWeekSales: number;
     thisMonthSales: number;
     topProductoMostSales: ProductsSales[];
+    topProductoMostSalesByDate: ProductosMasVendidosResumenResponse[];
 
     ventas_search: Venta[];
     search_ventas_found: string;
@@ -41,6 +80,7 @@ interface VentaStore {
     loadingNotaCredito: boolean;
     loadingResumenVentas: boolean;
     loadingMostSales: boolean;
+    loadingMostSalesByDate: boolean;
     loadingSearch: boolean;
 
     error?: any;
@@ -54,6 +94,8 @@ interface VentaStore {
     anularVenta: (ventaId: number, options: any) => Promise<void>;
     loadResumenVentas: () => Promise<void>;
     loadTopProductosVentasHoy: () => Promise<void>;
+    loadTopProductosVentasByDate: () => Promise<void>;
+
     loadVentasRangoFechas: (startDate: string, endDate: string) => Promise<void>;
     searchVentas: (query: string, page?: number, page_size?: number) => Promise<void>;
     clearVentaTemporal: () => void;
@@ -71,6 +113,7 @@ export const useVentaStore = create<VentaStore>((set, get) => ({
     thisWeekSales: 0,
     thisMonthSales: 0,
     topProductoMostSales: [],
+    topProductoMostSalesByDate: [],
 
     ventas_search: [],
     search_ventas_found: '',
@@ -89,6 +132,7 @@ export const useVentaStore = create<VentaStore>((set, get) => ({
     loadingNotaCredito: false,
     loadingResumenVentas: false,
     loadingMostSales: false,
+    loadingMostSalesByDate: false,
     loadingSearch: false,
 
     error: null,
@@ -197,14 +241,24 @@ export const useVentaStore = create<VentaStore>((set, get) => ({
     },
 
     loadTopProductosVentasHoy: async () => {
-        set({ loadingMostSales: true, error: null });
+        set({ loadingMostSalesByDate: true, error: null });
         try {
             const res = await fetchWithAuth(URLS.TOP_PRODUCTOS_HOY);
-            set({ topProductoMostSales: res, loadingMostSales: false });
+            set({ topProductoMostSalesByDate: res, loadingMostSalesByDate: false });
         } catch (error) {
-            set({ loadingMostSales: false, error });
+            set({ loadingMostSalesByDate: false, error });
         }
     },
+    loadTopProductosVentasByDate: async () => {
+        set({ loadingMostSalesByDate: true, error: null });
+        try {
+            const res = await fetchWithAuth(URLS.TOP_PRODUCTOS_VENTAS_BY_DATE);
+            set({ topProductoMostSalesByDate: res, loadingMostSalesByDate: false });
+        } catch (error) {
+            set({ loadingMostSalesByDate: false, error });
+        }
+    },
+
 
     loadVentasRangoFechas: async (startDate, endDate) => {
         set({ loading: true, error: null });

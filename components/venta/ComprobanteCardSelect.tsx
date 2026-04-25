@@ -1,53 +1,58 @@
-import { C } from '@/State/utils/c';
+
+import T from '@/constants/THEME';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 
 export type ComprobanteMethod = 'Boleta' | 'Factura' | 'Anonima';
 
-const COMPROBANTE_OPTIONS: { key: ComprobanteMethod; label: string }[] = [
-    { key: 'Boleta', label: 'Boleta' },
-    { key: 'Factura', label: 'Factura' },
-    { key: 'Anonima', label: 'Anónima' },
-];
+const COMPROBANTE_OPTIONS: {
+    key: ComprobanteMethod;
+    label: string;
+    icon: string;
+}[] = [
+        { key: 'Boleta', label: 'Boleta', icon: 'receipt' },
+        { key: 'Factura', label: 'Factura', icon: 'file-document' },
+        { key: 'Anonima', label: 'Anónima', icon: 'incognito' },
+    ];
 
 interface ComprobanteCardProps {
     comprobanteMethod: ComprobanteMethod;
     onSelect: (method: ComprobanteMethod) => void;
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ComprobanteCardSelect.tsx
-// ═══════════════════════════════════════════════════════════════════════════════
-
-
-interface ComprobanteCardProps {
-    comprobanteMethod: ComprobanteMethod;
-    onSelect: (method: ComprobanteMethod) => void;
-}
-
-export function ComprobanteCardSelect({ comprobanteMethod, onSelect }: ComprobanteCardProps) {
+export function ComprobanteCardSelect({
+    comprobanteMethod,
+    onSelect,
+}: ComprobanteCardProps) {
     return (
-        <View style={compStyles.card}>
-            <View style={compStyles.cardHead}>
-                <Text style={compStyles.secLabel}>COMPROBANTE</Text>
+        <View style={styles.card}>
+            <View style={styles.header}>
+                <Text style={styles.title}>COMPROBANTE</Text>
             </View>
-            <View style={compStyles.optRow}>
-                {COMPROBANTE_OPTIONS.map((opt: any) => {
+
+            <View style={styles.row}>
+                {COMPROBANTE_OPTIONS.map(opt => {
                     const isActive = comprobanteMethod === opt.key;
+
                     return (
                         <TouchableOpacity
                             key={opt.key}
-                            style={[compStyles.opt, isActive && compStyles.optActive]}
+                            style={[styles.option, isActive && styles.optionActive]}
                             onPress={() => onSelect(opt.key)}
-                            activeOpacity={0.8}
+                            activeOpacity={0.85}
                         >
                             <Icon
                                 source={opt.icon as any}
-                                size={15}
-                                color={isActive ? C.bg : C.textSecondary}
+                                size={16}
+                                color={isActive ? T.bg : T.textSecondary}
                             />
-                            <Text style={[compStyles.optLabel, isActive && compStyles.optLabelActive]}>
+
+                            <Text
+                                style={[
+                                    styles.label,
+                                    isActive && styles.labelActive,
+                                ]}
+                            >
                                 {opt.label}
                             </Text>
                         </TouchableOpacity>
@@ -58,25 +63,65 @@ export function ComprobanteCardSelect({ comprobanteMethod, onSelect }: Comproban
     );
 }
 
-const compStyles = StyleSheet.create({
+const styles = StyleSheet.create({
     card: {
-        borderRadius: 16, backgroundColor: C.surface,
-        borderWidth: 1, borderColor: C.border, overflow: 'hidden',
+        backgroundColor: T.surface,
+        borderRadius: T.radiusLg,
+        borderWidth: 1,
+        borderColor: T.border,
+        overflow: 'hidden',
+        ...T.shadowCard,
     },
-    cardHead: {
-        padding: 14, paddingHorizontal: 16,
-        borderBottomWidth: 1, borderBottomColor: C.border,
+
+    header: {
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: T.border,
+        backgroundColor: T.surfaceAlt,
     },
-    secLabel: { fontSize: 10, fontWeight: '800', color: C.textMuted, letterSpacing: 1.2, textTransform: 'uppercase' },
-    optRow: { flexDirection: 'row', gap: 8, padding: 12, paddingHorizontal: 14 },
-    opt: {
-        flex: 1, paddingVertical: 11, borderRadius: 12,
-        alignItems: 'center', justifyContent: 'center',
-        backgroundColor: C.surfaceAlt,
-        borderWidth: 1, borderColor: C.border,
-        flexDirection: 'row', gap: 6,
+
+    title: {
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 1.3,
+        color: T.textMuted,
     },
-    optActive: { backgroundColor: C.accent, borderColor: C.accent },
-    optLabel: { fontSize: 13, fontWeight: '700', color: C.textSecondary },
-    optLabelActive: { color: C.bg },
+
+    row: {
+        flexDirection: 'row',
+        padding: 12,
+        gap: 10,
+    },
+
+    option: {
+        flex: 1,
+        flexDirection: 'row',
+        gap: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+
+        paddingVertical: 12,
+        borderRadius: T.radiusMd,
+
+        backgroundColor: T.surfaceAlt,
+        borderWidth: 1,
+        borderColor: T.border,
+    },
+
+    optionActive: {
+        backgroundColor: T.accent,
+        borderColor: T.accent,
+        ...T.shadowAccent,
+    },
+
+    label: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: T.textSecondary,
+    },
+
+    labelActive: {
+        color: T.bg,
+    },
 });

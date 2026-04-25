@@ -1,10 +1,11 @@
+import UnderDevelopment from '@/components/Desarrollo'
 import React from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
 
 export default function comprobantes() {
     return (
-        <View>
-            <Text>comprobantes</Text>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <UnderDevelopment />
         </View>
     )
 }

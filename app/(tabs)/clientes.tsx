@@ -1,13 +1,12 @@
+import T from '@/constants/THEME';
 import { useClientes } from '@/State/hooks/useClientes';
 import { Cliente } from '@/State/models/cliente.models';
 import { useClienteStore } from '@/State/store/useClienteStore';
-import { C } from '@/State/utils/c';
-
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Animated,
     FlatList,
     StyleSheet,
     TextInput,
@@ -16,74 +15,96 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-paper';
 
-
-
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ─── helpers ─────────────────────────────
 const getInitial = (name: string) =>
     name?.trim()?.charAt(0)?.toUpperCase() ?? '?';
 
-const AVATAR_COLORS = ['#c8f135', '#6ee7b7', '#93c5fd', '#f9a8d4', '#fcd34d', '#a78bfa'];
-const getAvatarColor = (n: string) => AVATAR_COLORS[(n?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
+const AVATAR_COLORS = [T.accent, T.green, T.blue, '#f9a8d4', T.yellow, T.purple];
+const getAvatarColor = (n: string) =>
+    AVATAR_COLORS[(n?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 
 const isRuc = (doc: string) => doc?.length === 11;
-const docLabel = (doc: string) => isRuc(doc) ? 'RUC' : 'DNI';
+const docLabel = (doc: string) => (isRuc(doc) ? 'RUC' : 'DNI');
 
-const PAGE_SIZE = 20;
-
-// ─── ClienteCard ──────────────────────────────────────────────────────────────
-function ClienteCard({ cliente, onPress }: { cliente: Cliente; onPress: () => void }) {
+// ─── CARD PREMIUM ───────────────────────
+function ClienteCard({ cliente, index }: { cliente: Cliente; index: number }) {
     const color = getAvatarColor(cliente.fullname ?? '');
+    const scale = useRef(new Animated.Value(0.95)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.spring(scale, {
+                toValue: 1,
+                useNativeDriver: true,
+                delay: index * 30,
+            }),
+            Animated.timing(opacity, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+                delay: index * 30,
+            }),
+        ]).start();
+    }, []);
 
     return (
-        <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-            <View style={[styles.avatar, { backgroundColor: color + '18', borderColor: color + '35', borderWidth: 1 }]}>
-                <Text style={[styles.avatarText, { color }]}>
-                    {getInitial(cliente.fullname)}
-                </Text>
-            </View>
+        <Animated.View style={{ transform: [{ scale }], opacity }}>
+            <TouchableOpacity style={styles.card} activeOpacity={0.9}>
 
-            <View style={styles.cardInfo}>
-                <Text style={styles.cardNombre} numberOfLines={1}>
-                    {cliente.fullname || 'Sin nombre'}
-                </Text>
-                <Text style={styles.cardDoc}>
-                    {docLabel(cliente.document)} · {cliente.document}
-                </Text>
-            </View>
+                {/* Avatar */}
+                <View style={[styles.avatar, { backgroundColor: color + '22' }]}>
+                    <Text style={[styles.avatarText, { color }]}>
+                        {getInitial(cliente.fullname)}
+                    </Text>
+                </View>
 
-            <View style={styles.cardRight}>
-                {cliente.phone ? (
-                    <View style={styles.phoneBadge}>
-                        <Icon name="phone-outline" size={11} color={C.textSecondary} />
-                        <Text style={styles.phoneBadgeText}>{cliente.phone}</Text>
-                    </View>
-                ) : null}
-                <Icon name="chevron-right" size={18} color={C.border} style={{ marginTop: 4 }} />
-            </View>
-        </TouchableOpacity>
+                {/* Info */}
+                <View style={styles.info}>
+                    <Text style={styles.name} numberOfLines={1}>
+                        {cliente.fullname || 'Sin nombre'}
+                    </Text>
+
+                    <Text style={styles.doc}>
+                        {docLabel(cliente.document)} · {cliente.document}
+                    </Text>
+
+                    {cliente.phone && (
+                        <Text style={styles.phone}>
+                            {cliente.phone}
+                        </Text>
+                    )}
+                </View>
+
+                {/* Actions */}
+                <View style={styles.actions}>
+                    {cliente.phone && (
+                        <TouchableOpacity style={styles.iconBtn}>
+                            <Icon name="phone-outline" size={16} color={T.green} />
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity style={styles.iconBtn}>
+                        <Icon name="chevron-right" size={18} color={T.textMuted} />
+                    </TouchableOpacity>
+                </View>
+            </TouchableOpacity>
+        </Animated.View>
     );
 }
 
-// ─── ClientesScreen ───────────────────────────────────────────────────────────
-export default function ClientesScreen() {
-    const router = useRouter();
-    const { clientes, loading } = useClientes();
+// ─── SCREEN ─────────────────────────────
+export default function ClientesScreenPremium() {
+    const { clientes, loading, } = useClientes();
     const { search, setSearch, filtrar, clientesFiltrados } = useClienteStore();
 
-    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const inputRef = useRef<TextInput>(null);
+    const [focus, setFocus] = useState(false);
 
     useEffect(() => {
+
         filtrar(clientes);
-        setVisibleCount(PAGE_SIZE);
     }, [search, clientes]);
-
-    const visibleClientes = clientesFiltrados.slice(0, visibleCount);
-    const hasMore = visibleCount < clientesFiltrados.length;
-
-    const loadMore = () => {
-        if (hasMore) setVisibleCount(prev => prev + PAGE_SIZE);
-    };
 
     const clearSearch = () => {
         setSearch('');
@@ -93,7 +114,7 @@ export default function ClientesScreen() {
     if (loading) {
         return (
             <View style={styles.loadingWrap}>
-                <ActivityIndicator size="large" color={C.accent} />
+                <ActivityIndicator size="large" color={T.accent} />
                 <Text style={styles.loadingText}>Cargando clientes...</Text>
             </View>
         );
@@ -102,154 +123,217 @@ export default function ClientesScreen() {
     return (
         <View style={styles.screen}>
 
-            {/* ── HEADER ── */}
+            {/* HEADER */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.headerTitle}>Clientes</Text>
-                    <Text style={styles.headerSub}>
-                        {clientesFiltrados.length} registro{clientesFiltrados.length !== 1 ? 's' : ''}
+                    <Text style={styles.title}>Clientes</Text>
+                    <Text style={styles.subtitle}>
+                        {clientesFiltrados.length} registros
                     </Text>
                 </View>
-                <TouchableOpacity style={styles.fab} activeOpacity={0.85}>
-                    <Icon name="plus" size={16} color={C.bg} />
-                    <Text style={styles.fabText}>Nuevo</Text>
+
+                <TouchableOpacity style={styles.addBtn}>
+                    <Icon name="plus" size={18} color={T.bg} />
                 </TouchableOpacity>
             </View>
 
-            {/* ── SEARCH ── */}
-            <View style={styles.searchWrap}>
-                <View style={styles.searchBox}>
-                    <Icon name="magnify" size={18} color={C.textMuted} />
-                    <TextInput
-                        ref={inputRef}
-                        style={styles.searchInput}
-                        placeholder="Buscar por nombre o documento..."
-                        placeholderTextColor={C.textMuted}
-                        value={search}
-                        onChangeText={setSearch}
-                        returnKeyType="search"
-                        autoCorrect={false}
-                    />
-                    {search.length > 0 && (
-                        <TouchableOpacity onPress={clearSearch} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                            <Icon name="close-circle" size={17} color={C.textMuted} />
-                        </TouchableOpacity>
-                    )}
-                </View>
+            {/* SEARCH */}
+            <View style={[
+                styles.search,
+                focus && { borderColor: T.accent }
+            ]}>
+                <Icon name="magnify" size={18} color={T.textMuted} />
+
+                <TextInput
+                    ref={inputRef}
+                    style={styles.input}
+                    placeholder="Buscar cliente..."
+                    placeholderTextColor={T.textMuted}
+                    value={search}
+                    onChangeText={setSearch}
+                    onFocus={() => setFocus(true)}
+                    onBlur={() => setFocus(false)}
+                />
+
+                {search.length > 0 && (
+                    <TouchableOpacity onPress={clearSearch}>
+                        <Icon name="close-circle" size={18} color={T.textMuted} />
+                    </TouchableOpacity>
+                )}
             </View>
 
-            {/* ── LIST ── */}
+            {/* LIST */}
             <FlatList
-                data={visibleClientes}
+                data={clientesFiltrados}
                 keyExtractor={(item) => item.document}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={styles.list}
                 showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.3}
-                ListFooterComponent={
-                    hasMore ? (
-                        <View style={styles.footerLoader}>
-                            <ActivityIndicator size="small" color={C.textMuted} />
-                        </View>
-                    ) : null
-                }
+                renderItem={({ item, index }) => (
+                    <ClienteCard cliente={item} index={index} />
+                )}
                 ListEmptyComponent={
-                    <View style={styles.emptyWrap}>
-                        <View style={styles.emptyIcon}>
-                            <Icon name="account-search-outline" size={32} color={C.textMuted} />
-                        </View>
+                    <View style={styles.empty}>
+                        <Icon name="account-off-outline" size={42} color={T.accent} />
                         <Text style={styles.emptyTitle}>
                             {search ? 'Sin resultados' : 'Sin clientes'}
                         </Text>
-                        <Text style={styles.emptySubtitle}>
+                        <Text style={styles.emptySub}>
                             {search
                                 ? `No se encontró "${search}"`
-                                : 'Agrega tu primer cliente'}
+                                : 'Empieza agregando clientes'}
                         </Text>
                     </View>
                 }
-                renderItem={({ item }) => (
-                    <ClienteCard
-                        cliente={item}
-                        onPress={console.log}
-                    />
-                )}
             />
         </View>
     );
 }
 
-// ─── styles ───────────────────────────────────────────────────────────────────
+// ─── STYLES ─────────────────────────────
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: C.bg },
+    screen: {
+        flex: 1,
+        backgroundColor: T.bg,
+    },
 
-    loadingWrap: { flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
-    loadingText: { fontSize: 15, color: C.textSecondary, marginTop: 14 },
-
+    // HEADER
     header: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 24, paddingTop: 56, paddingBottom: 16,
-        backgroundColor: C.bg,
-        borderBottomWidth: 1, borderBottomColor: C.border,
+        paddingTop: 60,
+        paddingHorizontal: 20,
+        marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    headerTitle: { fontSize: 28, fontWeight: '700', color: C.textPrimary, letterSpacing: -0.8 },
-    headerSub: { fontSize: 13, color: C.textSecondary, marginTop: 2 },
-    fab: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: C.accent, borderRadius: 100,
-        paddingHorizontal: 18, paddingVertical: 10,
+    title: {
+        fontSize: 25,
+        fontWeight: '900',
+        color: T.textPrimary,
     },
-    fabText: { color: C.bg, fontWeight: '700', fontSize: 14, marginLeft: 6 },
+    subtitle: {
+        fontSize: 12,
+        color: T.textSecondary,
+    },
+    addBtn: {
+        width: 42,
+        height: 42,
+        borderRadius: 14,
+        backgroundColor: T.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...T.shadowAccent,
+    },
 
-    searchWrap: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: C.bg },
-    searchBox: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: C.surface, borderRadius: 14,
-        paddingHorizontal: 14, paddingVertical: 12,
-        borderWidth: 1, borderColor: C.border,
+    // SEARCH
+    search: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 20,
+        marginBottom: 12,
+        paddingHorizontal: 14,
+        height: 48,
+        borderRadius: 999,
+        backgroundColor: T.surfaceAlt,
+        borderWidth: 1,
+        borderColor: T.border,
     },
-    searchInput: {
-        flex: 1, fontSize: 15, color: C.textPrimary,
-        marginLeft: 10, marginRight: 6, padding: 0,
+    input: {
+        flex: 1,
+        marginLeft: 10,
+        color: T.textPrimary,
+        fontSize: 14,
     },
 
-    listContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 100 },
-    separator: { height: 1, backgroundColor: C.border, marginLeft: 66 },
-
+    // CARD
     card: {
-        flexDirection: 'row', alignItems: 'center',
-        paddingVertical: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        marginHorizontal: 20,
+        marginBottom: 12,
+        borderRadius: T.radiusLg,
+        backgroundColor: T.surface,
+        borderWidth: 1,
+        borderColor: T.border,
+        ...T.shadowCard,
     },
+
     avatar: {
-        width: 46, height: 46, borderRadius: 14,
-        alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
+        width: 56,
+        height: 56,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    avatarText: { fontSize: 18, fontWeight: '800' },
-    cardInfo: { flex: 1, marginLeft: 14 },
-    cardNombre: { fontSize: 15, fontWeight: '700', color: C.textPrimary, letterSpacing: -0.3 },
-    cardDoc: { fontSize: 12, color: C.textSecondary, marginTop: 2 },
-    cardRight: { alignItems: 'flex-end', marginLeft: 8 },
-    phoneBadge: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: C.surface, borderRadius: 100,
-        paddingHorizontal: 8, paddingVertical: 4,
-        borderWidth: 1, borderColor: C.border,
+    avatarText: {
+        fontSize: 18,
+        fontWeight: '900',
     },
-    phoneBadgeText: { fontSize: 11, color: C.textSecondary, fontWeight: '600', marginLeft: 4 },
 
-    footerLoader: { paddingVertical: 20, alignItems: 'center' },
-
-    emptyWrap: { alignItems: 'center', paddingTop: 72 },
-    emptyIcon: {
-        width: 64, height: 64, borderRadius: 20,
-        backgroundColor: C.surface,
-        alignItems: 'center', justifyContent: 'center',
-        marginBottom: 16,
-        borderWidth: 1, borderColor: C.border,
+    info: {
+        flex: 1,
+        marginLeft: 14,
     },
-    emptyTitle: { fontSize: 17, fontWeight: '700', color: C.textPrimary, marginBottom: 6 },
-    emptySubtitle: { fontSize: 14, color: C.textSecondary },
+    name: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: T.textPrimary,
+    },
+    doc: {
+        fontSize: 12,
+        color: T.textSecondary,
+        marginTop: 2,
+    },
+    phone: {
+        fontSize: 12,
+        color: T.green,
+        marginTop: 4,
+    },
+
+    actions: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    iconBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 12,
+        backgroundColor: T.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: T.border,
+    },
+
+    // EMPTY
+    empty: {
+        alignItems: 'center',
+        marginTop: 80,
+        gap: 6,
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: T.textPrimary,
+    },
+    emptySub: {
+        fontSize: 13,
+        color: T.textSecondary,
+    },
+
+    // LOADING
+    loadingWrap: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: T.bg,
+    },
+    loadingText: {
+        color: T.textSecondary,
+    },
+
+    list: {
+        paddingBottom: 120,
+    },
 });

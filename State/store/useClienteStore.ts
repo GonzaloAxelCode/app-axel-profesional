@@ -16,7 +16,6 @@ export const useClienteStore = create<ClienteState>((set, get) => ({
     clienteSeleccionado: null,
     search: "",
     clientesFiltrados: [],
-
     setCliente: (c) => set({ clienteSeleccionado: c }),
 
     setSearch: (text) => set({ search: text }),

@@ -1,4 +1,6 @@
+import { useClientes as useClientesHook } from '@/State/hooks/useClientes';
 import { Cliente } from '@/State/models/cliente.models';
+import T from '@/constants/THEME';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -10,21 +12,15 @@ import {
 } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 
-
-
-
-
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ClienteBottomSheet.tsx
-// ═══════════════════════════════════════════════════════════════════════════════
-import { useClientes as useClientesHook } from '@/State/hooks/useClientes';
-import { C } from '@/State/utils/c';
-
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-const AVATAR_COLORS = ['#111', '#1e88e5', '#43a047', '#e53935', '#8e24aa'];
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const AVATAR_COLORS = [
+  T.accent,
+  T.accent2,
+  T.accent3,
+  T.accent5,
+];
 
 type ClienteFilterKey = 'dni' | 'ruc';
 
@@ -34,11 +30,16 @@ interface ClienteBottomSheetProps {
   tipodoc: string;
 }
 
-export function ClienteBottomSheet({ bottomSheetRef, onClienteEncontrado, tipodoc }: ClienteBottomSheetProps) {
+export function ClienteBottomSheet({
+  bottomSheetRef,
+  onClienteEncontrado,
+  tipodoc,
+}: ClienteBottomSheetProps) {
   const snapPoints = useMemo(() => ['100%'], []);
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState<ClienteFilterKey>(tipodoc === 'ruc' ? 'ruc' : 'dni');
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<ClienteFilterKey>(
+    tipodoc === 'ruc' ? 'ruc' : 'dni'
+  );
   const [isSearchingApi, setIsSearchingApi] = useState(false);
 
   const { clientes, loading, getClienteByDocument } = useClientesHook();
@@ -51,115 +52,182 @@ export function ClienteBottomSheet({ bottomSheetRef, onClienteEncontrado, tipodo
     const q = search.toLowerCase();
     return clientes.filter((c: Cliente) => {
       const nombre = c.fullname || c.firstname || '';
-      const matchSearch = c.document?.includes(q) || nombre.toLowerCase().includes(q);
+      const matchSearch =
+        c.document?.includes(q) ||
+        nombre.toLowerCase().includes(q);
+
       const matchFilter =
         (activeFilter === 'dni' && c.document?.length === 8) ||
         (activeFilter === 'ruc' && c.document?.length === 11);
+
       return matchSearch && matchFilter;
     });
   }, [clientes, search, activeFilter]);
 
   const handleBuscarAPI = useCallback(async () => {
     if (!search || search.length < 8) return;
+
     try {
       setIsSearchingApi(true);
       const data: any = await getClienteByDocument(search);
+
       if (data?.nombre_completo || data?.nombre_o_razon_social) {
         const clienteNormalizado: Partial<Cliente> = {
-          fullname: data.nombre_o_razon_social || data.nombre_completo || '',
+          fullname:
+            data.nombre_o_razon_social ||
+            data.nombre_completo ||
+            '',
           document: data.numero || '',
         };
+
         onClienteEncontrado(clienteNormalizado);
         bottomSheetRef.current?.close();
         setSearch('');
       }
-    } catch { console.log('No encontrado en API'); }
-    finally { setIsSearchingApi(false); }
-  }, [search, getClienteByDocument, onClienteEncontrado, bottomSheetRef]);
+    } catch {
 
+    } finally {
+      setIsSearchingApi(false);
+    }
+  }, [search]);
+
+  // ─────────────────────────────────────────────
+  // ITEM
+  // ─────────────────────────────────────────────
   const renderItem = useCallback(({ item }: { item: Cliente }) => {
     const nombre = item.fullname || item.firstname || '';
     const isRuc = item.document?.length === 11;
-    const color = AVATAR_COLORS[(nombre?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
+
+    const color =
+      AVATAR_COLORS[
+      (nombre?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length
+      ];
 
     return (
       <TouchableOpacity
-        activeOpacity={0.85}
-        style={cbStyles.card}
+        activeOpacity={0.9}
+        style={styles.card}
         onPress={() => {
           onClienteEncontrado({
-            fullname: item.fullname || `${item.lastname || ''} ${item.firstname || ''}`.trim(),
+            fullname:
+              item.fullname ||
+              `${item.lastname || ''} ${item.firstname || ''}`.trim(),
             document: item.document,
           });
           bottomSheetRef.current?.close();
         }}
       >
-        <View style={[cbStyles.avatar, { backgroundColor: color + '18', borderColor: color + '35', borderWidth: 1.5 }]}>
-          <Text style={[cbStyles.avatarText, { color }]}>{getInitials(nombre) || '?'}</Text>
+        {/* Avatar */}
+        <View style={[styles.avatar, { backgroundColor: color + '20' }]}>
+          <Text style={[styles.avatarText, { color }]}>
+            {getInitials(nombre)}
+          </Text>
         </View>
-        <View style={cbStyles.cardBody}>
-          <View style={cbStyles.row}>
-            <Text style={cbStyles.cardName} numberOfLines={1}>{nombre || 'Sin nombre'}</Text>
-            <View style={[cbStyles.badge, { backgroundColor: isRuc ? C.purple + '15' : C.green + '15', borderColor: isRuc ? C.purple + '30' : C.green + '30' }]}>
-              <Text style={[cbStyles.badgeText, { color: isRuc ? C.purple : C.green }]}>{isRuc ? 'RUC' : 'DNI'}</Text>
-            </View>
-          </View>
-          <Text style={cbStyles.cardDoc}>{isRuc ? 'RUC' : 'DNI'}: {item.document}</Text>
+
+        {/* Info */}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.name} numberOfLines={1}>
+            {nombre || 'Sin nombre'}
+          </Text>
+
+          <Text style={styles.doc}>
+            {isRuc ? 'RUC' : 'DNI'} • {item.document}
+          </Text>
         </View>
-        <Icon source="chevron-right" size={16} color={C.textMuted} />
+
+        {/* Badge */}
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: isRuc ? T.purple + '20' : T.green + '20' },
+          ]}
+        >
+          <Text
+            style={{
+              color: isRuc ? T.purple : T.green,
+              fontWeight: '700',
+              fontSize: 11,
+            }}
+          >
+            {isRuc ? 'RUC' : 'DNI'}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
-  }, [bottomSheetRef, onClienteEncontrado]);
+  }, []);
 
+  // ─────────────────────────────────────────────
+  // HEADER
+  // ─────────────────────────────────────────────
   const ListHeader = useMemo(() => (
     <>
-      <View style={cbStyles.headerRow}>
-        <Text style={cbStyles.title}>Buscar cliente</Text>
-        <View style={cbStyles.countBadge}>
-          <Text style={cbStyles.countText}>{filtered.length} cliente{filtered.length !== 1 ? 's' : ''}</Text>
-        </View>
+      {/* Title */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Clientes</Text>
+        <Text style={styles.counter}>{filtered.length}</Text>
       </View>
-      <View style={cbStyles.filterRow}>
-        {[{ key: 'dni' as ClienteFilterKey, label: 'DNI' }, { key: 'ruc' as ClienteFilterKey, label: 'RUC' }].map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            onPress={() => setActiveFilter(f.key)}
-            style={[cbStyles.filterTab, activeFilter === f.key && cbStyles.filterTabActive]}
-          >
-            <Text style={[cbStyles.filterTabText, activeFilter === f.key && cbStyles.filterTabTextActive]}>{f.label}</Text>
-          </TouchableOpacity>
-        ))}
+
+      {/* Filters */}
+      <View style={styles.tabs}>
+        {['dni', 'ruc'].map((key) => {
+          const active = activeFilter === key;
+
+          return (
+            <TouchableOpacity
+              key={key}
+              onPress={() => setActiveFilter(key as any)}
+              style={[
+                styles.tab,
+                active && styles.tabActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  active && styles.tabTextActive,
+                ]}
+              >
+                {key.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
-      <View style={cbStyles.searchWrap}>
-        <Icon source="magnify" size={16} color={C.textMuted} />
+
+      {/* Search */}
+      <View style={styles.search}>
+        <Icon source="magnify" size={18} color={T.textMuted} />
         <TextInput
-          placeholder={`Buscar por nombre o ${activeFilter.toUpperCase()}...`}
-          placeholderTextColor={C.textMuted}
+          placeholder="Buscar cliente..."
+          placeholderTextColor={T.textMuted}
           value={search}
           onChangeText={setSearch}
-          style={cbStyles.searchInput}
+          style={styles.input}
         />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Icon source="close-circle" size={16} color={C.textMuted} />
-          </TouchableOpacity>
-        )}
       </View>
+
+      {/* API Button */}
       {filtered.length === 0 && search.length >= 8 && (
         <TouchableOpacity
-          style={[cbStyles.apiButton, isSearchingApi && { opacity: 0.6 }]}
+          style={styles.apiBtn}
           onPress={handleBuscarAPI}
           disabled={isSearchingApi}
         >
-          {isSearchingApi ? <ActivityIndicator size="small" color={C.bg} /> : <Icon source="magnify" size={16} color={C.bg} />}
-          <Text style={cbStyles.apiButtonText}>{isSearchingApi ? 'Buscando...' : 'Buscar en SUNAT / API'}</Text>
+          {isSearchingApi ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.apiText}>
+              Buscar en SUNAT
+            </Text>
+          )}
         </TouchableOpacity>
       )}
-      <Text style={cbStyles.sectionLabel}>Resultados</Text>
     </>
-  ), [filtered.length, search, activeFilter, isSearchingApi]);
+  ), [filtered.length, search, activeFilter]);
 
-  useEffect(() => { bottomSheetRef.current?.snapToIndex(0); }, []);
+  useEffect(() => {
+    bottomSheetRef.current?.snapToIndex(0);
+  }, []);
 
   return (
     <BottomSheet
@@ -167,83 +235,164 @@ export function ClienteBottomSheet({ bottomSheetRef, onClienteEncontrado, tipodo
       index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
-      backgroundStyle={{ backgroundColor: C.bg }}
-      handleIndicatorStyle={{ backgroundColor: C.border }}
+      backgroundStyle={{ backgroundColor: T.bg }}
     >
       <BottomSheetFlatList
         data={filtered}
         keyExtractor={(item: any) => item.document}
         renderItem={renderItem}
-        contentContainerStyle={[cbStyles.sheetContent, { minHeight: '100%' }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
         ListHeaderComponent={ListHeader}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-            <Text style={{ color: C.textMuted, fontSize: 14 }}>
-              {loading ? 'Cargando clientes...' : 'No se encontraron clientes'}
-            </Text>
-          </View>
+          <Text style={styles.empty}>
+            {loading ? 'Cargando...' : 'Sin resultados'}
+          </Text>
         }
-        removeClippedSubviews
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={10}
-        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-        keyboardBehavior="interactive"
-        keyboardBlurBehavior="restore"
-        android_keyboardInputMode="adjustResize"
       />
     </BottomSheet>
   );
 }
 
-const getInitials = (nombre: string) =>
-  nombre.trim().split(' ').slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join('');
+// ─────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    paddingBottom: 60,
+  },
 
-const cbStyles = StyleSheet.create({
-  sheetContent: { paddingHorizontal: 16, paddingBottom: 40, paddingTop: 4 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, marginTop: 8 },
-  title: { fontSize: 18, fontWeight: '700', color: C.textPrimary },
-  countBadge: {
-    backgroundColor: C.surfaceAlt, borderRadius: 20,
-    paddingHorizontal: 10, paddingVertical: 4,
-    borderWidth: 1, borderColor: C.border,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
-  countText: { fontSize: 12, color: C.textSecondary },
-  filterRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  filterTab: {
-    borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
-    borderWidth: 1, borderColor: C.border, backgroundColor: C.surface,
+
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: T.textPrimary,
   },
-  filterTabActive: { backgroundColor: C.accent, borderColor: C.accent },
-  filterTabText: { fontSize: 13, fontWeight: '600', color: C.textSecondary },
-  filterTabTextActive: { color: C.bg },
-  searchWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: C.surface, borderRadius: 12,
-    paddingHorizontal: 12, paddingVertical: 2,
-    marginBottom: 12, borderWidth: 1, borderColor: C.border,
+
+  counter: {
+    fontSize: 14,
+    color: T.textSecondary,
   },
-  searchInput: { flex: 1, fontSize: 14, color: C.textPrimary, paddingVertical: 10 },
-  apiButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: C.accent, borderRadius: 12,
-    paddingVertical: 13, marginBottom: 12,
+
+  tabs: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
   },
-  apiButtonText: { color: C.bg, fontSize: 14, fontWeight: '700' },
-  sectionLabel: { fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 1, fontWeight: '700', marginBottom: 8 },
+
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: T.radiusFull,
+    backgroundColor: T.surfaceAlt,
+  },
+
+  tabActive: {
+    backgroundColor: T.accent,
+  },
+
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: T.textSecondary,
+  },
+
+  tabTextActive: {
+    color: '#fff',
+  },
+
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: T.surface,
+    borderRadius: T.radiusMd,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: T.border,
+  },
+
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    color: T.textPrimary,
+  },
+
+  apiBtn: {
+    backgroundColor: T.accent,
+    padding: 14,
+    borderRadius: T.radiusMd,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  apiText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+
   card: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: C.surface, borderRadius: 14,
-    padding: 12, borderWidth: 1, borderColor: C.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: T.radiusLg,
+    backgroundColor: T.surface,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: T.border,
+    ...T.shadowCard,
   },
-  avatar: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  avatarText: { fontSize: 16, fontWeight: '800' },
-  cardBody: { flex: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  cardName: { flex: 1, fontSize: 14, fontWeight: '700', color: C.textPrimary },
-  cardDoc: { fontSize: 11, color: C.textSecondary, marginTop: 3 },
-  badge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
-  badgeText: { fontSize: 10, fontWeight: '700' },
+
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: T.radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  avatarText: {
+    fontWeight: '800',
+    fontSize: 16,
+  },
+
+  name: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: T.textPrimary,
+  },
+
+  doc: {
+    fontSize: 12,
+    color: T.textSecondary,
+    marginTop: 2,
+  },
+
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: T.radiusSm,
+  },
+
+  empty: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: T.textMuted,
+  },
 });
+
+// ─────────────────────────────────────────────
+const getInitials = (nombre: string) =>
+  nombre
+    .trim()
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('');
