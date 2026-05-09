@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: T.surface,
     borderRadius: T.radiusLg,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: T.border,
     overflow: 'hidden',
     ...T.shadowCard,
@@ -63,9 +63,9 @@ const styles = StyleSheet.create({
 
   head: {
     padding: 14,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: T.border,
-    backgroundColor: T.surfaceAlt,
+
   },
 
   label: {

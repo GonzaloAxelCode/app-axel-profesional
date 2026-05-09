@@ -1,7 +1,5 @@
 import T from '@/constants/THEME';
-import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
 interface VentaHeaderProps {
@@ -22,10 +20,7 @@ export function VentaHeader({ fecha = new Date() }: VentaHeaderProps) {
 
   return (
     <View style={styles.header}>
-      {/* BACK BUTTON */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-        <Icon name="arrow-left" size={26} color={T.textPrimary} />
-      </TouchableOpacity>
+
 
       {/* CONTENT */}
       <View style={styles.content}>
@@ -57,8 +52,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: T.surfaceAlt,
-    marginTop: 0,
+
   },
 
   content: {

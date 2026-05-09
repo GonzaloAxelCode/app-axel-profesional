@@ -1,17 +1,17 @@
 import T from '@/constants/THEME';
 import { InventarioCart } from '@/State/models/inventario.models';
 import { URLS } from '@/State/utils/endpoints';
-import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Icon, Text } from 'react-native-paper';
 
 // ─────────────────────────────────────────────
@@ -55,11 +55,19 @@ export function ProductosBottomSheet({
   onSelectProducto,
   loadMore,
 }: Props) {
-  const snapPoints = useMemo(() => ['100%'], []);
+  const [activeCategoria, setActiveCategoria] = useState<string>('todas');
+  const snapPoints = useMemo(() => ['90%'], []);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-
+  const categorias = useMemo(() => {
+    const unique = [...new Set(
+      productos
+        .map(p => p.categoria_nombre)
+        .filter(Boolean)
+    )] as string[];
+    return [{ key: 'todas', label: 'Todas' }, ...unique.map(c => ({ key: c, label: c }))];
+  }, [productos]);
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return productos.filter((p) => {
@@ -75,9 +83,12 @@ export function ProductosBottomSheet({
         (activeFilter === 'poco' && status === 'low_stock') ||
         (activeFilter === 'agotado' && status === 'no_stock');
 
-      return matchSearch && matchFilter;
+      const matchCategoria =
+        activeCategoria === 'todas' || p.categoria_nombre === activeCategoria;  // ← nuevo
+
+      return matchSearch && matchFilter && matchCategoria;
     });
-  }, [productos, search, activeFilter]);
+  }, [productos, search, activeFilter, activeCategoria]);  // ← agregar activeCategoria
 
   const handleEndReached = useCallback(async () => {
     if (isFetchingMore || isLoading || !hasNextPage || !loadMore) return;
@@ -161,8 +172,12 @@ export function ProductosBottomSheet({
     );
   }, []);
 
+
+
+
+
   const ListHeader = useMemo(() => (
-    <>
+    <View style={{ paddingHorizontal: 17 }}>
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Productos</Text>
@@ -181,45 +196,72 @@ export function ProductosBottomSheet({
         />
       </View>
 
-      {/* FILTERS */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+
+      <Text style={styles.sectionLabel}>Categoría</Text>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+
         <View style={styles.tabs}>
-          {FILTERS.map((f: any) => {
-            const active = activeFilter === f.key;
+          {categorias.map((c) => {
+            const active = activeCategoria === c.key;
             return (
               <TouchableOpacity
-                key={f.key}
-                onPress={() => setActiveFilter(f.key)}
-                style={[styles.tab, active && styles.tabActive]}
+                key={c.key}
+                onPress={() => setActiveCategoria(c.key)}
+                style={[styles.tab, active && styles.tabActiveCategoria]}
               >
                 <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                  {f.label}
+                  {c.label}
                 </Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </ScrollView>
-    </>
-  ), [filtered.length, search, activeFilter]);
+    </View>
+
+  ), [filtered.length, search, activeFilter, activeCategoria, categorias]);
+
 
   useEffect(() => {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        opacity={1.5}          // 0.0 – 1.0  (default es ~0.5)
+
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  );
+
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={-1}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
+      backdropComponent={renderBackdrop}
       backgroundStyle={{ backgroundColor: T.bg }}
+      handleIndicatorStyle={{ backgroundColor: T.textMuted, width: 40 }}
+
     >
+      {ListHeader}
       <BottomSheetFlatList
         data={filtered}
+
         keyExtractor={(item: any) => item.id.toString()}
         renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
+
         contentContainerStyle={styles.container}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
@@ -259,6 +301,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 14,
+
   },
 
   title: {
@@ -321,7 +364,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: T.radiusLg,
     backgroundColor: T.surface,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: T.border,
     marginBottom: 10,
     ...T.shadowCard,
@@ -393,5 +436,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
     color: T.textMuted,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: T.textMuted,
+    marginBottom: 6,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+
+  tabActiveCategoria: {
+    backgroundColor: T.purple,   // color distinto para diferenciar del filtro de stock
   },
 });

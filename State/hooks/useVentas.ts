@@ -153,7 +153,7 @@ export const useVentas = () => {
         // MANUAL REFETCH
         refreshVentasPorTienda: ventasPorTiendaQuery.refetch,
         // LOADING
-        loadingVentasHoy: ventasHoyQuery.isLoading,
+        loadingVentasHoy: ventasPorTiendaQuery.isLoading,
         loadingResumenVentas: resumenVentasQuery.isLoading,
         loadingTopProductosHoy: topProductosQuery.isLoading,
         loadingVentasPorRango: ventasPorRangoQuery.isLoading,

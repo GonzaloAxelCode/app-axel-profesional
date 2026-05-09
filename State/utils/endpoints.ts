@@ -1,6 +1,6 @@
 
 
-export const URL_DESA = 'http://10.203.187.42:8000';
+export const URL_DESA = 'http://10.137.171.135:8000';
 export const URL_PROD = 'https://inventarioaxel.duckdns.org';
 
 export const PRODUCTION = true; // Cambia a false para desarrollo

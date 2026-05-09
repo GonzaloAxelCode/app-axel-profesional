@@ -49,7 +49,7 @@ export function ClienteCard({ cliente, onBuscar }: ClienteCardProps) {
               styles.avatar,
               {
                 backgroundColor: avatarColor + '20',
-                borderColor: avatarColor + '50',
+
               },
             ]}
           >
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: T.surface,
     borderRadius: T.radiusLg,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: T.border,
     overflow: 'hidden',
     ...T.shadowCard,
@@ -94,9 +94,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 14,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: T.border,
-    backgroundColor: T.surfaceAlt,
+
   },
 
   label: {
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     backgroundColor: T.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: T.radiusFull,
     alignItems: 'center',
   },
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   actionText: {
     color: T.bg,
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 14,
   },
 
   row: {
@@ -132,10 +132,10 @@ const styles = StyleSheet.create({
   avatar: {
     width: 44,
     height: 44,
-    borderRadius: T.radiusMd,
+    borderRadius: T.radiusFull,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
+
   },
 
   avatarText: {
@@ -145,9 +145,9 @@ const styles = StyleSheet.create({
   avatarEmpty: {
     width: 44,
     height: 44,
-    borderRadius: T.radiusMd,
+    borderRadius: T.radiusFull,
     backgroundColor: T.surfaceAlt,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: T.border,
     justifyContent: 'center',
     alignItems: 'center',

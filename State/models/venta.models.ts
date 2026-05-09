@@ -34,7 +34,7 @@ export interface Venta {
 export interface NotaCredito {
     id: number;
     serie: string;
-    correlativo: string;
+    correlativo: any;
     tipo_comprobante_modifica: string;
     serie_modifica: string;
     correlativo_modifica: string;
@@ -51,7 +51,7 @@ export interface NotaCredito {
 export interface ComprobanteElectronico {
     tipo_comprobante: string;
     serie: string;
-    correlativo: string
+    correlativo: any
     numero: string;
     moneda: string;
     date_created?: any

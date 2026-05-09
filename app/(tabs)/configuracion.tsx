@@ -58,29 +58,6 @@ function ProfileCard() {
         </TouchableOpacity>
     );
 }
-
-// ─── StatsRow ─────────────────────────────────────────────────────────────────
-function StatsRow() {
-    const stats = [
-        { num: '1,284', label: 'Ventas', icon: 'cart-outline', color: T.accent },
-        { num: '342', label: 'Productos', icon: 'cube-outline', color: T.blue },
-        { num: '98', label: 'Clientes', icon: 'account-group-outline', color: T.purple },
-    ];
-    return (
-        <View style={styles.statsRow}>
-            {stats.map((s, i) => (
-                <View key={s.label} style={[styles.statBox, i < stats.length - 1 && { marginRight: 8 }]}>
-                    <View style={[styles.statIcon, { backgroundColor: s.color + '18' }]}>
-                        <Icon name={s.icon as any} size={16} color={s.color} />
-                    </View>
-                    <Text style={styles.statNum}>{s.num}</Text>
-                    <Text style={styles.statLbl}>{s.label}</Text>
-                </View>
-            ))}
-        </View>
-    );
-}
-
 // ─── SettingRow ───────────────────────────────────────────────────────────────
 function SettingRow({ icon, iconBg, iconColor, title, subtitle, onPress, right }: RowItem) {
     return (

@@ -1,145 +1,156 @@
 import * as React from 'react';
-import {
-  Animated,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform, Pressable, StatusBar, StyleSheet, View } from 'react-native';
+import { MD3LightTheme, Provider as PaperProvider, Text } from 'react-native-paper';
 
-import ClientesScreen from './clientes';
+
 import ConfiguracionScreen from './configuracion';
 import InicioScreen from './inicio';
 import { ProductosScreen } from './productos';
 import VentasScreen from './ventas';
 
-import T from '@/constants/THEME';
-import { MaterialCommunityIcons as MIcon } from '@expo/vector-icons';
-
-// 🔥 NUEVO
-import { useAuthStore } from '@/State/store/useAuthStore';
 import LoadingScreen from '@/components/LoadScreen';
+import T from '@/constants/THEME';
+import { useAuthStore } from '@/State/store/useAuthStore';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import HacerVentaScreen from './hacerventa';
 
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-type Route = {
-  key: string;
-  title: string;
-  icon: string;
-  iconActive: string;
-  badge?: boolean;
-  screen: React.ComponentType;
+// ─── Paper Theme ──────────────────────────────────────────────────────────────
+const paperTheme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: T.accent,
+    secondary: T.accent2,
+    background: T.bg,
+    surface: T.surface,
+    surfaceVariant: T.surfaceAlt,
+    onSurface: T.textPrimary,
+    onSurfaceVariant: T.textMuted,
+    secondaryContainer: T.accentDim,
+    onSecondaryContainer: T.accent,
+    outline: T.border,
+    error: T.red,
+  },
 };
 
+// ─── Tab Context ──────────────────────────────────────────────────────────────
+export const TabContext = React.createContext<(key: string) => void>(() => { });
+export const useTabRouter = () => React.useContext(TabContext);
+
 // ─── Rutas ────────────────────────────────────────────────────────────────────
-const ROUTES: Route[] = [
-  { key: 'inicio', title: 'Home', icon: 'home-outline', iconActive: 'home', screen: InicioScreen },
-  { key: 'productos', title: 'Stock', icon: 'cube-outline', iconActive: 'cube', screen: ProductosScreen },
-  { key: 'ventas', title: 'Ventas', icon: 'cart-outline', iconActive: 'cart', screen: VentasScreen },
-  { key: 'clientes', title: 'Clientes', icon: 'account-group-outline', iconActive: 'account-group', screen: ClientesScreen },
-  { key: 'configuracion', title: 'Perfil', icon: 'account-circle-outline', iconActive: 'account-circle', screen: ConfiguracionScreen },
-];
+type RouteKey = 'inicio' | 'productos' | 'hacerventa' | 'ventas' | 'configuracion';
 
-// ─── Tab Item ─────────────────────────────────────────────────────────────────
-const TabItem = React.memo(function TabItem({
-  route,
-  active,
-  onPress,
-}: {
-  route: Route;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const anim = React.useRef(new Animated.Value(active ? 1 : 0)).current;
+const ROUTES: {
+  key: RouteKey;
+  title: string;
+  icon: string;
+  isFab?: boolean;
+}[] = [
+    { key: 'inicio', title: 'Home', icon: 'home' },
+    { key: 'productos', title: 'Stock', icon: 'cube' },
+    { key: 'hacerventa', title: '', icon: 'cart', isFab: true },
+    { key: 'ventas', title: 'Ventas', icon: 'chart-bar' },
+    { key: 'configuracion', title: 'Perfil', icon: 'account-circle' },
+  ];
 
-  React.useEffect(() => {
-    Animated.spring(anim, {
-      toValue: active ? 1 : 0,
-      useNativeDriver: true,
-      tension: 250,
-      friction: 14,
-    }).start();
-  }, [active]);
+// ─── Scenes ───────────────────────────────────────────────────────────────────
+const SCENES: Record<string, React.ComponentType<any>> = {
+  inicio: InicioScreen,
+  productos: ProductosScreen,
+  ventas: VentasScreen,
+  hacerventa: HacerVentaScreen,
+  configuracion: ConfiguracionScreen,
+};
 
-  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
-  const pillOpacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
-  const pillScale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] });
-
-  const iconColor = active ? T.bg : T.textMuted;
-
-  return (
-    <Pressable onPress={onPress} style={styles.tabItem}>
-      <Animated.View style={[
-        styles.pill,
-        {
-          opacity: pillOpacity,
-          transform: [{ scaleX: pillScale }],
-        }
-      ]} />
-
-      <Animated.View style={[styles.tabInner, { transform: [{ scale }] }]}>
-        <MIcon
-          name={(active ? route.iconActive : route.icon) as any}
-          size={20}
-          color={iconColor}
-        />
-      </Animated.View>
-    </Pressable>
-  );
-});
-
-// ─── Screens memo ─────────────────────────────────────────────────────────────
-const MemoScreens = ROUTES.reduce((acc, r) => {
-  const Memo = React.memo(r.screen);
-  acc[r.key] = Memo;
-  return acc;
-}, {} as Record<string, React.MemoExoticComponent<React.ComponentType>>);
-
-// ─── Layout principal ─────────────────────────────────────────────────────────
+// ─── Layout ───────────────────────────────────────────────────────────────────
 export default function TabLayout() {
   const [index, setIndex] = React.useState(0);
-  const insets = useSafeAreaInsets();
-  const handlers = React.useMemo(
-    () => ROUTES.map((_, i) => () => setIndex(i)),
-    [],
-  );
-
-
   const { loading, isAuthenticated } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
-  // 🔥 LOADING GLOBAL
-  if (loading) {
-    return <LoadingScreen text="Cargando aplicación..." />;
-  }
+  const navigateToTab = React.useCallback((key: string) => {
+    const i = ROUTES.findIndex(r => r.key === key);
+    if (i !== -1) setIndex(i);
+  }, []);
 
-  // 🔥 PROTECCIÓN DE SESIÓN
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (loading) return <LoadingScreen text="Cargando aplicación..." />;
+  if (!isAuthenticated) return null;
 
-  const ActiveScreen = MemoScreens[ROUTES[index].key];
+  const activeRoute = ROUTES[index];
+  const SceneComponent = SCENES[activeRoute?.key ?? 'inicio'];
 
   return (
-    <View style={styles.root}>
-      <View style={styles.screenContainer}>
-        <ActiveScreen />
-      </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PaperProvider theme={paperTheme}>
+        <StatusBar barStyle="light-content" backgroundColor={T.bg} />
+        <TabContext.Provider value={navigateToTab}>
+          <View style={styles.root}>
 
-      {/* Tab bar */}
-      <View style={[styles.tabBarWrapper, { bottom: Math.max(insets.bottom + 10, 18) }]}>
-        <View style={styles.tabBar}>
-          {ROUTES.map((route, i) => (
-            <TabItem
-              key={route.key}
-              route={route}
-              active={index === i}
-              onPress={handlers[i]}
-            />
-          ))}
-        </View>
-      </View>
-    </View>
+            {/* CONTENIDO */}
+            <View style={styles.scene}>
+              {SceneComponent ? <SceneComponent /> : null}
+            </View>
+
+            {/* BARRA CUSTOM */}
+            <View style={[styles.barWrapper, { paddingBottom: insets.bottom || 12 }]}>
+              <View style={styles.bar}>
+                {ROUTES.map((route: any, i) => {
+                  const focused = index === i;
+
+                  // ── FAB central ──────────────────────────────────────────────
+                  if (route.isFab) {
+                    return (
+                      <Pressable
+                        key={route.key}
+                        onPress={() => setIndex(i)}
+                        style={styles.fabBtn}
+                        android_ripple={null}
+                      >
+                        <View style={styles.fab}>
+                          <MaterialCommunityIcons
+                            name="cart"
+                            size={24}
+                            color={T.bg}
+                          />
+                        </View>
+                      </Pressable>
+                    );
+                  }
+
+                  // ── Tab normal ───────────────────────────────────────────────
+                  return (
+                    <Pressable
+                      key={route.key}
+                      onPress={() => setIndex(i)}
+                      style={styles.tab}
+                      android_ripple={null}
+                    >
+                      <MaterialCommunityIcons
+                        name={route.icon}
+                        size={24}
+                        color={focused ? '#FFFFFF' : T.textMuted}
+                      />
+                      <Text
+                        style={[
+                          styles.label,
+                          { color: focused ? '#FFFFFF' : T.textMuted },
+                          focused && styles.labelActive,
+                        ]}
+                      >
+                        {route.title}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+          </View>
+        </TabContext.Provider>
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -149,53 +160,78 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: T.bg,
   },
-  screenContainer: {
+
+  scene: {
     flex: 1,
   },
-  tabBarWrapper: {
+
+  barWrapper: {
     position: 'absolute',
-    left: 10,
-    right: 10,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 0,
+    backgroundColor: T.bg,
   },
-  tabBar: {
+
+  bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    height: 66,
-    borderRadius: 36,
-    backgroundColor: T.surface,
-    borderWidth: 1,
-    borderColor: T.border,
-    paddingHorizontal: 6,
+    backgroundColor: "transparent",
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    width: '100%',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.5,
-        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 20,
       },
-      android: {
-        elevation: 16,
-      },
+      android: { elevation: 16 },
     }),
   },
-  tabItem: {
+
+  tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    gap: 4,
+    paddingVertical: 4,
   },
-  pill: {
-    position: 'absolute',
-    top: 10,
-    bottom: 10,
-    left: 4,
-    right: 4,
-    backgroundColor: T.accent,
-    borderRadius: 22,
+
+  label: {
+    fontSize: 11,
+    fontWeight: '500',
   },
-  tabInner: {
+
+  labelActive: {
+    fontWeight: '700',
+  },
+
+  fabBtn: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 56,
+    backgroundColor: T.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: T.accent,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.55,
+        shadowRadius: 16,
+      },
+      android: { elevation: 10 },
+    }),
   },
 });

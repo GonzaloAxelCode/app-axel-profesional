@@ -1,9 +1,20 @@
+/* ──────────────────────────────────────────────────────────────
+   REDISEÑO MODERNO · SINGLE SCREEN
+   - Todo en una sola pantalla fluida
+   - Header glass / hero moderno
+   - Cards compactas
+   - Acciones rápidas arriba
+   - Productos estilo app premium
+────────────────────────────────────────────────────────────── */
+
 import T from "@/constants/THEME";
 import { Venta } from "@/State/models/venta.models";
 import { useVentaStore } from '@/State/store/useVentaStore';
+import { URLS } from "@/State/utils/endpoints";
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Image } from "expo-image";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+
 import {
     Linking,
     Modal,
@@ -11,132 +22,80 @@ import {
     ScrollView,
     StatusBar,
     StyleSheet,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
+
 import { ActivityIndicator, Text } from "react-native-paper";
 
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatFecha = (fecha: string) => {
     if (!fecha) return '—';
+
     return new Date(fecha).toLocaleDateString('es-PE', {
-        month: 'short', day: 'numeric', year: '2-digit',
-        hour: '2-digit', minute: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
     });
 };
 
-const ESTADO_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
-    aceptado: { bg: T.green + '18', text: T.green, dot: T.green },
-    pendiente: { bg: T.amber + '18', text: T.amber, dot: T.amber },
-    anulado: { bg: T.red + '18', text: T.red, dot: T.red },
-    cancelado: { bg: T.surfaceAlt, text: T.textSecondary, dot: T.textMuted },
+const estadoMap: any = {
+    aceptado: {
+        bg: T.green + '15',
+        color: T.green,
+        icon: 'check-decagram',
+    },
+    pendiente: {
+        bg: T.amber + '15',
+        color: T.amber,
+        icon: 'clock-outline',
+    },
+    anulado: {
+        bg: T.red + '15',
+        color: T.red,
+        icon: 'cancel',
+    },
 };
-const getEstadoStyle = (e: string) =>
-    ESTADO_STYLES[e?.toLowerCase()] ?? ESTADO_STYLES.cancelado;
 
-const COMPROBANTE_LABEL: Record<string, string> = {
-    '01': 'FACTURA', '03': 'BOLETA', boleta: 'BOLETA', factura: 'FACTURA',
-};
-const getTipoLabel = (tipo: string) =>
-    COMPROBANTE_LABEL[tipo?.toLowerCase()] ?? tipo?.toUpperCase() ?? '—';
-
-const getInitial = (n: string) => n?.trim()?.charAt(0)?.toUpperCase() ?? '?';
-
-const AVATAR_COLORS = [T.accent, T.green, T.blue, '#f9a8d4', T.amber, T.purple];
-const getAvatarColor = (n: string) =>
-    AVATAR_COLORS[(n?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
-
-// ─── Cancel Confirm Modal ─────────────────────────────────────────────────────
-function CancelConfirmModal({ visible, loading, onConfirm, onClose }: {
+export default function VentaDetalleModal({
+    venta,
+    visible,
+    onClose,
+}: {
+    venta: Venta | null;
     visible: boolean;
-    loading: boolean;
-    onConfirm: () => void;
     onClose: () => void;
 }) {
-    return (
-        <Modal visible={visible} transparent animationType="fade">
-            <View style={mStyles.cancelOverlay}>
-                <View style={mStyles.cancelSheet}>
-                    <View style={mStyles.cancelIconWrap}>
-                        <Icon name="alert-circle-outline" size={38} color={T.red} />
-                    </View>
-                    <Text style={mStyles.cancelTitle}>¿Anular comprobante?</Text>
-                    <Text style={mStyles.cancelSubtitle}>
-                        Esta acción es irreversible. El comprobante quedará anulado ante SUNAT.
-                    </Text>
-                    <TouchableOpacity
-                        style={mStyles.cancelConfirmBtn}
-                        onPress={onConfirm}
-                        activeOpacity={0.8}
-                        disabled={loading}
-                    >
-                        {loading
-                            ? <ActivityIndicator size="small" color="#fff" />
-                            : <>
-                                <Icon name="cancel" size={18} color="#fff" />
-                                <Text style={mStyles.cancelConfirmText}>Sí, anular venta</Text>
-                            </>
-                        }
-                    </TouchableOpacity>
-                    <TouchableOpacity style={mStyles.cancelDismissBtn} onPress={onClose} activeOpacity={0.7}>
-                        <Text style={mStyles.cancelDismissText}>Cancelar</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </Modal>
-    );
-}
 
-// ─── Section Header ───────────────────────────────────────────────────────────
-function SectionHeader({ label }: { label: string }) {
-    return (
-        <View style={mStyles.sectionHeader}>
-            <Text style={mStyles.sectionLabel}>{label}</Text>
-            <View style={mStyles.sectionLine} />
-        </View>
-    );
-}
-
-// ─── VentaDetalleModal ────────────────────────────────────────────────────────
-function VentaDetalleModal({
-    venta, visible, onClose,
-}: { venta: Venta | null; visible: boolean; onClose: () => void }) {
     const { anularVenta, temporaryVenta, loadingNotaCredito } = useVentaStore();
+
     const [whatsappNum, setWhatsappNum] = useState('');
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-    useEffect(() => {
-
-    }, [venta]);
-
-    if (!venta) return null;
+    if (!venta || !venta.comprobante) return null;
 
     const cp = venta.comprobante;
-    const estadoStyle = getEstadoStyle(venta.estado);
-    const tipoLabel = getTipoLabel(cp?.tipo_comprobante ?? venta.tipo_comprobante);
-    const serie = cp?.serie ?? '—';
-    const correlativo = cp?.correlativo ?? '—';
-    const avatarColor = getAvatarColor(venta?.comprobante?.nombre_cliente || "Anonima");
-    const isAnulado = venta.estado?.toLowerCase() === 'anulado';
 
-    const handleWhatsApp = () => {
+    const estado =
+        estadoMap[venta.estado?.toLowerCase()] ??
+        estadoMap.pendiente;
+
+    const total = Number(venta.total).toFixed(2);
+
+    const sendWhatsApp = () => {
+
         const num = whatsappNum.replace(/\D/g, '');
+
         if (!num) return;
-        const mensaje = encodeURIComponent(
-            `👋 Hola, somos *Axel Accesories*\n\n` +
-            `🧾 *Comprobante de pago*\n` +
-            `Tipo: ${venta.tipo_comprobante}\n` +
-            `Serie: ${venta.comprobante.serie}-${venta.comprobante.correlativo}\n\n` +
-            `Total: *S/ ${venta.total}*\n\n` +
-            `📄 Descargar: ${venta.comprobante.ticket_url}\n\nGracias por tu compra 🙌`
+
+        const msg = encodeURIComponent(
+            `🧾 ${cp.serie}-${cp.correlativo}\n💰 Total: S/ ${total}\n📄 ${cp.ticket_url}`
         );
-        Linking.openURL(`https://wa.me/51${num}?text=${mensaje}`);
+
+        Linking.openURL(`https://wa.me/51${num}?text=${msg}`);
     };
 
-    const handleAnularConfirm = () => {
-        setShowCancelConfirm(false);
+    const handleAnular = () => {
         anularVenta(temporaryVenta.id, {
             venta_id: temporaryVenta.id,
             tipo_motivo: "01",
@@ -144,455 +103,865 @@ function VentaDetalleModal({
         });
     };
 
-    const docButtons = [
-        { label: 'PDF', icon: 'file-pdf-box', color: T.red, url: cp?.pdf_url },
-        { label: 'XML', icon: 'code-tags', color: T.blue, url: cp?.xml_url },
-        { label: 'CDR', icon: 'file-check', color: T.green, url: cp?.cdr_url },
-        { label: 'Ticket', icon: 'receipt', color: T.purple, url: cp?.ticket_url },
+    const docs = [
+        {
+            icon: 'file-pdf-box',
+            color: T.red,
+            label: 'PDF',
+            url: cp.pdf_url,
+        },
+        {
+            icon: 'xml',
+            color: T.blue,
+            label: 'XML',
+            url: cp.xml_url,
+        },
+        {
+            icon: 'shield-check',
+            color: T.green,
+            label: 'CDR',
+            url: cp.cdr_url,
+        },
+        {
+            icon: 'receipt-text',
+            color: T.purple,
+            label: 'Ticket',
+            url: cp.ticket_url,
+        },
     ];
+    const getImg = (url: any) =>
+        url ? URLS.BASE + url : URLS.IMAGE_URL_PLACEHOLDER;
 
     return (
-        <>
-            <Modal visible={visible} transparent={false} animationType="slide" onRequestClose={onClose}>
-                <StatusBar barStyle="light-content" backgroundColor={T.bg} />
-                <SafeAreaView style={mStyles.screen}>
+        <Modal
+            visible={visible}
+            animationType="slide"
+            transparent={false}
+            onRequestClose={onClose}
+        >
 
-                    {/* ── TOP BAR ── */}
-                    <View style={mStyles.topBar}>
-                        <TouchableOpacity style={mStyles.backBtn} onPress={onClose} activeOpacity={0.8}>
-                            <Icon name="arrow-left" size={20} color={T.textPrimary} />
-                        </TouchableOpacity>
-                        <Text style={mStyles.topBarTitle}>Detalle de venta</Text>
-                        {!isAnulado ? (
+            <StatusBar
+                barStyle="light-content"
+                backgroundColor={T.bg}
+            />
+
+            <SafeAreaView style={s.container}>
+
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={s.scroll}
+                >
+
+                    {/* ───────────────── HEADER ───────────────── */}
+
+                    <View style={s.hero}>
+
+                        <View style={s.heroTop}>
+
                             <TouchableOpacity
-                                style={mStyles.anularTopBtn}
-                                onPress={() => setShowCancelConfirm(true)}
-                                activeOpacity={0.8}
+                                style={s.iconBtn}
+                                onPress={onClose}
                             >
-                                {loadingNotaCredito
-                                    ? <ActivityIndicator size="small" color={T.red} />
-                                    : <>
-                                        <Icon name="cancel" size={14} color={T.red} />
-                                        <Text style={mStyles.anularTopBtnText}>Anular</Text>
-                                    </>
-                                }
+                                <Icon
+                                    name="arrow-left"
+                                    size={20}
+                                    color={T.textPrimary}
+                                />
                             </TouchableOpacity>
-                        ) : (
-                            <View style={mStyles.anularTopBtnGhost} />
-                        )}
+
+                            <View
+                                style={[
+                                    s.estado,
+                                    { backgroundColor: estado.bg }
+                                ]}
+                            >
+                                <Icon
+                                    name={estado.icon}
+                                    size={13}
+                                    color={estado.color}
+                                />
+
+                                <Text
+                                    style={[
+                                        s.estadoText,
+                                        { color: estado.color }
+                                    ]}
+                                >
+                                    {venta.estado}
+                                </Text>
+                            </View>
+
+                        </View>
+
+                        <Text style={s.serie}>
+                            {cp.serie}-{cp.correlativo}
+                        </Text>
+
+                        <Text style={s.total}>
+                            S/ {total}
+                        </Text>
+
+                        <View style={s.metaRow}>
+
+                            <View style={s.metaItem}>
+                                <Icon
+                                    name="calendar-outline"
+                                    size={14}
+                                    color={T.textMuted}
+                                />
+                                <Text style={s.metaText}>
+                                    {formatFecha(venta.fecha_hora)}
+                                </Text>
+                            </View>
+
+                            <View style={s.metaDivider} />
+
+                            <View style={s.metaItem}>
+                                <Icon
+                                    name="credit-card-outline"
+                                    size={14}
+                                    color={T.textMuted}
+                                />
+                                <Text style={s.metaText}>
+                                    {venta.metodo_pago}
+                                </Text>
+                            </View>
+
+                        </View>
+
+                        <View style={s.card}>
+
+                            <View style={s.avatar}>
+                                <Text style={s.avatarText}>
+                                    {cp?.nombre_cliente?.charAt(0) || 'A'}
+                                </Text>
+                            </View>
+
+                            <View style={{ flex: 1 }}>
+
+                                <Text style={s.clientName}>
+                                    {cp?.nombre_cliente || 'Cliente'}
+                                </Text>
+
+                                <Text style={s.clientDoc}>
+                                    {cp?.numero_documento_cliente || 'Sin documento'}
+                                </Text>
+
+                            </View>
+
+                        </View>
+                        {/* ───────────────── PRODUCTOS GRID ───────────────── */}
+
+                        <View style={s.section}>
+
+                            <View style={s.productsGridHeader}>
+
+
+
+                            </View>
+
+                            <View style={s.productsGrid}>
+
+                                {venta.productos?.map((p, i) => {
+
+                                    const isOddLast =
+                                        venta.productos.length > 1 &&
+                                        venta.productos.length % 2 !== 0 &&
+                                        i === venta.productos.length - 1;
+                                    const total =
+                                        (
+                                            (p.precio_unitario ?? p.valor_unitario) *
+                                            p.cantidad
+                                        ).toFixed(2);
+
+                                    return (
+
+                                        <TouchableOpacity
+                                            key={i}
+                                            activeOpacity={0.9}
+                                            style={[
+                                                s.productGridCard,
+                                                isOddLast && s.productGridFull
+                                            ]}
+                                        >
+
+                                            {p.producto_imagen ? (
+
+                                                <Image
+                                                    source={{ uri: getImg(p.producto_imagen) }}
+                                                    style={s.productGridImage}
+                                                    contentFit="cover"
+                                                />
+
+                                            ) : (
+
+                                                <View style={s.productGridImageEmpty}>
+                                                    <Icon
+                                                        name="package-variant-closed"
+                                                        size={22}
+                                                        color={T.textMuted}
+                                                    />
+                                                </View>
+
+                                            )}
+
+                                            <View style={s.productGridContent}>
+
+                                                <View style={s.productGridTop}>
+
+                                                    <View style={{ flex: 1 }}>
+
+                                                        <Text
+                                                            numberOfLines={1}
+                                                            style={s.productGridName}
+                                                        >
+                                                            {p.producto_nombre}
+                                                        </Text>
+
+                                                        <Text style={s.productGridQty}>
+                                                            {p.cantidad} unidades
+                                                        </Text>
+
+                                                    </View>
+
+                                                    <View style={s.productGridBadge}>
+                                                        <Text style={s.productGridBadgeText}>
+                                                            x{p.cantidad}
+                                                        </Text>
+                                                    </View>
+
+                                                </View>
+
+                                                <View style={s.productGridBottom}>
+
+                                                    <View>
+
+                                                        <Text style={s.productGridMini}>
+                                                            Total
+                                                        </Text>
+
+                                                        <Text style={s.productGridPrice}>
+                                                            S/ {total}
+                                                        </Text>
+
+                                                    </View>
+
+                                                    <Icon
+                                                        name="chevron-right"
+                                                        size={18}
+                                                        color={T.textMuted}
+                                                    />
+
+                                                </View>
+
+                                            </View>
+
+                                        </TouchableOpacity>
+
+                                    );
+
+                                })}
+
+                            </View>
+
+                        </View>
+
                     </View>
 
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={mStyles.scrollContent}>
+                    {/* ───────────────── ACTIONS ───────────────── */}
 
-                        {/* ── HERO ── */}
-                        <View style={mStyles.heroArea}>
-                            {isAnulado && (
-                                <View style={mStyles.anuladaBanner}>
-                                    <Icon name="cancel" size={14} color={T.red} />
-                                    <Text style={mStyles.anuladaText}>Comprobante anulado · {formatFecha(venta.fecha_hora)}</Text>
-                                </View>
-                            )}
+                    <View style={{ ...s.section, }}>
 
-                            <Text style={mStyles.comprobanteNum}>{serie} - {correlativo}</Text>
+                        <Text style={s.sectionTitle}>
+                            Acciones rápidas
+                        </Text>
 
-                            <View style={mStyles.heroChips}>
-                                <View style={mStyles.tipoChip}>
-                                    <Text style={mStyles.tipoChipText}>{tipoLabel}</Text>
-                                </View>
-                                <View style={[mStyles.estadoBadge, { backgroundColor: estadoStyle.bg, borderColor: estadoStyle.dot + '30' }]}>
-                                    <View style={[mStyles.estadoDot, { backgroundColor: estadoStyle.dot }]} />
-                                    <Text style={[mStyles.estadoText, { color: estadoStyle.text }]}>
-                                        {venta.estado?.charAt(0).toUpperCase() + venta.estado?.slice(1)}
-                                    </Text>
-                                </View>
-                            </View>
+                        <View style={s.actionsRow}>
 
-                            <Text style={[mStyles.totalHero, isAnulado && { color: T.red }]}>
-                                S/ {venta.total}
-                            </Text>
-                        </View>
+                            {docs.map((d) => (
 
-                        {/* ── DOCUMENTOS ── */}
-                        <SectionHeader label="Documentos" />
-                        <View style={mStyles.docBtnsRow}>
-                            {docButtons.map(({ label, icon, color, url }) => (
                                 <TouchableOpacity
-                                    key={label}
-                                    style={[mStyles.docBtn, !url && { opacity: 0.3 }]}
-                                    onPress={() => url && Linking.openURL(url)}
-                                    activeOpacity={url ? 0.75 : 1}
+                                    key={d.label}
+                                    style={[
+                                        s.actionCard,
+                                        !d.url && { opacity: 0.35 }
+                                    ]}
+                                    onPress={() =>
+                                        d.url && Linking.openURL(d.url)
+                                    }
                                 >
-                                    <View style={[mStyles.docBtnIcon, { backgroundColor: color + '18' }]}>
-                                        <Icon name={icon as any} size={22} color={url ? color : T.textMuted} />
-                                    </View>
-                                    <Text style={[mStyles.docBtnLabel, url && { color: T.textSecondary }]}>{label}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
 
-                        {/* ── CLIENTE ── */}
-                        <SectionHeader label="Cliente" />
-                        <View style={mStyles.clienteCard}>
-                            <View style={[mStyles.avatar, { backgroundColor: avatarColor + '18', borderColor: avatarColor + '30', borderWidth: 1.5 }]}>
-                                <Text style={[mStyles.avatarText, { color: avatarColor }]}>
-                                    {getInitial(venta?.comprobante?.nombre_cliente || "Anonima")}
-                                </Text>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={mStyles.clienteNombre}>{venta?.comprobante?.nombre_cliente || 'Anónimo'}</Text>
-                                <Text style={mStyles.clienteDoc}>
-                                    {venta?.comprobante?.tipo_documento_cliente?.toUpperCase() === "1" ? 'DNI' : 'RUC'}: {venta?.comprobante?.numero_documento_cliente || '—'}
-                                </Text>
-                            </View>
-                            <View style={mStyles.clienteArrow}>
-                                <Icon name="chevron-right" size={18} color={T.textMuted} />
-                            </View>
-                        </View>
-
-                        {/* ── WHATSAPP ── */}
-                        <SectionHeader label="Enviar comprobante" />
-                        <View style={mStyles.whatsappRow}>
-                            <View style={mStyles.whatsappInput}>
-                                <Icon name="whatsapp" size={18} color={T.green} />
-                                <TextInput
-                                    placeholder="+51 Número WhatsApp"
-                                    placeholderTextColor={T.textMuted}
-                                    value={whatsappNum}
-                                    onChangeText={setWhatsappNum}
-                                    keyboardType="numeric"
-                                    style={mStyles.whatsappTextInput}
-                                />
-                            </View>
-                            <TouchableOpacity style={mStyles.whatsappBtn} onPress={handleWhatsApp} activeOpacity={0.85}>
-                                <Icon name="send" size={18} color="#fff" />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* ── ORDER TRACKING STYLE — Status ── */}
-                        <SectionHeader label="Estado del comprobante" />
-                        <View style={mStyles.trackingCard}>
-                            {[
-                                { label: 'Venta registrada', sub: formatFecha(venta.fecha_hora), done: true, icon: 'check-circle' },
-                                { label: 'Enviado a SUNAT', sub: 'Procesando...', done: venta.estado === 'aceptado' || venta.estado === 'anulado', icon: 'cloud-upload' },
-                                { label: 'Aceptado', sub: venta.estado === 'aceptado' ? 'Comprobante válido' : 'Pendiente', done: venta.estado === 'aceptado', icon: 'check-decagram' },
-                            ].map((step, i) => (
-                                <View key={i} style={mStyles.trackStep}>
-                                    <View style={[mStyles.trackDot, step.done && mStyles.trackDotDone]}>
+                                    <View
+                                        style={[
+                                            s.actionIcon,
+                                            { backgroundColor: d.color + '15' }
+                                        ]}
+                                    >
                                         <Icon
-                                            name={step.done ? step.icon as any : 'circle-outline'}
-                                            size={16}
-                                            color={step.done ? T.bg : T.textMuted}
+                                            name={d.icon as any}
+                                            size={20}
+                                            color={d.color}
                                         />
                                     </View>
-                                    {i < 2 && (
-                                        <View style={[mStyles.trackLine, step.done && mStyles.trackLineDone]} />
-                                    )}
-                                    <View style={mStyles.trackInfo}>
-                                        <Text style={[mStyles.trackLabel, step.done && { color: T.textPrimary }]}>{step.label}</Text>
-                                        <Text style={mStyles.trackSub}>{step.sub}</Text>
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
 
-                        {/* ── RESUMEN ── */}
-                        <SectionHeader label="Resumen financiero" />
-                        <View style={mStyles.statsCard}>
-                            {[
-                                { label: 'Método de pago', value: venta.metodo_pago?.toUpperCase() ?? '—' },
-                                { label: 'Fecha', value: formatFecha(venta.fecha_hora) },
-                                { label: 'Serie', value: serie },
-                                { label: 'Correlativo', value: correlativo },
-                                { label: 'Estado', value: venta.estado?.charAt(0).toUpperCase() + venta.estado?.slice(1) },
-                                { label: 'Moneda', value: cp?.moneda ?? 'PEN' },
-                                { label: 'Subtotal', value: `S/ ${venta.subtotal ?? cp?.sub_total ?? '—'}` },
-                                { label: 'IGV (18%)', value: `S/ ${venta.igv_total ?? cp?.igv ?? '—'}` },
-                            ].map(({ label, value }, i, arr) => (
-                                <View key={label}>
-                                    <View style={mStyles.statRow}>
-                                        <Text style={mStyles.statLabel}>{label}</Text>
-                                        <Text style={mStyles.statValue}>{value}</Text>
-                                    </View>
-                                    {i < arr.length - 1 && <View style={mStyles.statDivider} />}
-                                </View>
-                            ))}
-                        </View>
-                        <View style={[mStyles.totalRow, isAnulado && { borderColor: T.red + '30', backgroundColor: T.red + '08' }]}>
-                            <Text style={[mStyles.totalLabel, isAnulado && { color: T.red }]}>Total</Text>
-                            <Text style={[mStyles.totalValue, isAnulado && { color: T.red }]}>S/ {venta.total}</Text>
-                        </View>
+                                    <Text style={s.actionLabel}>
+                                        {d.label}
+                                    </Text>
 
-                        {/* ── PRODUCTOS ── */}
-                        <SectionHeader label={`Productos · ${venta.productos?.length ?? 0}`} />
-                        <View style={{ gap: 8, marginBottom: 16 }}>
-                            {venta.productos?.map((p, i) => (
-                                <View key={i} style={mStyles.productoCard}>
-                                    {p.producto_imagen ? (
-                                        <Image source={{ uri: p.producto_imagen }} style={mStyles.productoImg} contentFit="cover" />
-                                    ) : (
-                                        <View style={[mStyles.productoImg, mStyles.productoImgPlaceholder]}>
-                                            <Icon name="package-variant-closed" size={20} color={T.textMuted} />
-                                        </View>
-                                    )}
-                                    <View style={{ flex: 1, paddingLeft: 12 }}>
-                                        <Text style={mStyles.productoNombre} numberOfLines={2}>{p.producto_nombre}</Text>
-                                        <View style={mStyles.productoFooter}>
-                                            <View style={mStyles.cantidadBadge}>
-                                                <Text style={mStyles.cantidadText}>×{p.cantidad}</Text>
-                                            </View>
-                                            <Text style={mStyles.productoTotal}>
-                                                S/ {((p.precio_unitario ?? p.valor_unitario) * p.cantidad).toFixed(2)}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-
-                        {/* ── FOOTER ACTIONS ── */}
-                        <View style={mStyles.footerActions}>
-                            <TouchableOpacity
-                                style={[mStyles.ticketBtn, !cp?.ticket_url && { opacity: 0.4 }]}
-                                onPress={() => cp?.ticket_url && Linking.openURL(cp.ticket_url)}
-                                activeOpacity={cp?.ticket_url ? 0.8 : 1}
-                            >
-                                <View style={mStyles.ticketIconWrap}>
-                                    <Icon name="printer-outline" size={20} color={cp?.ticket_url ? T.accent : T.textMuted} />
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={[mStyles.ticketBtnText, !cp?.ticket_url && { color: T.textMuted }]}>Imprimir ticket</Text>
-                                    <Text style={mStyles.ticketBtnSub}>{cp?.ticket_url ? 'Abre en el navegador' : 'No disponible'}</Text>
-                                </View>
-                                <Icon name="open-in-new" size={15} color={T.textMuted} />
-                            </TouchableOpacity>
-
-                            {!isAnulado && (
-                                <TouchableOpacity
-                                    style={mStyles.anularFooterBtn}
-                                    onPress={() => setShowCancelConfirm(true)}
-                                    activeOpacity={0.8}
-                                >
-                                    {loadingNotaCredito
-                                        ? <ActivityIndicator size="small" color={T.red} />
-                                        : <>
-                                            <Icon name="cancel" size={18} color={T.red} />
-                                            <Text style={mStyles.anularFooterText}>Anular venta</Text>
-                                        </>
-                                    }
                                 </TouchableOpacity>
-                            )}
+
+                            ))}
+
                         </View>
 
-                    </ScrollView>
-                </SafeAreaView>
-            </Modal>
+                    </View>
 
-            <CancelConfirmModal
-                visible={showCancelConfirm}
-                loading={loadingNotaCredito}
-                onConfirm={handleAnularConfirm}
-                onClose={() => setShowCancelConfirm(false)}
-            />
-        </>
+
+                    {venta.estado?.toLowerCase() !== 'anulada' && (
+
+                        <TouchableOpacity
+                            style={s.cancelGlassBtn}
+                            onPress={handleAnular}
+                            activeOpacity={0.92}
+                        >
+
+                            <View style={s.cancelGlassLeft}>
+
+                                <View style={s.cancelGlassBadge}>
+                                    {loadingNotaCredito ? (
+                                        <ActivityIndicator
+                                            size="small"
+                                            color="#fff"
+                                        />
+                                    ) : (
+                                        <Icon
+                                            name="close-thick"
+                                            size={15}
+                                            color="#fff"
+                                        />
+                                    )}
+                                </View>
+
+                                <View>
+
+                                    <Text style={s.cancelGlassTitle}>
+                                        Cancelar comprobante
+                                    </Text>
+
+                                    <Text style={s.cancelGlassSub}>
+                                        Acción irreversible ante SUNAT
+                                    </Text>
+
+                                </View>
+
+                            </View>
+
+                            <View style={s.cancelGlassArrow}>
+                                <Icon
+                                    name="arrow-top-right"
+                                    size={16}
+                                    color={T.red}
+                                />
+                            </View>
+
+                        </TouchableOpacity>
+
+                    )}
+                </ScrollView>
+
+            </SafeAreaView>
+
+        </Modal>
     );
 }
-export default VentaDetalleModal;
 
-// ─── Modal Styles ─────────────────────────────────────────────────────────────
-const mStyles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: T.bg },
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
+const s = StyleSheet.create({
 
-    topBar: {
-        flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: 16, paddingVertical: 12,
-        borderBottomWidth: 1, borderBottomColor: T.border,
-        backgroundColor: T.bg, gap: 12,
-    },
-    backBtn: {
-        width: 40, height: 40, borderRadius: 13,
-        backgroundColor: T.surface, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.border,
-    },
-    topBarTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: T.textPrimary, letterSpacing: -0.3 },
-    anularTopBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: T.red + '15', borderRadius: 12,
-        paddingHorizontal: 12, paddingVertical: 8,
-        borderWidth: 1, borderColor: T.red + '30',
-        minWidth: 72, justifyContent: 'center',
-    },
-    anularTopBtnText: { fontSize: 13, fontWeight: '700', color: T.red },
-    anularTopBtnGhost: { minWidth: 72 },
-
-    heroArea: { paddingTop: 24, paddingBottom: 4 },
-    anuladaBanner: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: T.red + '15', borderWidth: 1, borderColor: T.red + '30',
-        borderRadius: 12, padding: 12, marginBottom: 16,
-    },
-    anuladaText: { fontSize: 12, color: T.red, fontWeight: '600', flex: 1 },
-    comprobanteNum: { fontSize: 36, fontWeight: '900', color: T.textPrimary, letterSpacing: -1.5, marginBottom: 10 },
-    heroChips: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-    tipoChip: {
-        backgroundColor: T.surface, borderRadius: 10,
-        paddingHorizontal: 12, paddingVertical: 6,
-        borderWidth: 1, borderColor: T.border,
-    },
-    tipoChipText: { fontSize: 11, fontWeight: '700', color: T.textSecondary },
-    estadoBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
-    estadoDot: { width: 6, height: 6, borderRadius: 3 },
-    estadoText: { fontSize: 11, fontWeight: '700' },
-    totalHero: { fontSize: 48, fontWeight: '900', color: T.accent, letterSpacing: -2, marginBottom: 8 },
-
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 14 },
-    sectionLabel: { fontSize: 10, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: '700' },
-    sectionLine: { flex: 1, height: 1, backgroundColor: T.border },
-
-    docBtnsRow: { flexDirection: 'row', gap: 8 },
-    docBtn: {
-        flex: 1, alignItems: 'center', gap: 8, paddingVertical: 14,
-        backgroundColor: T.surface, borderRadius: T.radiusMd,
-        borderWidth: 1, borderColor: T.border,
-    },
-    docBtnIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    docBtnLabel: { fontSize: 11, fontWeight: '700', color: T.textMuted },
-
-    clienteCard: {
-        flexDirection: 'row', alignItems: 'center', gap: 12,
-        backgroundColor: T.surface, borderRadius: T.radiusMd,
-        padding: 14, borderWidth: 1, borderColor: T.border,
-    },
-    avatar: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-    avatarText: { fontWeight: '900', fontSize: 20 },
-    clienteNombre: { fontSize: 15, fontWeight: '700', color: T.textPrimary },
-    clienteDoc: { fontSize: 12, color: T.textSecondary, marginTop: 2 },
-    clienteArrow: {
-        width: 30, height: 30, borderRadius: 9,
-        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.border,
+    container: {
+        flex: 1,
+        backgroundColor: T.bg,
     },
 
-    whatsappRow: { flexDirection: 'row', gap: 10 },
-    whatsappInput: {
-        flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
-        backgroundColor: T.surface, borderRadius: T.radiusMd,
-        paddingHorizontal: 14, borderWidth: 1, borderColor: T.border,
-    },
-    whatsappTextInput: { flex: 1, color: T.textPrimary, fontSize: 14, paddingVertical: 14 },
-    whatsappBtn: {
-        backgroundColor: '#15803d', borderRadius: T.radiusMd,
-        paddingHorizontal: 18, paddingVertical: 14,
-        alignItems: 'center', justifyContent: 'center',
+    scroll: {
+        padding: 18,
+        paddingBottom: 13,
+        gap: 18,
     },
 
-    // Tracking style
-    trackingCard: {
-        backgroundColor: T.surface, borderRadius: T.radiusMd,
-        padding: 16, borderWidth: 1, borderColor: T.border,
+    hero: {
+        backgroundColor: T.surface,
+        borderRadius: 30,
+        padding: 22,
+        borderWidth: 1,
+        borderColor: T.border,
+        overflow: 'hidden',
     },
-    trackStep: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
-    trackDot: {
-        width: 32, height: 32, borderRadius: 10,
-        backgroundColor: T.surfaceAlt, borderWidth: 1, borderColor: T.border,
-        alignItems: 'center', justifyContent: 'center', marginRight: 12,
-    },
-    trackDotDone: { backgroundColor: T.accent, borderColor: T.accent },
-    trackLine: {
-        position: 'absolute', left: 15, top: 32,
-        width: 2, height: 20, backgroundColor: T.border, zIndex: 0,
-    },
-    trackLineDone: { backgroundColor: T.accent },
-    trackInfo: { flex: 1, paddingTop: 4 },
-    trackLabel: { fontSize: 13, fontWeight: '600', color: T.textSecondary },
-    trackSub: { fontSize: 11, color: T.textMuted, marginTop: 2 },
 
-    statsCard: {
-        backgroundColor: T.surface, borderRadius: T.radiusMd,
-        paddingHorizontal: 16, paddingVertical: 4,
-        borderWidth: 1, borderColor: T.border, marginBottom: 8,
+    heroTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    statRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
-    statDivider: { height: 1, backgroundColor: T.border },
-    statLabel: { fontSize: 13, color: T.textMuted },
-    statValue: { fontSize: 13, fontWeight: '600', color: T.textSecondary },
-    totalRow: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        paddingVertical: 16, backgroundColor: T.accentDim,
-        borderRadius: T.radiusMd, paddingHorizontal: 16,
-        borderWidth: 1, borderColor: T.accent + '25',
-    },
-    totalLabel: { fontSize: 11, fontWeight: '700', color: T.accent, textTransform: 'uppercase', letterSpacing: 1 },
-    totalValue: { fontSize: 30, fontWeight: '900', color: T.accent, letterSpacing: -1 },
 
-    productoCard: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: T.surface, borderRadius: T.radiusMd,
-        padding: 12, borderWidth: 1, borderColor: T.border,
+    iconBtn: {
+        width: 42,
+        height: 42,
+        borderRadius: 14,
+        backgroundColor: T.surfaceAlt,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    productoImg: { width: 56, height: 56, borderRadius: 12 },
-    productoImgPlaceholder: {
-        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.border,
-    },
-    productoNombre: { fontSize: 14, fontWeight: '600', color: T.textPrimary, marginBottom: 8 },
-    productoFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    cantidadBadge: {
-        backgroundColor: T.accentDim, borderRadius: 8,
-        paddingHorizontal: 8, paddingVertical: 3,
-        borderWidth: 1, borderColor: T.accent + '30',
-    },
-    cantidadText: { fontSize: 11, fontWeight: '700', color: T.accent },
-    productoTotal: { fontSize: 15, fontWeight: '800', color: T.textPrimary },
 
-    footerActions: { gap: 10, marginTop: 8 },
-    ticketBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 14,
-        backgroundColor: T.surface, borderRadius: T.radiusLg,
-        paddingVertical: 14, paddingHorizontal: 16,
-        borderWidth: 1, borderColor: T.border,
+    estado: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 100,
     },
-    ticketIconWrap: {
-        width: 42, height: 42, borderRadius: 13,
-        backgroundColor: T.accentDim, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.accent + '30',
-    },
-    ticketBtnText: { fontSize: 14, fontWeight: '700', color: T.textPrimary },
-    ticketBtnSub: { fontSize: 11, color: T.textMuted, marginTop: 2 },
-    anularFooterBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-        borderRadius: T.radiusLg, paddingVertical: 15,
-        backgroundColor: T.red + '12', borderWidth: 1, borderColor: T.red + '30',
-    },
-    anularFooterText: { fontSize: 15, fontWeight: '700', color: T.red },
 
-    cancelOverlay: {
-        flex: 1, backgroundColor: 'rgba(0,0,0,0.9)',
-        justifyContent: 'center', alignItems: 'center', padding: 24,
+    estadoText: {
+        fontSize: 12,
+        fontWeight: '800',
+        textTransform: 'capitalize',
     },
-    cancelSheet: {
-        backgroundColor: T.surface, borderRadius: T.radiusXl,
-        padding: 28, alignItems: 'center', width: '100%',
-        borderWidth: 1, borderColor: T.border,
+
+    serie: {
+        fontSize: 19,
+        fontWeight: '700',
+        color: T.textSecondary,
+        marginTop: 28,
     },
-    cancelIconWrap: {
-        width: 72, height: 72, borderRadius: 20,
-        backgroundColor: T.red + '15', alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.red + '30', marginBottom: 20,
+
+    total: {
+        fontSize: 52,
+        fontWeight: '900',
+        color: T.accent,
+        letterSpacing: -3,
+        marginTop: 4,
     },
-    cancelTitle: { fontSize: 20, fontWeight: '900', color: T.textPrimary, letterSpacing: -0.5, marginBottom: 10 },
-    cancelSubtitle: { fontSize: 14, color: T.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
-    cancelConfirmBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: T.red, borderRadius: T.radiusMd,
-        paddingVertical: 15, paddingHorizontal: 24,
-        width: '100%', justifyContent: 'center', marginBottom: 10, minHeight: 52,
+
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 18,
+        backgroundColor: T.surfaceAlt,
+        borderRadius: 18,
+        padding: 14,
     },
-    cancelConfirmText: { fontSize: 15, fontWeight: '800', color: '#fff' },
-    cancelDismissBtn: {
-        paddingVertical: 14, paddingHorizontal: 24, borderRadius: T.radiusMd,
-        width: '100%', alignItems: 'center',
-        backgroundColor: T.surfaceAlt, borderWidth: 1, borderColor: T.border,
+
+    metaItem: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
+        justifyContent: 'center',
     },
-    cancelDismissText: { fontSize: 15, fontWeight: '600', color: T.textSecondary },
+
+    metaDivider: {
+        width: 1,
+        height: 20,
+        backgroundColor: T.border,
+    },
+
+    metaText: {
+        fontSize: 12,
+        color: T.textSecondary,
+        fontWeight: '600',
+    },
+
+    section: {
+        gap: 12,
+    },
+
+    sectionTitle: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: T.textMuted,
+        letterSpacing: 1.2,
+        textTransform: 'uppercase',
+    },
+
+    actionsRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+
+    actionCard: {
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: T.surface,
+        borderRadius: 22,
+        paddingVertical: 16,
+        borderWidth: 1,
+        borderColor: T.border,
+        gap: 8,
+    },
+
+    actionIcon: {
+        width: 46,
+        height: 46,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    actionLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: T.textSecondary,
+    },
+
+    card: {
+        backgroundColor: T.surface,
+        borderRadius: 24,
+        paddingTop: 13,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        borderWidth: 0,
+        borderColor: T.border,
+    },
+
+    avatar: {
+        width: 54,
+        height: 54,
+        borderRadius: 18,
+        backgroundColor: T.accent + '15',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    avatarText: {
+        fontSize: 20,
+        fontWeight: '900',
+        color: T.accent,
+    },
+
+    clientName: {
+        fontSize: 15,
+        fontWeight: '800',
+        color: T.textPrimary,
+    },
+
+    clientDoc: {
+        marginTop: 3,
+        fontSize: 12,
+        color: T.textMuted,
+    },
+
+    whatsappRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+
+    inputWrap: {
+        flex: 1,
+        backgroundColor: T.surface,
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        borderWidth: 1,
+        borderColor: T.border,
+    },
+
+    input: {
+        flex: 1,
+        color: T.textPrimary,
+        paddingVertical: 14,
+        fontSize: 14,
+    },
+
+    sendBtn: {
+        width: 56,
+        borderRadius: 18,
+        backgroundColor: T.accent,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    productsHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    productsCount: {
+        fontSize: 13,
+        color: T.textMuted,
+        fontWeight: '700',
+    },
+
+    productCard: {
+        backgroundColor: T.surface,
+        borderRadius: 24,
+        padding: 12,
+        flexDirection: 'row',
+        gap: 12,
+        borderWidth: 1,
+        borderColor: T.border,
+    },
+
+    productImage: {
+        width: 68,
+        height: 68,
+        borderRadius: 18,
+    },
+
+    productImageEmpty: {
+        backgroundColor: T.surfaceAlt,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    productName: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: T.textPrimary,
+        marginBottom: 10,
+    },
+
+    productBottom: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    qty: {
+        backgroundColor: T.accent + '15',
+        borderRadius: 100,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+    },
+
+    qtyText: {
+        fontSize: 11,
+        fontWeight: '800',
+        color: T.accent,
+    },
+
+    productPrice: {
+        fontSize: 15,
+        fontWeight: '900',
+        color: T.textPrimary,
+    },
+
+    footer: {
+        marginTop: 8,
+        backgroundColor: T.surface,
+        borderRadius: 28,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: T.border,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    footerLabel: {
+        fontSize: 12,
+        color: T.textMuted,
+        fontWeight: '700',
+    },
+
+    footerTotal: {
+        marginTop: 2,
+        fontSize: 32,
+        fontWeight: '900',
+        color: T.accent,
+        letterSpacing: -2,
+    },
+
+    /// Cancel
+
+    cancelGlassBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+
+        backgroundColor: T.red + '08',
+
+        borderWidth: 1,
+        borderColor: T.red + '18',
+
+        borderRadius: 28,
+
+        paddingVertical: 16,
+        paddingHorizontal: 18,
+    },
+
+    cancelGlassLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+
+        flex: 1,
+    },
+
+    cancelGlassBadge: {
+        width: 48,
+        height: 48,
+
+        borderRadius: 16,
+
+        backgroundColor: T.red,
+
+        justifyContent: 'center',
+        alignItems: 'center',
+
+        shadowColor: T.red,
+        shadowOpacity: 0.25,
+        shadowRadius: 14,
+        shadowOffset: {
+            width: 0,
+            height: 6,
+        },
+
+        elevation: 8,
+    },
+
+    cancelGlassTitle: {
+        fontSize: 15,
+        fontWeight: '900',
+        color: T.red,
+    },
+
+    cancelGlassSub: {
+        marginTop: 3,
+        fontSize: 12,
+        color: T.textMuted,
+    },
+
+    cancelGlassArrow: {
+        width: 38,
+        height: 38,
+
+        borderRadius: 14,
+
+        backgroundColor: T.surface,
+
+        justifyContent: 'center',
+        alignItems: 'center',
+
+        borderWidth: 1,
+        borderColor: T.red + '15',
+    },
+    //product
+    productsGridHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+
+        marginBottom: 4,
+    },
+
+    productsGridCount: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: T.textMuted,
+    },
+
+    productsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+
+        gap: 12,
+    },
+
+    productGridCard: {
+        width: '48%',
+
+        backgroundColor: T.surface,
+
+        borderRadius: 28,
+
+        overflow: 'hidden',
+
+        borderWidth: 1,
+        borderColor: T.surfaceAlt,
+    },
+
+    productGridFull: {
+        width: '100%',
+    },
+
+    productGridImage: {
+        width: '100%',
+        height: 140,
+
+    },
+
+    productGridImageEmpty: {
+        width: '100%',
+        height: 140,
+
+        backgroundColor: T.surfaceAlt,
+
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    productGridContent: {
+        padding: 14,
+    },
+
+    productGridTop: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+
+        gap: 10,
+    },
+
+    productGridName: {
+        fontSize: 15,
+        fontWeight: '900',
+        color: T.textPrimary,
+    },
+
+    productGridQty: {
+        marginTop: 4,
+
+        fontSize: 12,
+        color: T.textMuted,
+    },
+
+    productGridBadge: {
+        backgroundColor: T.accent + '15',
+
+        borderRadius: 999,
+
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+    },
+
+    productGridBadgeText: {
+        fontSize: 11,
+        fontWeight: '800',
+        color: T.accent,
+    },
+
+    productGridBottom: {
+        marginTop: 18,
+
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    productGridMini: {
+        fontSize: 11,
+        color: T.textMuted,
+    },
+
+    productGridPrice: {
+        marginTop: 2,
+
+        fontSize: 18,
+        fontWeight: '900',
+        color: T.textPrimary,
+    },
 });

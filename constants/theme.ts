@@ -1,61 +1,110 @@
-export const T = {
-    // ── BACKGROUNDS (LIGHT) ─────────────────────────────────────────────
-    bg: '#f8fafc',                 // fondo principal (blanco suave)
-    surface: '#ffffff',           // tarjetas base
-    surfaceAlt: '#f1f5f9',        // variación gris claro
-    surfaceElevated: '#ffffff',   // modales / overlays
+type Shadow = {
+    shadowColor: string;
+    shadowOffset: { width: number; height: number };
+    shadowOpacity: number;
+    shadowRadius: number;
+    elevation: number;
+};
 
-    // ── ACCENTS ─────────────────────────────────────────────────────────
-    accent: '#ef4444',   // rojo
-    accent2: '#3b82f6',  // azul
-    accent3: '#22c55e',  // verde
-    accent4: '#eab308',  // amarillo
-    accent5: '#a855f7',  // morado
-    accent6: '#f97316',  // naranja
+type Theme = {
+    bg: string;
+    surface: string;
+    surfaceAlt: string;
+    surfaceElevated: string;
 
-    accentDim: '#ef444415',
-    accentHover: '#dc2626',
+    accent: string;
+    accent2: string;
+    accent3: string;
+    accent4: string;
+    accent5: string;
+    accent6: string;
+    accentDim: string;
+    accentHover: string;
 
-    // ── TEXT ────────────────────────────────────────────────────────────
-    textPrimary: '#0f172a',     // casi negro
-    textSecondary: '#334155',   // gris oscuro medio
-    textMuted: '#64748b',       // gris tenue
+    textPrimary: string;
+    textSecondary: string;
+    textMuted: string;
+    textDisabled: string;
 
-    // ── BORDERS ─────────────────────────────────────────────────────────
-    border: '#e2e8f0',
-    borderMedium: '#cbd5e1',
+    border: string;
+    borderMedium: string;
 
-    // ── SEMÁNTICOS ──────────────────────────────────────────────────────
-    green: '#16a34a',
-    red: '#ef4444',
-    amber: '#f59e0b',
-    yellow: '#eab308',
-    blue: '#3b82f6',
-    purple: '#a855f7',
+    green: string;
+    red: string;
+    amber: string;
+    yellow: string;
+    blue: string;
+    purple: string;
 
-    // ── RADIOS ──────────────────────────────────────────────────────────
+    radiusSm: number;
+    radiusMd: number;
+    radiusLg: number;
+    radiusXl: number;
+    radiusFull: number;
+
+    shadowAccent: Shadow;
+    shadowCard: Shadow;
+};
+
+const arounda: Theme = {
+    // ── NEGROS PROFUNDOS (sin verde ni azul) ─────────────────────
+    bg: '#050505',
+    surface: '#0D0D0D',
+    surfaceAlt: '#151515',
+    surfaceElevated: '#1D1D1D',
+
+    // ── ACCENT VERDE NEÓN ────────────────────────────────────────
+    accent: '#C6FF00',
+    accent2: '#B2F000',
+    accent3: '#98D600',
+    accent4: '#D4FF4D',
+    accent5: '#E4FF8A',
+    accent6: '#F1FFC2',
+
+    accentDim: '#C6FF0018',
+    accentHover: '#AEE000',
+
+    // ── TEXTO ────────────────────────────────────────────────────
+    textPrimary: '#F5F5F5',
+    textSecondary: '#B0B0B0',
+    textMuted: '#707070',
+    textDisabled: '#404040',
+
+    // ── BORDES ───────────────────────────────────────────────────
+    border: 'transparent',
+    borderMedium: '#262626',
+
+    // ── COLORES SEMÁNTICOS ───────────────────────────────────────
+    green: '#6DFF7A',
+    red: '#FF5A5A',
+    amber: '#FFB020',
+    yellow: '#F8FF72',
+    blue: '#3BA7FF',
+    purple: '#9B6DFF',
+
+    // ── RADIOS ───────────────────────────────────────────────────
     radiusSm: 10,
     radiusMd: 14,
     radiusLg: 20,
     radiusXl: 28,
     radiusFull: 100,
 
-    // ── SHADOWS (LIGHT MODE) ────────────────────────────────────────────
+    // ── SOMBRAS ──────────────────────────────────────────────────
     shadowAccent: {
-        shadowColor: 'rgba(239,68,68,0.4)',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.08,
-        shadowRadius: 14,
-        elevation: 3,
+        shadowColor: '#C6FF00',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.22,
+        shadowRadius: 22,
+        elevation: 8,
     },
 
     shadowCard: {
-        shadowColor: 'rgba(0,0,0,0.06)',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.06,
-        shadowRadius: 16,
-        elevation: 2,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.65,
+        shadowRadius: 24,
+        elevation: 10,
     },
 };
 
-export default T;
+export default arounda;

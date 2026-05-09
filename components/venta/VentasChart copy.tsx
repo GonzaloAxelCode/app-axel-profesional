@@ -693,21 +693,14 @@ export function VentasChart2() {
     return (
         <View style={st.wrap}>
 
-            {/* ── HOY ── */}
-            <SectionLabel title="HOY" />
-            <TodaySection raw={raw} />
 
-            <View style={st.sectionDivider} />
+
 
             {/* ── SEMANA ── */}
             <SectionLabel title="ESTA SEMANA" />
             <WeekChart data={weekData} />
 
-            <View style={st.sectionDivider} />
 
-            {/* ── MES ── */}
-            <SectionLabel title="ÚLTIMOS 30 DÍAS" />
-            <MonthChart data={monthData} />
 
             <View style={st.sectionDivider} />
 

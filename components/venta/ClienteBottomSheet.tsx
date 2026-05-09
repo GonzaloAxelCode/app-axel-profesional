@@ -1,7 +1,7 @@
 import { useClientes as useClientesHook } from '@/State/hooks/useClientes';
 import { Cliente } from '@/State/models/cliente.models';
 import T from '@/constants/THEME';
-import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -35,7 +35,7 @@ export function ClienteBottomSheet({
   onClienteEncontrado,
   tipodoc,
 }: ClienteBottomSheetProps) {
-  const snapPoints = useMemo(() => ['100%'], []);
+  const snapPoints = useMemo(() => ['90%'], []);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<ClienteFilterKey>(
     tipodoc === 'ruc' ? 'ruc' : 'dni'
@@ -160,39 +160,13 @@ export function ClienteBottomSheet({
   // HEADER
   // ─────────────────────────────────────────────
   const ListHeader = useMemo(() => (
-    <>
+    <View style={{ paddingHorizontal: 14 }}>
       {/* Title */}
       <View style={styles.header}>
         <Text style={styles.title}>Clientes</Text>
         <Text style={styles.counter}>{filtered.length}</Text>
       </View>
 
-      {/* Filters */}
-      <View style={styles.tabs}>
-        {['dni', 'ruc'].map((key) => {
-          const active = activeFilter === key;
-
-          return (
-            <TouchableOpacity
-              key={key}
-              onPress={() => setActiveFilter(key as any)}
-              style={[
-                styles.tab,
-                active && styles.tabActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  active && styles.tabTextActive,
-                ]}
-              >
-                {key.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
 
       {/* Search */}
       <View style={styles.search}>
@@ -222,26 +196,40 @@ export function ClienteBottomSheet({
           )}
         </TouchableOpacity>
       )}
-    </>
+    </View>
   ), [filtered.length, search, activeFilter]);
 
   useEffect(() => {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        opacity={1.5}          // 0.0 – 1.0  (default es ~0.5)
 
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  );
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={-1}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
+      backdropComponent={renderBackdrop}
       backgroundStyle={{ backgroundColor: T.bg }}
+      handleIndicatorStyle={{ backgroundColor: T.textMuted, width: 40 }}
     >
+      {ListHeader}
       <BottomSheetFlatList
         data={filtered}
         keyExtractor={(item: any) => item.document}
         renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
+
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={

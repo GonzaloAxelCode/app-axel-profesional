@@ -1,3 +1,4 @@
+import T from '@/constants/THEME';
 import { useProductos } from '@/State/hooks/useProductos';
 import { Producto } from '@/State/models/producto.models';
 import { URLS } from '@/State/utils/endpoints';
@@ -18,8 +19,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ImageViewing from 'react-native-image-viewing';
 import { Text } from 'react-native-paper';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-// ─── helpers ─────────────────────────────────────────────────────────────────
+const W = Dimensions.get('window').width;
 
 const formatFecha = (fecha?: Date | string) => {
   if (!fecha) return '—';
@@ -27,8 +27,6 @@ const formatFecha = (fecha?: Date | string) => {
     day: 'numeric', month: 'short', year: 'numeric',
   });
 };
-
-// ─── ProductoDetailScreen ─────────────────────────────────────────────────────
 
 export default function ProductoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,24 +44,22 @@ export default function ProductoDetailScreen() {
     await Share.share({ message: `${producto.nombre} — S/ ${producto.inventario?.costo_venta ?? '—'}` });
   };
 
-  // ── Loading ──
   if (isLoading) {
     return (
-      <GestureHandlerRootView style={styles.loadingWrap}>
-        <ActivityIndicator size="large" color="#0a0a0a" />
-        <Text style={styles.loadingText}>Cargando producto...</Text>
+      <GestureHandlerRootView style={s.center}>
+        <ActivityIndicator size="large" color={T.accent} />
+        <Text style={s.loadingText}>Cargando...</Text>
       </GestureHandlerRootView>
     );
   }
 
-  // ── Not found ──
   if (!producto) {
     return (
-      <GestureHandlerRootView style={styles.loadingWrap}>
-        <Icon name="package-variant-closed" size={52} color="#e5e7eb" />
-        <Text style={styles.emptyTitle}>Producto no encontrado</Text>
-        <TouchableOpacity style={styles.backPill} onPress={() => router.back()}>
-          <Text style={styles.backPillText}>Volver</Text>
+      <GestureHandlerRootView style={s.center}>
+        <Icon name="package-variant-closed" size={52} color={T.textMuted} />
+        <Text style={s.emptyTitle}>Producto no encontrado</Text>
+        <TouchableOpacity style={s.backPill} onPress={() => router.back()}>
+          <Text style={s.backPillText}>Volver</Text>
         </TouchableOpacity>
       </GestureHandlerRootView>
     );
@@ -72,164 +68,142 @@ export default function ProductoDetailScreen() {
   const inv = producto.inventario;
   const precioVenta = inv?.costo_venta;
   const precioCompra = inv?.costo_compra;
-  const stock = inv?.cantidad ?? inv?.cantidad ?? null;
-  const vendidos = null;
+  const stock = inv?.cantidad ?? null;
+  const ganancia = precioVenta && precioCompra ? precioVenta - precioCompra : null;
+  const margen = precioVenta && precioCompra ? Math.round(((precioVenta - precioCompra) / precioVenta) * 100) : null;
 
-  const getImagenProducto = (producto: Producto) =>
-    producto?.imagen ? URLS.BASE + producto.imagen : URLS.IMAGE_URL_PLACEHOLDER;
-
+  const getImg = (p: Producto) =>
+    p?.imagen ? URLS.BASE + p.imagen : URLS.IMAGE_URL_PLACEHOLDER;
 
   const infoRows = [
-    { label: 'SKU', value: producto.sku || '—' },
-    { label: 'Marca', value: producto.marca || '—' },
-    { label: 'Modelo', value: producto.modelo || '—' },
-    { label: 'Precio compra', value: precioCompra != null ? `S/ ${precioCompra}` : '—' },
-    { label: 'Categoría', value: producto.categoria_nombre || '—' },
-    { label: 'Creado', value: formatFecha(producto.fecha_creacion) },
+    { label: 'SKU', value: producto.sku || '—', icon: 'barcode' },
+    { label: 'Marca', value: producto.marca || '—', icon: 'tag-outline' },
+    { label: 'Modelo', value: producto.modelo || '—', icon: 'cube-outline' },
+    { label: 'Costo compra', value: precioCompra != null ? `S/ ${precioCompra}` : '—', icon: 'cart-outline' },
+    { label: 'Categoría', value: producto.categoria_nombre || '—', icon: 'shape-outline' },
+    { label: 'Creado', value: formatFecha(producto.fecha_creacion), icon: 'calendar-outline' },
   ].filter(r => r.value !== '—');
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={styles.screen}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: T.bg }}>
 
-        {/* ── HERO IMAGE ── */}
-        <View style={styles.hero}>
-          {producto.imagen ? (
-            <TouchableOpacity activeOpacity={0.9} onPress={() => setImageVisible(true)}>
-              <Image
-                source={{ uri: getImagenProducto(producto) }}
-                style={styles.heroImg}
-                contentFit="cover"
-                placeholder={URLS.IMAGE_URL_PLACEHOLDER}
-              />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.heroPlaceholder}>
-              <Icon name="package-variant-closed" size={64} color="#d1d5db" />
-              <Text style={styles.heroPlaceholderText}>Sin imagen</Text>
-            </View>
-          )}
+      {/* ── HERO ── */}
+      <View style={s.hero}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setImageVisible(true)} style={{ flex: 1 }}>
+          <Image
+            source={{ uri: getImg(producto) }}
+            style={s.heroImg}
+            contentFit="cover"
+          />
+          {/* overlay gradient */}
+          <View style={s.heroOverlay} />
+        </TouchableOpacity>
 
-          {/* Back */}
-          <TouchableOpacity style={[styles.circleBtn, styles.circleBtnLeft]} onPress={() => router.back()} activeOpacity={0.8}>
-            <Icon name="chevron-left" size={22} color="#0a0a0a" />
-          </TouchableOpacity>
+        {/* Back */}
+        <TouchableOpacity style={[s.fab, s.fabLeft]} onPress={() => router.back()}>
+          <Icon name="chevron-left" size={22} color={T.textPrimary} />
+        </TouchableOpacity>
 
-          {/* Share */}
-          <TouchableOpacity style={[styles.circleBtn, styles.circleBtnRight]} onPress={handleShare} activeOpacity={0.8}>
-            <Icon name="share-variant-outline" size={19} color="#0a0a0a" />
-          </TouchableOpacity>
+        {/* Share */}
+        <TouchableOpacity style={[s.fab, s.fabRight]} onPress={handleShare}>
+          <Icon name="share-variant-outline" size={18} color={T.textPrimary} />
+        </TouchableOpacity>
 
-          {/* Stock badge */}
-          {stock != null && (
-            <View style={styles.stockBadge}>
-              <Text style={styles.stockBadgeText}>{stock} en stock</Text>
+        {/* Estado badge */}
+        <View style={[s.estadoBadge, { backgroundColor: producto.activo ? T.green + '20' : T.red + '20' }]}>
+          <View style={[s.estadoDot, { backgroundColor: producto.activo ? T.green : T.red }]} />
+          <Text style={[s.estadoText, { color: producto.activo ? T.green : T.red }]}>
+            {producto.activo ? 'Activo' : 'Inactivo'}
+          </Text>
+        </View>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={s.scroll}
+      >
+        {/* ── NOMBRE + PRECIO ── */}
+        <View style={s.topSection}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.nombre}>{producto.nombre}</Text>
+            {producto.categoria_nombre && (
+              <View style={s.catChip}>
+                <Icon name="shape-outline" size={11} color={T.textMuted} />
+                <Text style={s.catText}>{producto.categoria_nombre}</Text>
+              </View>
+            )}
+          </View>
+          {precioVenta != null && (
+            <View style={s.precioBox}>
+              <Text style={s.precioLabel}>S/</Text>
+              <Text style={s.precio}>{precioVenta}</Text>
             </View>
           )}
         </View>
 
-        {/* ── CONTENT ── */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* Nombre + Precio */}
-          <View style={styles.topRow}>
-            <Text style={styles.nombre}>{producto.nombre}</Text>
-            {precioVenta != null && (
-              <Text style={styles.precio}>S/ {precioVenta}</Text>
-            )}
-          </View>
-
-          {/* Categoría chip */}
-          {producto.categoria_nombre && (
-            <View style={styles.categoriaChip}>
-              <Icon name="tag-outline" size={12} color="#6b7280" />
-              <Text style={styles.categoriaText}>{producto.categoria_nombre}</Text>
+        {/* ── STATS GRID ── */}
+        <View style={s.statsGrid}>
+          {stock != null && (
+            <View style={[s.statCard, { backgroundColor: T.accent + '15' }]}>
+              <Text style={[s.statVal, { color: T.accent }]}>{stock}</Text>
+              <Text style={s.statLbl}>Stock</Text>
             </View>
           )}
-
-          {/* Stats pills */}
-          <View style={styles.statsRow}>
-            {stock != null && (
-              <View style={styles.statPill}>
-                <Text style={styles.statVal}>{stock}</Text>
-                <Text style={styles.statLbl}>Stock</Text>
-              </View>
-            )}
-            {vendidos != null && (
-              <View style={styles.statPill}>
-                <Text style={styles.statVal}>{vendidos}</Text>
-                <Text style={styles.statLbl}>Vendidos</Text>
-              </View>
-            )}
-            <View style={styles.statPill}>
-              <Text style={[styles.statVal, styles.statValEstado, { color: producto.activo ? '#16a34a' : '#ef4444' }]}>
-                {producto.activo ? 'ACTIVO' : 'INACTIVO'}
-              </Text>
-              <Text style={styles.statLbl}>Estado</Text>
+          {ganancia != null && (
+            <View style={[s.statCard, { backgroundColor: T.green + '15' }]}>
+              <Text style={[s.statVal, { color: T.green }]}>S/{ganancia}</Text>
+              <Text style={s.statLbl}>Ganancia</Text>
             </View>
+          )}
+          {margen != null && (
+            <View style={[s.statCard, { backgroundColor: T.blue + '15' }]}>
+              <Text style={[s.statVal, { color: T.blue }]}>{margen}%</Text>
+              <Text style={s.statLbl}>Margen</Text>
+            </View>
+          )}
+        </View>
+
+        {/* ── INFO ROWS ── */}
+        {infoRows.length > 0 && (
+          <View style={s.infoCard}>
+            {infoRows.map(({ label, value, icon }, i) => (
+              <View key={label} style={[s.infoRow, i < infoRows.length - 1 && s.infoRowBorder]}>
+                <View style={s.infoLeft}>
+                  <View style={s.infoIconBox}>
+                    <Icon name={icon as any} size={14} color={T.textMuted} />
+                  </View>
+                  <Text style={s.infoLabel}>{label}</Text>
+                </View>
+                <Text style={s.infoValue} numberOfLines={1}>{value}</Text>
+              </View>
+            ))}
           </View>
+        )}
 
-          {/* Info card */}
-          {infoRows.length > 0 && (
-            <>
-              <Text style={styles.sectionLabel}>Información</Text>
-              <View style={styles.infoCard}>
-                {infoRows.map(({ label, value }, i) => (
-                  <View
-                    key={label}
-                    style={[styles.infoRow, i < infoRows.length - 1 && styles.infoRowBorder]}
-                  >
-                    <Text style={styles.infoLabel}>{label}</Text>
-                    <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
-                  </View>
-                ))}
+        {/* ── DESCRIPCIÓN ── */}
+        {producto.descripcion && (
+          <View style={s.descCard}>
+            <Text style={s.sectionLabel}>Descripción</Text>
+            <Text style={s.descripcion}>{producto.descripcion}</Text>
+          </View>
+        )}
+
+        {/* ── CARACTERÍSTICAS ── */}
+        {producto.caracteristicas && Object.keys(producto.caracteristicas).length > 0 && (
+          <View style={s.infoCard}>
+            <Text style={[s.sectionLabel, { paddingHorizontal: 16, paddingTop: 14 }]}>Características</Text>
+            {Object.entries(producto.caracteristicas).map(([key, val], i, arr) => (
+              <View key={key} style={[s.infoRow, i < arr.length - 1 && s.infoRowBorder]}>
+                <Text style={s.infoLabel}>{key}</Text>
+                <Text style={s.infoValue}>{String(val)}</Text>
               </View>
-            </>
-          )}
+            ))}
+          </View>
+        )}
+      </ScrollView>
 
-          {/* Descripción */}
-          {producto.descripcion && (
-            <>
-              <View style={styles.divider} />
-              <Text style={styles.sectionLabel}>Descripción</Text>
-              <Text style={styles.descripcion}>{producto.descripcion}</Text>
-            </>
-          )}
-
-          {/* Características */}
-          {producto.caracteristicas && Object.keys(producto.caracteristicas).length > 0 && (
-            <>
-              <View style={styles.divider} />
-              <Text style={styles.sectionLabel}>Características</Text>
-              <View style={styles.infoCard}>
-                {Object.entries(producto.caracteristicas).map(([key, val], i, arr) => (
-                  <View
-                    key={key}
-                    style={[styles.infoRow, i < arr.length - 1 && styles.infoRowBorder]}
-                  >
-                    <Text style={styles.infoLabel}>{key}</Text>
-                    <Text style={styles.infoValue}>{String(val)}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-        </ScrollView>
-
-        {/* ──  <View style={styles.bottomBar}>
-
-          <TouchableOpacity style={styles.addBtn} activeOpacity={0.85}>
-            <Icon name="pencil" size={20} color="#fff" />
-            <Text style={styles.addBtnText}>Editar</Text>
-          </TouchableOpacity>
-        </View> ── */}
-
-
-      </View>
       <ImageViewing
-        images={[{ uri: getImagenProducto(producto) }]}
+        images={[{ uri: getImg(producto) }]}
         imageIndex={0}
         visible={imageVisible}
         onRequestClose={() => setImageVisible(false)}
@@ -238,101 +212,78 @@ export default function ProductoDetailScreen() {
   );
 }
 
-// ─── styles ───────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  center: { flex: 1, backgroundColor: T.bg, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { fontSize: 14, color: T.textMuted, marginTop: 12 },
+  emptyTitle: { fontSize: 16, fontWeight: '600', color: T.textMuted, marginTop: 12 },
+  backPill: { marginTop: 12, backgroundColor: T.accent, borderRadius: 100, paddingHorizontal: 20, paddingVertical: 10 },
+  backPillText: { color: '#0A0A0A', fontWeight: '700', fontSize: 14 },
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#fff' },
-
-  loadingWrap: { flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
-  loadingText: { fontSize: 15, color: '#9ca3af', marginTop: 14 },
-  emptyTitle: { fontSize: 17, fontWeight: '600', color: '#9ca3af', marginTop: 14 },
-  backPill: { marginTop: 8, backgroundColor: '#0a0a0a', borderRadius: 100, paddingHorizontal: 20, paddingVertical: 10 },
-  backPillText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-
-  // hero
-  hero: {
-    height: 340,
-    backgroundColor: '#f5f5f5',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
+  hero: { height: 300, backgroundColor: T.surfaceAlt, position: 'relative' },
+  heroImg: { width: W, height: 300 },
+  heroOverlay: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
+    backgroundColor: 'transparent',
   },
-  heroImg: { width: SCREEN_WIDTH, height: 340 },
-  heroPlaceholder: { alignItems: 'center' },
-  heroPlaceholderText: { fontSize: 13, color: '#9ca3af', marginTop: 10 },
 
-  circleBtn: {
+  fab: {
     position: 'absolute', top: 52,
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    width: 40, height: 40, borderRadius: 14,
+    backgroundColor: T.surface + 'EE',
     alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: T.border,
   },
-  circleBtnLeft: { left: 20 },
-  circleBtnRight: { right: 20 },
+  fabLeft: { left: 16 },
+  fabRight: { right: 16 },
 
-  stockBadge: {
-    position: 'absolute', bottom: 18, right: 18,
-    backgroundColor: '#0a0a0a', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 6,
+  estadoBadge: {
+    position: 'absolute', bottom: 16, left: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderRadius: 100, paddingHorizontal: 12, paddingVertical: 6,
   },
-  stockBadgeText: { fontSize: 12, fontWeight: '700', color: '#fff', letterSpacing: 0.3 },
+  estadoDot: { width: 6, height: 6, borderRadius: 3 },
+  estadoText: { fontSize: 12, fontWeight: '700' },
 
-  // scroll
-  scrollContent: { padding: 24, paddingBottom: 110 },
+  scroll: { padding: 20, gap: 14, paddingBottom: 40 },
 
-  topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 },
-  nombre: { flex: 1, fontSize: 26, fontWeight: '800', color: '#0a0a0a', letterSpacing: -0.8, lineHeight: 30, marginRight: 12 },
-  precio: { fontSize: 26, fontWeight: '800', color: '#0a0a0a', letterSpacing: -0.8, flexShrink: 0 },
-
-  categoriaChip: {
-    flexDirection: 'row', alignItems: 'center',
-    alignSelf: 'flex-start', backgroundColor: '#f5f5f5',
-    borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 20,
+  topSection: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  nombre: { fontSize: 24, fontWeight: '900', color: T.textPrimary, letterSpacing: -0.5, lineHeight: 28, marginBottom: 6 },
+  catChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    alignSelf: 'flex-start', backgroundColor: T.surfaceAlt,
+    borderRadius: 100, paddingHorizontal: 10, paddingVertical: 4,
   },
-  categoriaText: { fontSize: 12, fontWeight: '700', color: '#6b7280', marginLeft: 6 },
+  catText: { fontSize: 11, fontWeight: '600', color: T.textMuted },
+  precioBox: { alignItems: 'flex-end' },
+  precioLabel: { fontSize: 12, fontWeight: '700', color: T.accent, marginBottom: -2 },
+  precio: { fontSize: 32, fontWeight: '900', color: T.accent, letterSpacing: -1 },
 
-  statsRow: { flexDirection: 'row', marginBottom: 24 },
-  statPill: {
-    flex: 1, backgroundColor: '#f9f9f9', borderRadius: 16,
-    borderWidth: 0.5, borderColor: '#ebebeb', padding: 14, alignItems: 'center',
-    marginRight: 10,
+  statsGrid: { flexDirection: 'row', gap: 10 },
+  statCard: {
+    flex: 1, borderRadius: T.radiusLg,
+    paddingVertical: 16, alignItems: 'center', gap: 4,
   },
-  statVal: { fontSize: 20, fontWeight: '800', color: '#0a0a0a', letterSpacing: -0.5 },
-  statValEstado: { fontSize: 13 },
-  statLbl: { fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: '700', marginTop: 3 },
+  statVal: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
+  statLbl: { fontSize: 10, color: T.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
 
-  // section
-  sectionLabel: { fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, fontWeight: '700', marginBottom: 12 },
-  divider: { height: 0.5, backgroundColor: '#f5f5f5', marginVertical: 20 },
-
-  // info card
-  infoCard: { backgroundColor: '#f9f9f9', borderRadius: 16, borderWidth: 0.5, borderColor: '#ebebeb', overflow: 'hidden' },
+  infoCard: {
+    backgroundColor: T.surface, borderRadius: T.radiusLg,
+    borderWidth: 1, borderColor: T.border, overflow: 'hidden',
+  },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13 },
-  infoRowBorder: { borderBottomWidth: 0.5, borderBottomColor: '#ebebeb' },
-  infoLabel: { fontSize: 14, color: '#6b7280' },
-  infoValue: { fontSize: 14, fontWeight: '600', color: '#0a0a0a', flex: 1, textAlign: 'right', marginLeft: 16 },
+  infoRowBorder: { borderBottomWidth: 1, borderBottomColor: T.border },
+  infoLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  infoIconBox: {
+    width: 28, height: 28, borderRadius: 8,
+    backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
+  },
+  infoLabel: { fontSize: 13, color: T.textMuted },
+  infoValue: { fontSize: 13, fontWeight: '700', color: T.textPrimary, flex: 1, textAlign: 'right', marginLeft: 16 },
 
-  // descripción
-  descripcion: { fontSize: 14, lineHeight: 22, color: '#6b7280' },
-
-  bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#fff',
-    borderTopWidth: 0.5, borderTopColor: '#ebebeb',
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 24, paddingTop: 14, paddingBottom: 32,
+  descCard: {
+    backgroundColor: T.surface, borderRadius: T.radiusLg,
+    borderWidth: 1, borderColor: T.border, padding: 16, gap: 8,
   },
-  editBtn: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#f5f5f5', borderRadius: 14,
-    paddingHorizontal: 18, paddingVertical: 14,
-    marginRight: 12,
-  },
-  editBtnText: { fontSize: 14, fontWeight: '700', color: '#0a0a0a', marginLeft: 6 },
-  addBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#0a0a0a', borderRadius: 14, paddingVertical: 15,
-  },
-  addBtnText: { fontSize: 15, fontWeight: '700', color: '#fff', marginLeft: 8 },
+  sectionLabel: { fontSize: 10, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: '700' },
+  descripcion: { fontSize: 14, lineHeight: 22, color: T.textSecondary },
 });

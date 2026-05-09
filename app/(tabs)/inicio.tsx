@@ -1,170 +1,58 @@
 
-import TopProductsMostSales from '@/components/venta/TopProductsMostSales';
+import SectionHeader from '@/components/InicioComponents/SectionHeader';
+import ServiceChip from '@/components/InicioComponents/ServiceChip';
+import StatPill from '@/components/InicioComponents/StarPill';
+import TopProductsHoy from '@/components/InicioComponents/TopProductsHoy';
+import { fmt } from '@/components/InicioComponents/utils';
+import VentaRow from '@/components/InicioComponents/VentaRow';
 import { VentasChart } from '@/components/venta/VentasChart';
 import { VentasChart2 } from '@/components/venta/VentasChart copy';
 import T from '@/constants/THEME';
 import { useVentas } from '@/State/hooks/useVentas';
-import { Venta } from '@/State/models/venta.models';
+import { useAuthStore } from '@/State/store/useAuthStore';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import {
-    Dimensions,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
+import { useTabRouter } from './_layout';
 
-
-const { width: W } = Dimensions.get('window');
-
-// ─── Utils ────────────────────────────────────────────────────────────────────
-const fmt = (n: number) =>
-    `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-
-const getInitials = (name: string) =>
-    name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
-
-const formatHour = (dateStr: string) => {
-    try {
-        return new Date(dateStr).toLocaleTimeString('es-PE', {
-            hour: '2-digit', minute: '2-digit',
-        });
-    } catch { return ''; }
-};
-
-const today = new Date().toLocaleDateString('es-PE', {
-    weekday: 'long', day: 'numeric', month: 'long',
-});
-
-// ─── StatPill ─────────────────────────────────────────────────────────────────
-const StatPill = memo(({ label, value }: { label: string; value: string }) => (
-    <View style={styles.statPill}>
-        <Text style={styles.statPillVal}>{value}</Text>
-        <Text style={styles.statPillLbl}>{label}</Text>
-    </View>
-));
-StatPill.displayName = 'StatPill';
-
-// ─── ServiceChip ─────────────────────────────────────────────────────────────
-const ServiceChip = memo(({ icon, label, time }: { icon: string; label: string; time: string }) => (
-    <View style={styles.serviceChip}>
-        <View style={styles.serviceIconWrap}>
-            <Icon name={icon as any} size={18} color={T.accent} />
-        </View>
-        <View>
-            <Text style={styles.serviceTime}>{time}</Text>
-            <Text style={styles.serviceLabel}>{label}</Text>
-        </View>
-    </View>
-));
-ServiceChip.displayName = 'ServiceChip';
-
-// ─── TopProductRow ────────────────────────────────────────────────────────────
-const TopProductRow = memo(({
-    nombre, cantidad, total, rank, maxCantidad,
-}: {
-    nombre: string; cantidad: number; total: number; rank: number; maxCantidad: number;
-}) => {
-    const pct = maxCantidad > 0 ? cantidad / maxCantidad : 0;
-    const isFirst = rank === 1;
-    return (
-        <View style={styles.listRow}>
-            <View style={[styles.rankBadge, isFirst && styles.rankBadge1]}>
-                <Text style={[styles.rankText, isFirst && styles.rankText1]}>{rank}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-                <Text style={styles.listName} numberOfLines={1}>{nombre}</Text>
-                <Text style={styles.listSub}>{cantidad} uds · {fmt(total)}</Text>
-                <View style={styles.prog}>
-                    <View style={[styles.progFill, { width: `${pct * 100}%` as any }]} />
-                </View>
-            </View>
-        </View>
-    );
-});
-TopProductRow.displayName = 'TopProductRow';
-
-// ─── VentaRow ─────────────────────────────────────────────────────────────────
-const ESTADO_COLOR: Record<string, string> = {
-    aceptado: T.green, pendiente: T.amber, anulado: T.red, cancelado: T.textSecondary,
-};
-
-const VentaRow = memo(({ venta }: { venta: Venta }) => {
-    const cliente = venta.nombre_cliente || 'Cliente anónimo';
-    const initials = getInitials(cliente);
-    const dotColor = ESTADO_COLOR[venta.estado?.toLowerCase()] ?? T.textSecondary;
-
-    return (
-        <View style={styles.listRow}>
-            <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{initials.slice(0, 2)}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-                <Text style={styles.listName} numberOfLines={1}>{cliente}</Text>
-                <Text style={styles.listSub}>
-                    {venta.tipo_comprobante} · {formatHour(venta.fecha_hora)}
-                </Text>
-            </View>
-            <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                <Text style={styles.listAmt}>{fmt(venta.total)}</Text>
-                <View style={[styles.estadoDot, { backgroundColor: dotColor }]} />
-            </View>
-        </View>
-    );
-});
-VentaRow.displayName = 'VentaRow';
-
-// ─── SectionHeader ────────────────────────────────────────────────────────────
-function SectionHeader({
-    title, action, onAction,
-}: { title: string; action?: string; onAction?: () => void }) {
-    return (
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            {action && (
-                <TouchableOpacity onPress={onAction} style={styles.seeAllBtn}>
-                    <Text style={styles.sectionAction}>{action}</Text>
-                </TouchableOpacity>
-            )}
-        </View>
-    );
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function InicioScreen() {
     const router = useRouter();
-    const { resumenVentas, ventasHoy, topProductosHoy } = useVentas();
+    const { resumenVentas, ventasHoy, } = useVentas();
 
 
 
+    const navigateToTab = useTabRouter();
 
     const todaySales = resumenVentas?.todaySales ?? 0;
     const weekSales = resumenVentas?.thisWeekSales ?? 0;
     const monthSales = resumenVentas?.thisMonthSales ?? 0;
 
-    const maxCantidad = useMemo(
-        () => Math.max(...(topProductosHoy?.map((p) => p.cantidad_total_vendida) ?? [1])),
-        [topProductosHoy],
-    );
 
+    const today = new Date().toLocaleDateString('es-PE', {
+        weekday: 'long', day: 'numeric', month: 'long',
+    });
     const ventasDeHoy = ventasHoy?.slice(0, 8) ?? [];
-
+    const { user, tienda } = useAuthStore()
     return (
         <ScrollView
             style={styles.root}
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
         >
-            {/* ── Header ── */}
+
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <View style={styles.locationRow}>
                         <Icon name="map-marker-outline" size={12} color={T.textSecondary} />
-                        <Text style={styles.locationText}>Lima, Perú</Text>
+                        <Text style={styles.locationText}>Puente Pieda, Lima, Perú</Text>
                     </View>
                     <View style={styles.greetingRow}>
                         <Text style={styles.greeting}>Hola, </Text>
@@ -172,13 +60,10 @@ export default function InicioScreen() {
                     </View>
                 </View>
                 <View style={styles.headerRight}>
-                    <TouchableOpacity style={styles.iconBtn}>
-                        <Icon name="bell-outline" size={20} color={T.textPrimary} />
-                        <View style={styles.notifDot} />
-                    </TouchableOpacity>
+
                     <TouchableOpacity
                         style={styles.avatarBtn}
-                        onPress={() => router.push('/configuracion')}
+                        onPress={() => navigateToTab('configuracion')}
                         activeOpacity={0.8}
                     >
                         <Text style={styles.avatarBtnText}>MT</Text>
@@ -188,8 +73,9 @@ export default function InicioScreen() {
 
             {/* ── Store name ── */}
             <View style={styles.storeNameWrap}>
-                <Text style={styles.storeName}>Axel Accesories</Text>
-                <Text style={styles.storeSubtitle}>Panel de control · {today}</Text>
+                <Text style={styles.storeName}> {tienda?.nombre}</Text>
+
+                <Text style={styles.storeSubtitle}>{tienda?.direccion} · {today}</Text>
             </View>
 
             {/* ── Hero card ── */}
@@ -216,18 +102,20 @@ export default function InicioScreen() {
                 </View>
             </View>
 
-            {/* ── Services row (decorativo como en el diseño) ── */}
-            <SectionHeader title="Servicios rápidos" action="Ver todo" />
+
+            <SectionHeader title="Servicios rápidos" />
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.servicesScroll}
                 style={{ marginBottom: 24 }}
             >
-                <ServiceChip icon="cart-plus" label="Nueva Venta" time="Rápido" />
-                <ServiceChip icon="package-variant" label="Productos" time="Inventario" />
-                <ServiceChip icon="account-group" label="Clientes" time="Registros" />
-                <ServiceChip icon="chart-line" label="Reportes" time="Estadísticas" />
+
+
+                <ServiceChip icon="cart-plus" label="Nueva Venta" time="Rápido" onPress={() => router.push('/hacerventa')} />
+                <ServiceChip icon="package-variant" label="Productos" time="Inventario" onPress={() => navigateToTab('productos')} />
+                <ServiceChip icon="account-group" label="Clientes" time="Registros" onPress={() => navigateToTab('clientes')} />
+                <ServiceChip icon="chart-line" label="Perfil" time="Perfil" onPress={() => navigateToTab('configuracion')} />
             </ScrollView>
 
             {/* ── Chart ── */}
@@ -238,56 +126,15 @@ export default function InicioScreen() {
 
             </View>
 
-            <TopProductsMostSales />
 
 
+            <TopProductsHoy />
 
 
-
-
-
-
-
-            {/* ── Recent Laundry style card — Top productos ── */}
-            {(topProductosHoy?.length ?? 0) > 0 && (
-                <>
-                    <SectionHeader
-                        title="Top productos hoy"
-                        action={`${topProductosHoy!.length} items`}
-                    />
-                    <View style={styles.recentCard}>
-                        <View style={styles.recentCardHeader}>
-                            <Text style={styles.recentCardDate}>
-                                Hoy, {new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' })}
-                            </Text>
-                            <View style={styles.recentCardBadge}>
-                                <Icon name="trending-up" size={12} color={T.accent} />
-                                <Text style={styles.recentCardBadgeText}>+12%</Text>
-                            </View>
-                        </View>
-                        {topProductosHoy!.slice(0, 5).map((p, i) => (
-                            <React.Fragment key={p.producto_id ?? i}>
-                                <TopProductRow
-                                    rank={i + 1}
-                                    nombre={p.producto_nombre ?? p.nombre}
-                                    cantidad={p.cantidad_total_vendida}
-                                    total={p.precio_unitario * p.cantidad_total_vendida}
-                                    maxCantidad={maxCantidad}
-                                />
-                                {i < Math.min(topProductosHoy!.length, 5) - 1 && (
-                                    <View style={styles.rowDivider} />
-                                )}
-                            </React.Fragment>
-                        ))}
-                    </View>
-                </>
-            )}
-
-            {/* ── Ventas de hoy ── */}
             <SectionHeader
                 title="Ventas de hoy"
                 action="Ver todas"
-                onAction={() => router.replace('/ventas')}
+                onAction={() => navigateToTab('ventas')}
             />
 
             {ventasDeHoy.length === 0 ? (
@@ -312,7 +159,7 @@ export default function InicioScreen() {
     );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: T.bg },
     content: { paddingTop: Platform.OS === 'ios' ? 56 : 24, paddingBottom: 24 },
@@ -349,7 +196,7 @@ const styles = StyleSheet.create({
     // Store name
     storeNameWrap: { paddingHorizontal: 20, marginBottom: 20 },
     storeName: { fontSize: 32, fontWeight: '900', color: T.textPrimary, letterSpacing: -1.5 },
-    storeSubtitle: { fontSize: 12, color: T.textMuted, marginTop: 4, textTransform: 'capitalize' },
+    storeSubtitle: { fontSize: 18, color: T.textMuted, marginTop: 4, textTransform: 'capitalize' },
 
     // Hero
     heroCard: {
@@ -364,7 +211,7 @@ const styles = StyleSheet.create({
         backgroundColor: T.accent + '08',
     },
     heroTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-    heroLabel: { fontSize: 12, color: T.textSecondary, marginBottom: 8, fontWeight: '500' },
+    heroLabel: { fontSize: 14, color: T.textSecondary, marginBottom: 8, fontWeight: '500' },
     heroValue: { fontSize: 40, fontWeight: '900', color: T.textPrimary, letterSpacing: -2, lineHeight: 44 },
     heroLiveBadge: {
         flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -374,13 +221,11 @@ const styles = StyleSheet.create({
     },
     heroLiveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: T.green },
     heroLiveText: { fontSize: 11, color: T.green, fontWeight: '700' },
-    heroSub: { fontSize: 11, color: T.textMuted, marginTop: 6 },
+    heroSub: { fontSize: 14, color: T.textMuted, marginTop: 6 },
     heroRule: { height: 1, backgroundColor: T.border, marginVertical: 18 },
     heroStats: { flexDirection: 'row' },
     heroStatDivider: { width: 1, backgroundColor: T.border },
-    statPill: { flex: 1, alignItems: 'center', gap: 4 },
-    statPillVal: { fontSize: 16, fontWeight: '700', color: T.textPrimary },
-    statPillLbl: { fontSize: 10, color: T.textSecondary, fontWeight: '500' },
+
 
     // Services
     servicesScroll: { paddingLeft: 20, paddingRight: 8, gap: 10 },
@@ -398,18 +243,6 @@ const styles = StyleSheet.create({
     serviceTime: { fontSize: 9, color: T.accent, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
     serviceLabel: { fontSize: 13, fontWeight: '600', color: T.textPrimary, marginTop: 1 },
 
-    // Section
-    sectionHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', paddingHorizontal: 20, marginBottom: 12,
-    },
-    sectionTitle: { fontSize: 16, fontWeight: '700', color: T.textPrimary, letterSpacing: -0.3 },
-    seeAllBtn: {
-        backgroundColor: T.surface, borderRadius: 20,
-        paddingHorizontal: 12, paddingVertical: 5,
-        borderWidth: 1, borderColor: T.border,
-    },
-    sectionAction: { fontSize: 11, color: T.accent, fontWeight: '600' },
 
     // Card
     card: {
@@ -440,27 +273,7 @@ const styles = StyleSheet.create({
     listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
     rowDivider: { height: 1, backgroundColor: T.border },
 
-    // Rank
-    rankBadge: {
-        width: 28, height: 28, borderRadius: 9,
-        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.border,
-    },
-    rankBadge1: { backgroundColor: T.accent, borderColor: T.accent },
-    rankText: { fontSize: 12, fontWeight: '700', color: T.textSecondary },
-    rankText1: { color: T.bg },
 
-    // Progress
-    prog: { height: 3, backgroundColor: T.border, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
-    progFill: { height: '100%', backgroundColor: T.accent, borderRadius: 2 },
-
-    // Avatar
-    avatarCircle: {
-        width: 38, height: 38, borderRadius: 12,
-        backgroundColor: T.surfaceAlt, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: T.border,
-    },
-    avatarText: { fontSize: 12, fontWeight: '700', color: T.accent },
 
     // Text
     listName: { fontSize: 13, fontWeight: '600', color: T.textPrimary },

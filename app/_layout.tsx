@@ -43,7 +43,7 @@ export default function RootLayout() {
               <Stack.Screen name="welcome" options={{ headerShown: false }} />
               <Stack.Screen name="login" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="hacerventa" options={modalOptions} />
+
               <Stack.Screen name="productodetail" options={modalOptions} />
               <Stack.Screen name="settings/perfil" options={modalOptions} />
               <Stack.Screen name="settings/categorias" options={modalOptions} />

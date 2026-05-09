@@ -1,4 +1,6 @@
 import VentaDetalleModal from "@/components/venta/VentaDetailModal";
+import { buildList, formatDivider } from "@/components/VentaScreenComponents/utils";
+import VentaCard from "@/components/VentaScreenComponents/VentaCard";
 import T from "@/constants/THEME";
 import { useVentas } from "@/State/hooks/useVentas";
 import { Venta } from "@/State/models/venta.models";
@@ -11,127 +13,12 @@ import {
     FlatList,
     RefreshControl,
     StyleSheet,
-    TouchableOpacity,
     View
 } from "react-native";
 import { Text } from "react-native-paper";
 
-// ─── (MISMAS HELPERS, NO CAMBIO) ─────────────────────────────────────────────
-const formatFecha = (fecha: string) => {
-    if (!fecha) return '—';
-    return new Date(fecha).toLocaleDateString('es-PE', {
-        month: 'short', day: 'numeric', year: '2-digit',
-        hour: '2-digit', minute: '2-digit',
-    });
-};
 
-const ESTADO_CFG: Record<string, { color: string; bg: string }> = {
-    aceptado: { color: T.green, bg: T.green + '18' },
-    pendiente: { color: T.amber, bg: T.amber + '18' },
-    anulado: { color: T.red, bg: T.red + '18' },
-    cancelado: { color: T.textSecondary, bg: T.border },
-};
-const getEstado = (e: string) => ESTADO_CFG[e?.toLowerCase()] ?? ESTADO_CFG.cancelado;
 
-const COMPROBANTE_LABEL: Record<string, string> = {
-    '01': 'FACTURA', '03': 'BOLETA', boleta: 'BOLETA', factura: 'FACTURA',
-};
-const getTipoLabel = (tipo: string) =>
-    COMPROBANTE_LABEL[tipo?.toLowerCase()] ?? tipo?.toUpperCase() ?? '—';
-
-const getInitial = (n: string) => n?.trim()?.charAt(0)?.toUpperCase() ?? '?';
-
-const AVATAR_COLORS = [T.accent, T.green, T.blue, '#f9a8d4', T.amber, T.purple];
-const getAvatarColor = (n: string) =>
-    AVATAR_COLORS[(n?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
-
-type ListItem =
-    | { type: 'divider'; fecha: string; count: number }
-    | { type: 'venta'; data: Venta };
-
-const getFechaKey = (f: string) => f.slice(0, 10);
-const formatDivider = (f: string) =>
-    new Date(f).toLocaleDateString('es-PE', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    });
-
-const buildList = (ventas: Venta[]): ListItem[] => {
-    const result: ListItem[] = [];
-    let lastKey = '';
-    for (const v of ventas) {
-        const key = getFechaKey(v.fecha_hora);
-        if (key !== lastKey) {
-            const count = ventas.filter((x) => getFechaKey(x.fecha_hora) === key).length;
-            result.push({ type: 'divider', fecha: v.fecha_hora, count });
-            lastKey = key;
-        }
-        result.push({ type: 'venta', data: v });
-    }
-    return result;
-};
-
-// ─── CARD PREMIUM ─────────────────────────────────────────────────────────────
-function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
-    const estado = getEstado(venta.estado);
-    const tipoLabel = getTipoLabel(venta.comprobante?.tipo_comprobante ?? venta.tipo_comprobante);
-    const serie = venta.comprobante?.serie ?? '—';
-    const correlativo = venta.comprobante?.correlativo ?? '—';
-    const avatarColor = getAvatarColor(venta.nombre_cliente ?? '');
-
-    return (
-        <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-
-            {/* TOP */}
-            <View style={styles.topRow}>
-                <View style={[styles.avatar, { backgroundColor: avatarColor + '25' }]}>
-                    <Text style={[styles.avatarText, { color: avatarColor }]}>
-                        {getInitial(venta.nombre_cliente)}
-                    </Text>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.cliente} numberOfLines={1}>
-                        {venta.nombre_cliente || 'Anónimo'}
-                    </Text>
-
-                    <Text style={styles.serie}>
-                        {serie}-{correlativo} · {tipoLabel}
-                    </Text>
-                </View>
-
-                <View style={[styles.badge, { backgroundColor: estado.bg }]}>
-                    <View style={[styles.dot, { backgroundColor: estado.color }]} />
-                    <Text style={[styles.badgeText, { color: estado.color }]}>
-                        {venta.estado}
-                    </Text>
-                </View>
-            </View>
-
-            {/* DIVIDER */}
-            <View style={styles.divider} />
-
-            {/* BOTTOM */}
-            <View style={styles.bottomRow}>
-                <View style={styles.meta}>
-                    <Text style={styles.metaLabel}>MÉTODO</Text>
-                    <Text style={styles.metaValue}>{venta.metodo_pago?.toUpperCase()}</Text>
-                </View>
-
-                <View style={styles.meta}>
-                    <Text style={styles.metaLabel}>FECHA</Text>
-                    <Text style={styles.metaValue}>{formatFecha(venta.fecha_hora)}</Text>
-                </View>
-
-                <View style={[styles.meta, { alignItems: 'flex-end' }]}>
-                    <Text style={styles.metaLabel}>TOTAL</Text>
-                    <Text style={styles.total}>S/ {venta.total}</Text>
-                </View>
-            </View>
-        </TouchableOpacity>
-    );
-}
-
-// ─── SCREEN ───────────────────────────────────────────────────────────────────
 export default function VentasScreenPremium() {
     const {
         ventasPorTienda,
@@ -179,12 +66,7 @@ export default function VentasScreenPremium() {
                     </Text>
                 </View>
 
-                <TouchableOpacity
-                    style={styles.addBtn}
-                    onPress={() => router.push('/hacerventa')}
-                >
-                    <Icon name="plus" size={18} color={T.bg} />
-                </TouchableOpacity>
+
             </View>
 
             <FlatList
@@ -216,9 +98,6 @@ export default function VentasScreenPremium() {
                             <View style={styles.dividerWrap}>
                                 <View style={styles.line} />
                                 <Text style={styles.dividerText}>{formatDivider(item.fecha)}</Text>
-                                <View style={styles.count}>
-                                    <Text style={styles.countText}>{item.count}</Text>
-                                </View>
                                 <View style={styles.line} />
                             </View>
                         );
@@ -261,7 +140,7 @@ export default function VentasScreenPremium() {
     );
 }
 
-// ─── STYLES PREMIUM ───────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: T.bg },
 
@@ -277,10 +156,14 @@ const styles = StyleSheet.create({
     subtitle: { fontSize: 12, color: T.textSecondary },
 
     addBtn: {
-        width: 44,
         height: 44,
-        borderRadius: 14,
+        borderRadius: 50,
         backgroundColor: T.accent,
+        paddingHorizontal: 13,
+        display: "flex",
+        flexDirection: "row",
+        gap: 10,
+
         alignItems: 'center',
         justifyContent: 'center',
         ...T.shadowAccent,
@@ -352,11 +235,10 @@ const styles = StyleSheet.create({
     dividerWrap: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 18,
-        gap: 10,
+        marginBottom: 10,
         paddingHorizontal: 20,
     },
-    line: { flex: 1, height: 1, backgroundColor: T.border },
+    line: { flex: 1, height: 0, },
     dividerText: { fontSize: 12, color: T.textSecondary },
     count: {
         backgroundColor: T.accentDim,

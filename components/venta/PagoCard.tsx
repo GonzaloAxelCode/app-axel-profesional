@@ -1,15 +1,33 @@
-
 import T from '@/constants/THEME';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 
 export type PayMethod = 'Efectivo' | 'PLIN' | 'YAPE';
 
-const PAY_OPTIONS: { key: PayMethod; label: string; icon: string; color: string }[] =
-  [
-    { key: 'Efectivo', label: 'Efectivo', icon: 'cash', color: T.green },
-    { key: 'PLIN', label: 'PLIN', icon: 'cellphone', color: T.blue },
-    { key: 'YAPE', label: 'YAPE', icon: 'qrcode-scan', color: T.purple },
+const PAY_OPTIONS: {
+  key: PayMethod;
+  label: string;
+  icon: string;
+  description: string;
+}[] = [
+    {
+      key: 'Efectivo',
+      label: 'Efectivo',
+      icon: 'cash',
+      description: 'Pago en físico al momento.',
+    },
+    {
+      key: 'PLIN',
+      label: 'PLIN',
+      icon: 'cellphone',
+      description: 'Transferencia vía PLIN.',
+    },
+    {
+      key: 'YAPE',
+      label: 'YAPE',
+      icon: 'qrcode-scan',
+      description: 'Escanea tu QR de Yape.',
+    },
   ];
 
 interface PagoCardProps {
@@ -19,44 +37,43 @@ interface PagoCardProps {
 
 export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
   return (
-    <View style={styles.card}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.title}>MÉTODO DE PAGO</Text>
-      </View>
+    <View style={styles.wrapper}>
+      <Text style={styles.sectionTitle}>Método de pago</Text>
 
-      {/* OPTIONS */}
-      <View style={styles.row}>
-        {PAY_OPTIONS.map(opt => {
+      <View style={styles.list}>
+        {PAY_OPTIONS.map((opt) => {
           const isActive = payMethod === opt.key;
 
           return (
             <TouchableOpacity
               key={opt.key}
-              style={[
-                styles.option,
-                isActive && [
-                  styles.optionActive,
-                  { borderColor: opt.color, backgroundColor: opt.color },
-                ],
-              ]}
+              style={[styles.card, isActive && styles.cardActive]}
               onPress={() => onSelect(opt.key)}
               activeOpacity={0.85}
             >
-              <Icon
-                source={opt.icon as any}
-                size={16}
-                color={isActive ? T.bg : T.textSecondary}
-              />
+              {/* CHECK esquina */}
+              {isActive && (
+                <View style={styles.check}>
+                  <Icon source="check" size={12} color="#0A0A0A" />
+                </View>
+              )}
 
-              <Text
-                style={[
-                  styles.label,
-                  isActive && styles.labelActive,
-                ]}
-              >
-                {opt.label}
-              </Text>
+              {/* ICONO */}
+              <View style={[styles.iconBox, isActive && styles.iconBoxActive]}>
+                <Icon
+                  source={opt.icon as any}
+                  size={22}
+                  color={isActive ? '#0A0A0A' : T.textMuted}
+                />
+              </View>
+
+              {/* TEXTO */}
+              <View style={styles.textBox}>
+                <Text style={[styles.label, isActive && styles.labelActive]}>
+                  {opt.label}
+                </Text>
+                <Text style={styles.description}>{opt.description}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -66,62 +83,86 @@ export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    gap: 10,
+  },
+
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: T.textMuted,
+    paddingHorizontal: 2,
+  },
+
+  list: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+
   card: {
+    flex: 1,
+    position: 'relative',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: T.surface,
     borderRadius: T.radiusLg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: T.border,
-    overflow: 'hidden',
+    padding: 14,
     ...T.shadowCard,
   },
 
-  header: {
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: T.border,
+  cardActive: {
+    borderColor: T.accent,
+    backgroundColor: T.accentDim,
+  },
+
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: T.radiusMd,
     backgroundColor: T.surfaceAlt,
-  },
-
-  title: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: T.textMuted,
-    letterSpacing: 1.2,
-  },
-
-  row: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: 12,
-  },
-
-  option: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 8,
     alignItems: 'center',
     justifyContent: 'center',
-
-    paddingVertical: 12,
-    borderRadius: T.radiusMd,
-
-    backgroundColor: T.surfaceAlt,
-    borderWidth: 1,
-    borderColor: T.border,
   },
 
-  optionActive: {
-    transform: [{ scale: 1.02 }],
-    ...T.shadowAccent,
+  iconBoxActive: {
+    backgroundColor: T.accent,
+  },
+
+  textBox: {
+    alignItems: 'center',
+    gap: 2,
   },
 
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: T.textSecondary,
+    color: T.textPrimary,
+    textAlign: 'center',
   },
 
   labelActive: {
-    color: T.bg,
+    color: T.textPrimary,
+  },
+
+  description: {
+    fontSize: 10,
+    color: T.textMuted,
+    lineHeight: 14,
+    textAlign: 'center',
+  },
+
+  check: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: T.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

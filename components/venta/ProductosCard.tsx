@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: T.surface,
     borderRadius: T.radiusLg,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: T.border,
     overflow: 'hidden',
     ...T.shadowCard,
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 14,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: T.border,
-    backgroundColor: T.surfaceAlt,
+
   },
 
   title: {
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     backgroundColor: T.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: T.radiusFull,
     alignItems: 'center',
   },
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   addText: {
     color: T.bg,
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 14,
   },
 
   empty: {
@@ -259,8 +259,8 @@ const styles = StyleSheet.create({
   emptyIcon: {
     width: 40,
     height: 40,
-    borderRadius: T.radiusMd,
-    borderWidth: 1,
+    borderRadius: T.radiusFull,
+    borderWidth: 0,
     borderColor: T.border,
     backgroundColor: T.surfaceAlt,
     justifyContent: 'center',

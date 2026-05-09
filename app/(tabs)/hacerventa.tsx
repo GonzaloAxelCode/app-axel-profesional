@@ -8,7 +8,6 @@ import {
   StyleSheet,
   View
 } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ComprobanteCardSelect, ComprobanteMethod } from '@/components/venta/ComprobanteCardSelect';
 import VentaDetalleModal from '@/components/venta/VentaDetailModal';
@@ -16,16 +15,17 @@ import T from '@/constants/THEME';
 import { Cliente } from '@/State/models/cliente.models';
 import { useVentaStore } from '@/State/store/useVentaStore';
 
-import { ClienteBottomSheet } from '../components/venta/ClienteBottomSheet';
-import { ClienteCard } from '../components/venta/ClienteCard';
-import { ConfirmarVentaBtn } from '../components/venta/ConfirmarVentaBtn';
-import { PagoCard, PayMethod } from '../components/venta/PagoCard';
-import { ProductosBottomSheet } from '../components/venta/ProductosBottomSheet';
-import { ProductosCard } from '../components/venta/ProductosCard';
-import { ResumenCard } from '../components/venta/ResumenCard';
-import { VentaHeader } from '../components/venta/VentaHeader';
+import { logJSON } from '@/utils/logjson';
+import { ClienteBottomSheet } from '../../components/venta/ClienteBottomSheet';
+import { ClienteCard } from '../../components/venta/ClienteCard';
+import { ConfirmarVentaBtn } from '../../components/venta/ConfirmarVentaBtn';
+import { PagoCard, PayMethod } from '../../components/venta/PagoCard';
+import { ProductosBottomSheet } from '../../components/venta/ProductosBottomSheet';
+import { ProductosCard } from '../../components/venta/ProductosCard';
+import { ResumenCard } from '../../components/venta/ResumenCard';
+import { VentaHeader } from '../../components/venta/VentaHeader';
 
-export default function HacerVentaScreen() {
+function HacerVentaScreen() {
   const { productos, isLoading } = useInventario();
   const { createVenta, temporaryVenta, showVentaDetailTemporary, loadingCreateVenta } = useVentaStore();
 
@@ -37,6 +37,7 @@ export default function HacerVentaScreen() {
   const [comprobanteMethod, setComprobanteMethod] = useState<ComprobanteMethod>('Boleta');
   const [cliente, setCliente] = useState<Cliente | any>({ document: '', fullname: '' });
 
+  // ── Cart logic ──
   const addToCart = useCallback((item: InventarioCart) => {
     setCart((prev) => {
       const existing = prev.find((p) => p.id === item.id);
@@ -66,13 +67,49 @@ export default function HacerVentaScreen() {
     }));
   }, []);
 
+  // ── Calculations ──
   const subtotal = cart.reduce((acc, p) => acc + p.costo_venta * p.cantidad, 0);
   const descuentoTotal = cart.reduce((acc, p) => acc + (p.descuento || 0) * p.cantidad, 0);
   const total = subtotal - descuentoTotal;
   const igv = total * 0.18;
 
   const handleConfirmar = () => {
-    const preparedData = { /* tu lógica intacta */ };
+    logJSON("Confirmar Venta", { cart, cliente });
+    const preparedData = {
+      usuarioId: 0,
+      metodoPago: payMethod,
+      formaPago: "Contado",
+      tipoComprobante: comprobanteMethod,
+      cliente: {
+        nombre_o_razon_social: cliente.fullname,
+        nombre_completo: cliente.fullname,
+        ruc: cliente.document,
+        numero: cliente.document,
+      },
+      documento_cliente: cliente.document,
+      nombre_cliente: cliente.fullname,
+      correo_cliente: "",
+      direccion_cliente: "",
+      telefono_cliente: "",
+      documento_cliente_existente: `${cliente?.document || cliente?.numero}-${cliente?.nombre_o_razon_social || cliente?.fullname}`,
+      productos: cart.map((p: InventarioCart) => ({
+        inventarioId: p.id,
+        cantidad_final: p.cantidad,
+        producto_nombre: p.producto_nombre,
+        nombre_categoria: p.categoria_nombre,
+        costo_venta: p.costo_venta,
+        productoId: p.producto,
+        stock_actual: "sin info",
+        producto_sku: p.producto_sku,
+        imagen_producto: p.imagen_producto,
+        descuento: p.descuento || 0,
+        costo_original: p.costo_venta,
+      })),
+      is_send_sunat: true,
+      is_save_user: true,
+      estado: true,
+    };
+    logJSON("Datos preparados para API", preparedData);
     createVenta(preparedData);
   };
 
@@ -83,53 +120,54 @@ export default function HacerVentaScreen() {
     (comprobanteMethod === "Factura" && (!cliente?.document || cliente.document?.length !== 11));
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: T.bg }}>
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
       <StatusBar barStyle="light-content" backgroundColor={T.bg} />
 
-      <View style={styles.screen}>
 
-        <VentaHeader />
+      <VentaHeader />
 
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.body}
-          showsVerticalScrollIndicator={false}
-        >
-          <ComprobanteCardSelect
-            comprobanteMethod={comprobanteMethod}
-            onSelect={(e) => {
-              setCliente({ document: '', fullname: '' });
-              setComprobanteMethod(e);
-            }}
+      <ScrollView
+        style={{ flex: 1, backgroundColor: T.bg }}
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ComprobanteCardSelect
+          comprobanteMethod={comprobanteMethod}
+          onSelect={(e) => {
+            setCliente({ document: '', fullname: '' });
+            setComprobanteMethod(e);
+          }}
+        />
+
+        {comprobanteMethod !== "Anonima" && (
+          <ClienteCard
+            cliente={cliente}
+            onBuscar={() => bottomSheetRef2.current?.expand()}
           />
+        )}
 
-          {comprobanteMethod !== "Anonima" && (
-            <ClienteCard
-              cliente={cliente}
-              onBuscar={() => bottomSheetRef2.current?.expand()}
-            />
-          )}
+        <ProductosCard
+          cart={cart}
+          onAgregar={() => bottomSheetRef.current?.expand()}
+          onChangeQty={changeQty}
+          onRemove={removeFromCart}
+          onChangeDiscount={changeDiscount}
+        />
 
-          <ProductosCard
-            cart={cart}
-            onAgregar={() => bottomSheetRef.current?.expand()}
-            onChangeQty={changeQty}
-            onRemove={removeFromCart}
-            onChangeDiscount={changeDiscount}
-          />
+        <PagoCard payMethod={payMethod} onSelect={setPayMethod} />
 
-          <PagoCard payMethod={payMethod} onSelect={setPayMethod} />
-
-          <ResumenCard subtotal={subtotal} descuento={descuentoTotal} total={total} igv={igv} />
-        </ScrollView>
-
+        <ResumenCard subtotal={subtotal} descuento={descuentoTotal} total={total} igv={igv} />
         <ConfirmarVentaBtn
           loading={loadingCreateVenta}
           total={total}
           onConfirmar={handleConfirmar}
           disabled={handleDisabled}
         />
-      </View>
+      </ScrollView>
+
+
+
 
       <ProductosBottomSheet
         bottomSheetRef={bottomSheetRef}
@@ -149,22 +187,21 @@ export default function HacerVentaScreen() {
         visible={showVentaDetailTemporary}
         onClose={() => useVentaStore.setState({ showVentaDetailTemporary: false, temporaryVenta: {} as Venta })}
       />
-    </GestureHandlerRootView>
+    </View>
   );
 }
+
+export default HacerVentaScreen;
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    position: 'relative',
     backgroundColor: T.bg,
   },
 
   body: {
     padding: 16,
     gap: 12,
-    paddingBottom: 8,
+    paddingBottom: 100,
   },
-
-
 });

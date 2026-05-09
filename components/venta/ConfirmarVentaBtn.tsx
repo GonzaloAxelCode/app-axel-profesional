@@ -25,17 +25,19 @@ export function ConfirmarVentaBtn({
 }: ConfirmarVentaBtnProps) {
   const spin = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
-  const shine = useRef(new Animated.Value(-1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const isOff = loading || disabled;
 
-  // 🎯 animación loading
+  // ── Spin (loading) ──────────────────────────────────────────────
   useEffect(() => {
     if (loading) {
       Animated.loop(
         Animated.timing(spin, {
           toValue: 1,
-          duration: 800,
+          duration: 700,
           easing: Easing.linear,
           useNativeDriver: true,
         })
@@ -46,42 +48,88 @@ export function ConfirmarVentaBtn({
     }
   }, [loading]);
 
-  // 🎯 shine effect
+  // ── Glow pulse (cuando está activo) ────────────────────────────
   useEffect(() => {
     if (!isOff) {
       Animated.loop(
-        Animated.timing(shine, {
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // slide de la línea animada
+      Animated.loop(
+        Animated.timing(slideAnim, {
           toValue: 1,
-          duration: 2200,
-          easing: Easing.inOut(Easing.ease),
+          duration: 2000,
+          easing: Easing.linear,
           useNativeDriver: true,
         })
       ).start();
+
+      // pulse del bloque izquierdo
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.06,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
     } else {
-      shine.stopAnimation();
+      glowAnim.stopAnimation();
+      slideAnim.stopAnimation();
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
     }
   }, [isOff]);
 
-  const spinInter = spin.interpolate({
+  const spinInterpolate = spin.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
 
-  const shineX = shine.interpolate({
-    inputRange: [-1, 1],
-    outputRange: [-250, 250],
+  const glowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1],
+  });
+
+  const slideX = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-300, 400],
   });
 
   const pressIn = () =>
     Animated.spring(scale, {
-      toValue: 0.97,
+      toValue: 0.96,
       useNativeDriver: true,
+      speed: 50,
     }).start();
 
   const pressOut = () =>
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
+      speed: 20,
     }).start();
 
   return (
@@ -93,114 +141,74 @@ export function ConfirmarVentaBtn({
           onPressIn={pressIn}
           onPressOut={pressOut}
           disabled={isOff}
-          style={[
-            styles.btn,
-            {
-              backgroundColor: isOff ? T.surface : T.accent,
-              borderWidth: isOff ? 1 : 0,
-              borderColor: T.border,
-            },
-          ]}
+          style={[styles.btn, isOff && styles.btnDisabled]}
         >
-          {/* SHINE */}
+          {/* SLIDE SHINE — línea que cruza */}
           {!isOff && (
             <Animated.View
               style={[
                 styles.shine,
-                {
-                  transform: [
-                    { translateX: shineX },
-                    { rotate: '20deg' },
-                  ],
-                },
+                { transform: [{ translateX: slideX }, { rotate: '15deg' }] },
               ]}
             />
           )}
 
-          {/* LEFT */}
-          <View style={styles.left}>
-            <View
+          {/* BLOQUE IZQUIERDO */}
+          <Animated.View
+            style={[
+              styles.leftBlock,
+              isOff && styles.leftBlockDisabled,
+              !isOff && { transform: [{ scale: pulseAnim }] },
+            ]}
+          >
+            {loading ? (
+              <Animated.View style={{ transform: [{ rotate: spinInterpolate }] }}>
+                <Icon name="loading" size={24} color="#0A0A0A" />
+              </Animated.View>
+            ) : (
+              <Icon
+                name={isOff ? 'cart-off' : 'check-bold'}
+                size={24}
+                color={isOff ? T.textMuted : '#0A0A0A'}
+              />
+            )}
+          </Animated.View>
+
+          {/* CENTRO */}
+          <View style={styles.center}>
+            <Animated.Text
               style={[
-                styles.icon,
-                {
-                  backgroundColor: isOff
-                    ? T.surfaceAlt
-                    : 'rgba(255,255,255,0.2)',
-                },
+                styles.label,
+                isOff && styles.labelDisabled,
+                !isOff && { opacity: glowOpacity },
               ]}
             >
-              {loading ? (
-                <Animated.View style={{ transform: [{ rotate: spinInter }] }}>
-                  <Icon
-                    name="loading"
-                    size={18}
-                    color={isOff ? T.textSecondary : T.surface}
-                  />
-                </Animated.View>
-              ) : (
-                <Icon
-                  name="check-bold"
-                  size={18}
-                  color={isOff ? T.textSecondary : T.surface}
-                />
-              )}
-            </View>
+              {loading ? 'Procesando...' : 'Confirmar venta'}
+            </Animated.Text>
 
-            <View>
-              <Text
-                style={[
-                  styles.title,
-                  {
-                    color: isOff ? T.textPrimary : T.surface,
-                  },
-                ]}
-              >
-                {loading ? 'Procesando...' : 'Confirmar venta'}
+            {!loading && (
+              <Text style={[styles.sub, isOff && { color: T.textDisabled }]}>
+                {isOff ? 'Agrega productos para continuar' : 'Toca para finalizar'}
               </Text>
-
-              {!loading && (
-                <Text
-                  style={[
-                    styles.subtitle,
-                    {
-                      color: isOff
-                        ? T.textSecondary
-                        : 'rgba(255,255,255,0.85)',
-                    },
-                  ]}
-                >
-                  Toca para finalizar
-                </Text>
-              )}
-            </View>
+            )}
           </View>
 
-          {/* PRICE */}
-          <View style={styles.price}>
-            <Text
+          {/* PRECIO */}
+          {!loading && (
+            <Animated.View
               style={[
-                styles.currency,
-                {
-                  color: isOff
-                    ? T.textSecondary
-                    : 'rgba(255,255,255,0.85)',
-                },
+                styles.priceBlock,
+                !isOff && { opacity: glowOpacity },
               ]}
             >
-              S/
-            </Text>
-
-            <Text
-              style={[
-                styles.amount,
-                {
-                  color: isOff ? T.textPrimary : T.surface,
-                },
-              ]}
-            >
-              {total.toFixed(2)}
-            </Text>
-          </View>
+              <Text style={[styles.currency, isOff && styles.labelDisabled]}>
+                S/
+              </Text>
+              <Text style={[styles.amount, isOff && styles.labelDisabled]}>
+                {total.toFixed(2)}
+              </Text>
+            </Animated.View>
+          )}
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -209,68 +217,91 @@ export function ConfirmarVentaBtn({
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 16,
-    paddingBottom: 30,
-    paddingTop: 10,
+    paddingHorizontal: 5,
+    paddingBottom: 20,
+    paddingTop: 5,
   },
 
   btn: {
-    borderRadius: T.radiusLg,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#111111',
+    borderRadius: T.radiusLg,
     overflow: 'hidden',
-    ...T.shadowAccent,
+    borderWidth: 1.5,
+    borderColor: T.accent + '60',
+    minHeight: 70,
+  },
+
+  btnDisabled: {
+    backgroundColor: T.surface,
+    borderColor: T.border,
   },
 
   shine: {
     position: 'absolute',
-    width: 80,
-    height: '200%',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 60,
+    height: '300%',
+    backgroundColor: 'rgba(202,255,0,0.08)',
+    zIndex: 0,
   },
 
-  left: {
-    flexDirection: 'row',
+  leftBlock: {
+    width: 70,
+    alignSelf: 'stretch',
+    backgroundColor: T.accent,
     alignItems: 'center',
-    gap: 12,
-  },
-
-  icon: {
-    width: 38,
-    height: 38,
-    borderRadius: T.radiusMd,
     justifyContent: 'center',
-    alignItems: 'center',
+    zIndex: 1,
   },
 
-  title: {
-    fontSize: 15,
+  leftBlockDisabled: {
+    backgroundColor: T.surfaceAlt,
+  },
+
+  center: {
+    flex: 1,
+    paddingHorizontal: 16,
+    gap: 3,
+    zIndex: 1,
+  },
+
+  label: {
+    fontSize: 16,
     fontWeight: '800',
+    color: '#F2F2F2',
+    letterSpacing: 0.2,
   },
 
-  subtitle: {
+  labelDisabled: {
+    color: T.textMuted,
+  },
+
+  sub: {
     fontSize: 11,
-    marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '500',
+    color: T.textMuted,
   },
 
-  price: {
+  priceBlock: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 3,
+    gap: 2,
+    paddingRight: 18,
+    paddingBottom: 2,
+    zIndex: 1,
   },
 
   currency: {
     fontSize: 13,
     fontWeight: '700',
-    marginBottom: 3,
+    color: T.accent,
+    marginBottom: 4,
   },
 
   amount: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '900',
+    color: T.accent,
   },
 });

@@ -1,4 +1,3 @@
-
 import T from '@/constants/THEME';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
@@ -9,10 +8,26 @@ const COMPROBANTE_OPTIONS: {
     key: ComprobanteMethod;
     label: string;
     icon: string;
+    description: string;
 }[] = [
-        { key: 'Boleta', label: 'Boleta', icon: 'receipt' },
-        { key: 'Factura', label: 'Factura', icon: 'file-document' },
-        { key: 'Anonima', label: 'Anónima', icon: 'incognito' },
+        {
+            key: 'Boleta',
+            label: 'Boleta',
+            icon: 'receipt',
+            description: 'Para personas naturales.',
+        },
+        {
+            key: 'Factura',
+            label: 'Factura',
+            icon: 'file-document-outline',
+            description: 'Requiere RUC válido.',
+        },
+        {
+            key: 'Anonima',
+            label: 'Anónima',
+            icon: 'incognito',
+            description: 'Sin comprobante.',
+        },
     ];
 
 interface ComprobanteCardProps {
@@ -25,36 +40,43 @@ export function ComprobanteCardSelect({
     onSelect,
 }: ComprobanteCardProps) {
     return (
-        <View style={styles.card}>
-            <View style={styles.header}>
-                <Text style={styles.title}>COMPROBANTE</Text>
-            </View>
+        <View style={styles.wrapper}>
+            <Text style={styles.sectionTitle}>Tipo de comprobante</Text>
 
-            <View style={styles.row}>
-                {COMPROBANTE_OPTIONS.map(opt => {
+            <View style={styles.list}>
+                {COMPROBANTE_OPTIONS.map((opt) => {
                     const isActive = comprobanteMethod === opt.key;
 
                     return (
                         <TouchableOpacity
                             key={opt.key}
-                            style={[styles.option, isActive && styles.optionActive]}
+                            style={[styles.card, isActive && styles.cardActive]}
                             onPress={() => onSelect(opt.key)}
                             activeOpacity={0.85}
                         >
-                            <Icon
-                                source={opt.icon as any}
-                                size={16}
-                                color={isActive ? T.bg : T.textSecondary}
-                            />
+                            {/* CHECK esquina */}
+                            {isActive && (
+                                <View style={styles.check}>
+                                    <Icon source="check" size={12} color="#0A0A0A" />
+                                </View>
+                            )}
 
-                            <Text
-                                style={[
-                                    styles.label,
-                                    isActive && styles.labelActive,
-                                ]}
-                            >
-                                {opt.label}
-                            </Text>
+                            {/* ICONO */}
+                            <View style={[styles.iconBox, isActive && styles.iconBoxActive]}>
+                                <Icon
+                                    source={opt.icon as any}
+                                    size={22}
+                                    color={isActive ? '#0A0A0A' : T.textMuted}
+                                />
+                            </View>
+
+                            {/* TEXTO */}
+                            <View style={styles.textBox}>
+                                <Text style={[styles.label, isActive && styles.labelActive]}>
+                                    {opt.label}
+                                </Text>
+                                <Text style={styles.description}>{opt.description}</Text>
+                            </View>
                         </TouchableOpacity>
                     );
                 })}
@@ -64,64 +86,86 @@ export function ComprobanteCardSelect({
 }
 
 const styles = StyleSheet.create({
-    card: {
-        backgroundColor: T.surface,
-        borderRadius: T.radiusLg,
-        borderWidth: 1,
-        borderColor: T.border,
-        overflow: 'hidden',
-        ...T.shadowCard,
-    },
-
-    header: {
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: T.border,
-        backgroundColor: T.surfaceAlt,
-    },
-
-    title: {
-        fontSize: 11,
-        fontWeight: '800',
-        letterSpacing: 1.3,
-        color: T.textMuted,
-    },
-
-    row: {
-        flexDirection: 'row',
-        padding: 12,
+    wrapper: {
         gap: 10,
     },
 
-    option: {
-        flex: 1,
-        flexDirection: 'row',
-        gap: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-
-        paddingVertical: 12,
-        borderRadius: T.radiusMd,
-
-        backgroundColor: T.surfaceAlt,
-        borderWidth: 1,
-        borderColor: T.border,
+    sectionTitle: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: T.textMuted,
+        paddingHorizontal: 2,
     },
 
-    optionActive: {
-        backgroundColor: T.accent,
+    list: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+
+    card: {
+        flex: 1,
+        position: 'relative',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: T.surface,
+        borderRadius: T.radiusLg,
+        borderWidth: 1.5,
+        borderColor: T.border,
+        padding: 14,
+        ...T.shadowCard,
+    },
+
+    cardActive: {
         borderColor: T.accent,
-        ...T.shadowAccent,
+        backgroundColor: T.accentDim,
+    },
+
+    iconBox: {
+        width: 44,
+        height: 44,
+        borderRadius: T.radiusMd,
+        backgroundColor: T.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    iconBoxActive: {
+        backgroundColor: T.accent,
+    },
+
+    textBox: {
+        alignItems: 'center',
+        gap: 2,
     },
 
     label: {
         fontSize: 13,
         fontWeight: '700',
-        color: T.textSecondary,
+        color: T.textPrimary,
+        textAlign: 'center',
     },
 
     labelActive: {
-        color: T.bg,
+        color: T.textPrimary,
+    },
+
+    description: {
+        fontSize: 10,
+        color: T.textMuted,
+        lineHeight: 14,
+        textAlign: 'center',
+    },
+
+    check: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: T.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
