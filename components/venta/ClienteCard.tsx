@@ -1,4 +1,3 @@
-
 import T from '@/constants/THEME';
 import { Cliente } from '@/State/models/cliente.models';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -14,12 +13,12 @@ const initials = (name: string) =>
   name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
 const AVATAR_COLORS = [
-  T.accent,
-  T.blue,
-  T.green,
-  T.purple,
-  T.amber,
-  T.accent6,
+  { bg: T.accent, text: T.bg },
+  { bg: T.blue, text: T.bg },
+  { bg: T.purple, text: T.bg },
+  { bg: T.amber, text: T.bg },
+  { bg: T.green, text: T.bg },
+  { bg: T.accent6, text: T.bg },
 ];
 
 const getAvatarColor = (seed: string) =>
@@ -27,53 +26,86 @@ const getAvatarColor = (seed: string) =>
 
 export function ClienteCard({ cliente, onBuscar }: ClienteCardProps) {
   const hasCliente = cliente && (cliente.fullname !== '' || cliente.document !== '');
-  const avatarColor = hasCliente
+  const avatarScheme = hasCliente
     ? getAvatarColor(cliente?.fullname || '')
-    : T.textMuted;
+    : null;
 
   return (
     <View style={styles.card}>
+      {/* Accent top line */}
+      <View style={styles.accentLine} />
+
+      {/* ── Header ── */}
       <View style={styles.head}>
         <Text style={styles.label}>CLIENTE</Text>
 
-        <TouchableOpacity style={styles.action} onPress={onBuscar}>
-          <Icon name="magnify" size={14} color={T.bg} />
-          <Text style={styles.actionText}>Buscar</Text>
+        <TouchableOpacity style={styles.btnBuscar} onPress={onBuscar} activeOpacity={0.75}>
+          <Icon name="magnify" size={13} color={T.bg} />
+          <Text style={styles.btnBuscarText}>Buscar</Text>
         </TouchableOpacity>
       </View>
 
+      {/* ── Divider ── */}
+      <View style={styles.divider} />
+
+      {/* ── Body ── */}
       {hasCliente ? (
-        <View style={styles.row}>
-          <View
-            style={[
-              styles.avatar,
-              {
-                backgroundColor: avatarColor + '20',
+        <>
+          <View style={styles.row}>
+            {/* Avatar */}
+            <View
+              style={[
+                styles.avatar,
+                { backgroundColor: avatarScheme!.bg + '20' },
+              ]}
+            >
+              <Text style={[styles.avatarText, { color: avatarScheme!.bg }]}>
+                {initials(cliente?.fullname || '')}
+              </Text>
+            </View>
 
-              },
-            ]}
-          >
-            <Text style={[styles.avatarText, { color: avatarColor }]}>
-              {initials(cliente?.fullname || '')}
-            </Text>
+            {/* Info */}
+            <View style={styles.info}>
+              <Text style={styles.name} numberOfLines={1}>
+                {cliente?.fullname}
+              </Text>
+              <View style={styles.docRow}>
+                <Icon name="card-account-details-outline" size={11} color={T.textMuted} />
+                <View style={styles.docPill}>
+                  <Text style={styles.docPillText}>
+                    DNI · {cliente?.document}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* OK badge */}
+            <View style={styles.badgeOk}>
+              <Icon name="check" size={13} color={T.green} />
+            </View>
           </View>
 
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{cliente?.fullname}</Text>
-            <Text style={styles.meta}>Documento · {cliente?.document}</Text>
-          </View>
+          {/* ── Footer chips ── */}
+          {(cliente?.phone) && (
+            <View style={styles.footer}>
+              {cliente?.phone && (
+                <View style={styles.chip}>
+                  <Icon name="phone-outline" size={11} color={T.textMuted} />
+                  <Text style={styles.chipText}>{cliente.phone}</Text>
+                </View>
+              )}
 
-          <View style={styles.ok}>
-            <Icon name="check" size={14} color={T.green} />
-          </View>
-        </View>
+            </View>
+          )}
+        </>
       ) : (
+        /* ── Empty state ── */
         <View style={styles.row}>
           <View style={styles.avatarEmpty}>
             <Icon name="account-outline" size={18} color={T.textMuted} />
           </View>
-          <Text style={styles.empty}>Selecciona un cliente</Text>
-          <Icon name="chevron-right" size={16} color={T.textMuted} />
+          <Text style={styles.emptyText}>Selecciona un cliente</Text>
+          <Icon name="chevron-right" size={16} color={T.surfaceElevated} />
         </View>
       )}
     </View>
@@ -81,76 +113,93 @@ export function ClienteCard({ cliente, onBuscar }: ClienteCardProps) {
 }
 
 const styles = StyleSheet.create({
+  /* ── Card shell ── */
   card: {
     backgroundColor: T.surface,
-    borderRadius: T.radiusLg,
+    borderRadius: T.radiusXl,
     borderWidth: 0,
-    borderColor: T.border,
+    borderColor: T.accent2,
     overflow: 'hidden',
+
     ...T.shadowCard,
   },
 
+  accentLine: {
+    height: 1,
+
+    opacity: 0.35,
+  },
+
+  /* ── Header ── */
   head: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 14,
-    borderBottomWidth: 0,
-    borderBottomColor: T.border,
-
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
   },
 
   label: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 2,
     color: T.textMuted,
-    letterSpacing: 1.2,
   },
 
-  action: {
+  btnBuscar: {
     flexDirection: 'row',
-    gap: 6,
-    backgroundColor: T.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: T.radiusFull,
     alignItems: 'center',
+    gap: 5,
+    backgroundColor: T.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: T.radiusFull,
   },
 
-  actionText: {
+  btnBuscarText: {
     color: T.bg,
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: '800',
+    fontSize: 12,
+    letterSpacing: 0.3,
   },
 
+  divider: {
+    height: 1,
+    backgroundColor: T.borderMedium,
+    marginHorizontal: 16,
+    opacity: 0.6,
+  },
+
+  /* ── Row (filled & empty share this) ── */
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     gap: 12,
   },
 
+  /* ── Avatar (filled) ── */
   avatar: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     borderRadius: T.radiusFull,
     justifyContent: 'center',
     alignItems: 'center',
-
+    flexShrink: 0,
   },
 
   avatarText: {
-    fontWeight: '800',
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
 
-  avatarEmpty: {
-    width: 44,
-    height: 44,
-    borderRadius: T.radiusFull,
-    backgroundColor: T.surfaceAlt,
-    borderWidth: 0,
-    borderColor: T.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+  /* ── Client info ── */
+  info: {
+    flex: 1,
+    minWidth: 0,
   },
 
   name: {
@@ -159,26 +208,86 @@ const styles = StyleSheet.create({
     color: T.textPrimary,
   },
 
-  meta: {
-    fontSize: 12,
+  docRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+  },
+
+  docPill: {
+    backgroundColor: T.surfaceElevated,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: '#252525',
+  },
+
+  docPillText: {
+    fontSize: 11,
     color: T.textSecondary,
-    marginTop: 2,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 
-  empty: {
-    flex: 1,
-    color: T.textMuted,
-    fontSize: 14,
-  },
-
-  ok: {
+  /* ── OK badge ── */
+  badgeOk: {
     width: 28,
     height: 28,
     borderRadius: T.radiusSm,
-    backgroundColor: T.green + '18',
+    backgroundColor: T.green + '1A',
+    borderWidth: 1,
+    borderColor: T.green + '38',
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0,
+  },
+
+  /* ── Footer chips ── */
+  footer: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    paddingTop: 2,
+  },
+
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 1,
-    borderColor: T.green + '30',
+    borderColor: '#222',
+    borderRadius: T.radiusFull,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+
+  chipText: {
+    fontSize: 11,
+    color: T.textSecondary,
+    fontWeight: '600',
+  },
+
+  /* ── Avatar (empty) ── */
+  avatarEmpty: {
+    width: 46,
+    height: 46,
+    borderRadius: T.radiusFull,
+    backgroundColor: T.surfaceAlt,
+    borderWidth: 1,
+    borderColor: '#282828',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+
+  emptyText: {
+    flex: 1,
+    color: T.textMuted,
+    fontSize: 14,
   },
 });

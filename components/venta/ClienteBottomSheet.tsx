@@ -199,16 +199,17 @@ export function ClienteBottomSheet({
     </View>
   ), [filtered.length, search, activeFilter]);
 
-  useEffect(() => {
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
+
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
         {...props}
-        opacity={1.5}          // 0.0 – 1.0  (default es ~0.5)
-
         disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        pressBehavior="close"
+        opacity={0.5}
+
+        enableTouchThrough={true}
       />
     ),
     []

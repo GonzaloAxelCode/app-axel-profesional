@@ -1,50 +1,128 @@
-# Welcome to your Expo app 👋
+# App Inventario 📦
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación multiplataforma para gestión de inventarios desarrollada con React Native y Expo.
 
-## Get started
+## Características Principales
 
-1. Install dependencies
+- Gestión de productos e inventario
+- Impresión de reportes y etiquetas
+- Escaneo de códigos (Bluetooth)
+- Visualización de gráficos y estadísticas
+- Interfaz intuitiva con Material Design
+- Soporte multiplataforma (Android, iOS, Web)
 
-   ```bash
-   npm install
-   ```
+## Stack Tecnológico
 
-2. Start the app
+### Framework
+- **React Native** 0.81.5
+- **Expo** SDK 54
+- **React** 19.1.0
+- **TypeScript** 5.9
 
-   ```bash
-   npx expo start
-   ```
+### Navegación
+- **expo-router** 6 - Enrutamiento basado en archivos
+- **@react-navigation** - Navegación por pestañas
 
-In the output, you'll find options to open the app in a
+### Estado y Datos
+- **zustand** 5 - Estado global
+- **@tanstack/react-query** 5 - Estado del servidor
+- **axios** - Cliente HTTP
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### UI y Estilos
+- **NativeWind** 4 + **Tailwind CSS** 3.4 - Utilidades CSS
+- **react-native-paper** 5 - Componentes Material Design
+- **@expo/vector-icons** - Iconos
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Funcionalidades Especiales
+- **react-native-gesture-handler** - Gestos
+- **react-native-reanimated** - Animaciones
+- **expo-print** - Impresión
+- **expo-file-system** - Sistema de archivos
+- **react-native-chart-kit** - Gráficos
+- **@gorhom/bottom-sheet** - Sheets modales
 
-## Get a fresh project
+### Herramientas de Desarrollo
+- **ESLint** - Linting
+- **Prettier** - Formateo de código
 
-When you're ready, run:
+## Requisitos Previos
 
+- Node.js 18+
+- npm o yarn
+- Expo CLI (`npm install -g expo-cli`)
+- Para Android: Android Studio
+- Para iOS: Xcode (solo macOS)
+
+## Instalación
+
+1. Clonar el repositorio:
 ```bash
-npm run reset-project
+git clone <url-del-repositorio>
+cd app-inventario
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Instalar dependencias:
+```bash
+npm install
+```
 
-## Learn more
+3. Iniciar la aplicación:
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Scripts Disponibles
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Comando | Descripción |
+|---------|-------------|
+| `npm start` | Iniciar servidor de Expo |
+| `npm run android` | Ejecutar en Android |
+| `npm run ios` | Ejecutar en iOS |
+| `npm run web` | Ejecutar en navegador |
+| `npm run lint` | Verificar código |
+| `npm run reset-project` | Reiniciar proyecto |
 
-## Join the community
+## Estructura del Proyecto
 
-Join our community of developers creating universal apps.
+```
+app-inventario/
+├── app/                    # Pantallas (Expo Router)
+├── components/             # Componentes reutilizables
+├── constants/              # Constantes y configuración
+├── State/                  # Estado global (Zustand)
+├── utils/                  # Utilidades y helpers
+├── assets/                 # Recursos estáticos
+├── scripts/                # Scripts de configuración
+└── android/                # Configuración Android
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Plataformas Soportadas
+
+- **Android** (API 21+)
+- **iOS** (iOS 13+)
+- **Web** (Navegadores modernos)
+
+## Permisos Android
+
+La aplicación requiere los siguientes permisos:
+- `BLUETOOTH` - Conexión Bluetooth
+- `BLUETOOTH_ADMIN` - Administración Bluetooth
+- `BLUETOOTH_CONNECT` - Conexión a dispositivos
+- `BLUETOOTH_SCAN` - Escaneo de dispositivos
+
+## Recursos
+
+- [Documentación de Expo](https://docs.expo.dev/)
+- [React Native](https://reactnative.dev/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [NativeWind](https://www.nativewind.dev/)
+
+## Características Adicionales
+
+- **Sistema de Punto de Venta (POS):** Proceso completo de ventas con carrito, múltiples métodos de pago (Efectivo, PLIN, YAPE), tipos de comprobante (Boleta, Factura, Anónima), descuentos por ítem, cálculo de IGV y consulta de cliente por DNI/RUC.
+- **Gestión de Clientes (CRM):** CRUD de clientes con búsqueda, validación de DNI/RUC mediante API externa, y UI animada con tarjetas.
+- **Integración con SUNAT:** Generación de comprobantes electrónicos (Boletas y Facturas) con numeración series/correlativo, envío a SUNAT, seguimiento de estado, y emisión de Notas de Crédito para anulaciones.
+
+## Licencia
+
+MIT

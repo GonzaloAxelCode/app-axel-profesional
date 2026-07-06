@@ -14,7 +14,7 @@ import { useAuthStore } from '@/State/store/useAuthStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import HacerVentaScreen from './hacerventa';
+import HacerVentaScreen from '../hacerventa';
 
 // ─── Paper Theme ──────────────────────────────────────────────────────────────
 const paperTheme = {

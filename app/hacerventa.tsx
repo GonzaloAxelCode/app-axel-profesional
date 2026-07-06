@@ -4,7 +4,6 @@ import { Venta } from "@/State/models/venta.models";
 import { useCallback, useRef, useState } from 'react';
 import {
   ScrollView,
-  StatusBar,
   StyleSheet,
   View
 } from 'react-native';
@@ -16,19 +15,21 @@ import { Cliente } from '@/State/models/cliente.models';
 import { useVentaStore } from '@/State/store/useVentaStore';
 
 import { logJSON } from '@/utils/logjson';
-import { ClienteBottomSheet } from '../../components/venta/ClienteBottomSheet';
-import { ClienteCard } from '../../components/venta/ClienteCard';
-import { ConfirmarVentaBtn } from '../../components/venta/ConfirmarVentaBtn';
-import { PagoCard, PayMethod } from '../../components/venta/PagoCard';
-import { ProductosBottomSheet } from '../../components/venta/ProductosBottomSheet';
-import { ProductosCard } from '../../components/venta/ProductosCard';
-import { ResumenCard } from '../../components/venta/ResumenCard';
-import { VentaHeader } from '../../components/venta/VentaHeader';
+import { ClienteCard } from '../components/venta/ClienteCard';
+import { ConfirmarVentaBtn } from '../components/venta/ConfirmarVentaBtn';
+import { PagoCard, PayMethod } from '../components/venta/PagoCard';
+
+import { ClientesModal } from '@/components/venta/ClientesModal';
+import { ProductosModal } from '@/components/venta/ProductosModal';
+import { ProductosCard } from '../components/venta/ProductosCard';
+import { ResumenCard } from '../components/venta/ResumenCard';
+import { VentaHeader } from '../components/venta/VentaHeader';
 
 function HacerVentaScreen() {
   const { productos, isLoading } = useInventario();
   const { createVenta, temporaryVenta, showVentaDetailTemporary, loadingCreateVenta } = useVentaStore();
-
+  const [visibleProductosModal, setVisibleProductosModal] = useState(false);
+  const [visibleClientesModal, setVisibleClientesModal] = useState(false);
   const bottomSheetRef = useRef<any>(null);
   const bottomSheetRef2 = useRef<any>(null);
 
@@ -119,16 +120,25 @@ function HacerVentaScreen() {
     loadingCreateVenta ||
     (comprobanteMethod === "Factura" && (!cliente?.document || cliente.document?.length !== 11));
 
+  const handleCloseVentaDetail = useCallback(() => {
+    useVentaStore.setState({
+      showVentaDetailTemporary: false,
+      temporaryVenta: {} as Venta
+    });
+  }, []);
+
   return (
-    <View style={{ flex: 1, backgroundColor: T.bg }}>
-      <StatusBar barStyle="light-content" backgroundColor={T.bg} />
+    <View style={styles.screen}>
 
+      {/* ── Header fijo fuera del scroll ── */}
+      <View style={styles.headerWrapper}>
+        <VentaHeader />
+      </View>
 
-      <VentaHeader />
-
+      {/* ── Contenido scrolleable ── */}
       <ScrollView
-        style={{ flex: 1, backgroundColor: T.bg }}
-        contentContainerStyle={styles.body}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -143,13 +153,13 @@ function HacerVentaScreen() {
         {comprobanteMethod !== "Anonima" && (
           <ClienteCard
             cliente={cliente}
-            onBuscar={() => bottomSheetRef2.current?.expand()}
+            onBuscar={() => setVisibleClientesModal(true)}
           />
         )}
 
         <ProductosCard
           cart={cart}
-          onAgregar={() => bottomSheetRef.current?.expand()}
+          onAgregar={() => setVisibleProductosModal(true)}
           onChangeQty={changeQty}
           onRemove={removeFromCart}
           onChangeDiscount={changeDiscount}
@@ -158,34 +168,35 @@ function HacerVentaScreen() {
         <PagoCard payMethod={payMethod} onSelect={setPayMethod} />
 
         <ResumenCard subtotal={subtotal} descuento={descuentoTotal} total={total} igv={igv} />
-        <ConfirmarVentaBtn
-          loading={loadingCreateVenta}
-          total={total}
-          onConfirmar={handleConfirmar}
-          disabled={handleDisabled}
-        />
+        {/* ── Botón fijo abajo ── */}
+        <View style={styles.footer}>
+          <ConfirmarVentaBtn
+            loading={loadingCreateVenta}
+            total={total}
+            onConfirmar={handleConfirmar}
+            disabled={handleDisabled}
+          />
+        </View>
       </ScrollView>
 
 
 
 
-      <ProductosBottomSheet
-        bottomSheetRef={bottomSheetRef}
-        productos={productos.map(p => ({ ...p, descuento: 0 }))}
-        isLoading={isLoading}
-        onSelectProducto={addToCart}
+      <ClientesModal tipodoc={comprobanteMethod === "Factura" ? "ruc" : "dni"}
+        visible={visibleClientesModal}
+        onClienteEncontrado={setCliente}
+        onClose={() => setVisibleClientesModal(false)}
       />
 
-      <ClienteBottomSheet
-        tipodoc={comprobanteMethod === "Factura" ? "ruc" : "dni"}
-        bottomSheetRef={bottomSheetRef2}
-        onClienteEncontrado={setCliente}
+      <ProductosModal visible={visibleProductosModal} onClose={() => setVisibleProductosModal(false)}
+
+        onSelectProducto={addToCart}
       />
 
       <VentaDetalleModal
         venta={temporaryVenta}
         visible={showVentaDetailTemporary}
-        onClose={() => useVentaStore.setState({ showVentaDetailTemporary: false, temporaryVenta: {} as Venta })}
+        onClose={handleCloseVentaDetail}
       />
     </View>
   );
@@ -199,9 +210,23 @@ const styles = StyleSheet.create({
     backgroundColor: T.bg,
   },
 
-  body: {
-    padding: 16,
+  headerWrapper: {
+    paddingHorizontal: 20,
+    backgroundColor: T.bg,
+  },
+
+  scroll: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingHorizontal: 20,
     gap: 12,
-    paddingBottom: 100,
+    paddingBottom: 16,
+  },
+
+  footer: {
+    paddingBottom: 70,
+    backgroundColor: T.bg,
   },
 });

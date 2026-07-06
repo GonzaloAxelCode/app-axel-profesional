@@ -18,7 +18,8 @@ export const useInventario = () => {
     });
 
     return {
-        productos: query.data ?? [] as InventarioCart[],
+        productos: query.data?.map(p => ({ ...p, descuento: 0 })) ?? [] as InventarioCart[],
+
         isLoading: query.isLoading,
         isError: query.isError,
     };
