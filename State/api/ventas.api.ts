@@ -21,8 +21,14 @@ export interface VentaResponse {
 
 
 // Ventas hoy
-export async function getVentasHoy(): Promise<{ results: Venta[] }> {
-    return fetchWithAuth(`${API_URL}/ventas/hoy/`);
+export async function getVentasHoy(): Promise<VentaResponse> {
+    const today = new Date();
+    const params = new URLSearchParams();
+    params.append('from_date', `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`);
+    params.append('to_date', `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`);
+    params.append('page', '1');
+    params.append('page_size', '100');
+    return fetchWithAuth(`${API_URL}/sales/totals/?${params.toString()}`);
 }
 
 // Ventas por rango de fechas (resumen)
@@ -34,7 +40,7 @@ export async function getVentasPorRangoFechasTienda(
         from_date: [fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()],
         to_date: [toDate.getFullYear(), toDate.getMonth(), toDate.getDate()],
     };
-    return fetchWithAuth(`${API_URL}/sales-by-date/`, { method: 'POST', body: JSON.stringify(body) });
+    return fetchWithAuth(`${API_URL}/sales/date-range/`, { method: 'POST', body: JSON.stringify(body) });
 }
 
 // Resumen de ventas por fecha
@@ -44,7 +50,7 @@ export async function getResumenVentasByDate(payload: {
     day?: number;
     tipo: 'day_month_year' | 'month_year';
 }): Promise<{ todaySales: number; thisMonthSales: number; tipo: string }> {
-    return fetchWithAuth(`${API_URL}/ventas/resumenbymonthorday/`, {
+    return fetchWithAuth(`${API_URL}/sales/by-day-month/`, {
         method: 'POST',
         body: JSON.stringify(payload),
     });
@@ -52,13 +58,13 @@ export async function getResumenVentasByDate(payload: {
 
 // Top productos más vendidos hoy
 export async function getTopProductosMasVendidosHoy(): Promise<{ topProductoMostSales: ProductsSales[] }> {
-    return fetchWithAuth(`${API_URL}/ventas/top-productos-vendidos-hoy/`, {
+    return fetchWithAuth(`${API_URL}/sales/top-products/`, {
         method: 'POST',
         body: JSON.stringify({}),
     });
 }
 export async function getTopProductosMasVendidos(): Promise<{ topProductoMostSalesByDate: ProductoVendidoResumen }> {
-    return fetchWithAuth(`${API_URL}/ventas/top-productos-vendidos/`, {
+    return fetchWithAuth(`${API_URL}/sales/top-products-month/`, {
         method: 'POST',
         body: JSON.stringify({}),
     });
@@ -80,22 +86,22 @@ export async function getVentasPorTienda(
     params.append('from_date', formatDate(from_date));
     params.append('to_date', formatDate(to_date));
 
-    return fetchWithAuth(`${API_URL}/ventas/tienda/?${params.toString()}`);
+    return fetchWithAuth(`${API_URL}/sales/totals/?${params.toString()}`);
 }
 
 // Crear venta
 export async function createVenta(venta: any): Promise<Venta> {
-    return fetchWithAuth(`${API_URL}/ventas/crear/`, { method: 'POST', body: JSON.stringify(venta) });
+    return fetchWithAuth(`${API_URL}/sales/create/`, { method: 'POST', body: JSON.stringify(venta) });
 }
 
 // Crear venta pendiente
 export async function createVentaPendiente(venta: CreateVenta): Promise<Venta> {
-    return fetchWithAuth(`${API_URL}/ventas/crear/pendiente/`, { method: 'POST', body: JSON.stringify(venta) });
+    return fetchWithAuth(`${API_URL}/sales/create/pendiente/`, { method: 'POST', body: JSON.stringify(venta) });
 }
 
 // Crear venta anónima
 export async function createVentaAnonima(venta: CreateVenta): Promise<Venta> {
-    return fetchWithAuth(`${API_URL}/ventas/crear/anonima/`, { method: 'POST', body: JSON.stringify(venta) });
+    return fetchWithAuth(`${API_URL}/sales/create/anonima/`, { method: 'POST', body: JSON.stringify(venta) });
 }
 
 // Cancelar venta
@@ -109,7 +115,7 @@ export async function obtenerResumenVentas(): Promise<{
     thisWeekSales: number;
     thisMonthSales: number;
 }> {
-    return fetchWithAuth(`${API_URL}/ventas/resumen/`, { method: 'POST', body: JSON.stringify({}) });
+    return fetchWithAuth(`${API_URL}/sales/summary/`, { method: 'POST', body: JSON.stringify({}) });
 }
 
 // Buscar ventas
@@ -118,7 +124,7 @@ export async function fetchSearchVentas(query: any, page = 1, page_size = 30): P
     params.append('page', page.toString());
     params.append('page_size', page_size.toString());
 
-    return fetchWithAuth(`${API_URL}/ventas/search/?${params.toString()}`, { method: 'POST', body: JSON.stringify({ query }) });
+    return fetchWithAuth(`${API_URL}/sales/search/?${params.toString()}`, { method: 'POST', body: JSON.stringify({ query }) });
 }
 
 // Anular venta / generar nota de crédito

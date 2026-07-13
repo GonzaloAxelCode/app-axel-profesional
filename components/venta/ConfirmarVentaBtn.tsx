@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import {
@@ -23,99 +23,107 @@ export function ConfirmarVentaBtn({
   loading,
   disabled,
 }: ConfirmarVentaBtnProps) {
-  const spin = useRef(new Animated.Value(0)).current;
+  const { T } = useAppTheme();
+
   const scale = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const shimmerX = useRef(new Animated.Value(-1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const spinnerRotate = useRef(new Animated.Value(0)).current;
+  const checkScale = useRef(new Animated.Value(0)).current;
+  const bgOpacity = useRef(new Animated.Value(0)).current;
 
   const isOff = loading || disabled;
 
-  // ── Spin (loading) ──────────────────────────────────────────────
+  // ── Loading spinner ──
   useEffect(() => {
     if (loading) {
       Animated.loop(
-        Animated.timing(spin, {
+        Animated.timing(spinnerRotate, {
           toValue: 1,
-          duration: 700,
+          duration: 800,
           easing: Easing.linear,
           useNativeDriver: true,
         })
       ).start();
     } else {
-      spin.stopAnimation();
-      spin.setValue(0);
+      spinnerRotate.stopAnimation();
+      spinnerRotate.setValue(0);
     }
   }, [loading]);
 
-  // ── Glow pulse (cuando está activo) ────────────────────────────
+  // ── Pulse when active ──
   useEffect(() => {
     if (!isOff) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 1500,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: 1500,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-
-      // slide de la línea animada
-      Animated.loop(
-        Animated.timing(slideAnim, {
-          toValue: 1,
-          duration: 2000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      ).start();
-
-      // pulse del bloque izquierdo
-      Animated.loop(
-        Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.06,
-            duration: 900,
+            toValue: 1.02,
+            duration: 1200,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 900,
+            duration: 1200,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
         ])
       ).start();
     } else {
-      glowAnim.stopAnimation();
-      slideAnim.stopAnimation();
       pulseAnim.stopAnimation();
       pulseAnim.setValue(1);
     }
   }, [isOff]);
 
-  const spinInterpolate = spin.interpolate({
+  // ── Shimmer sweep ──
+  useEffect(() => {
+    if (!isOff) {
+      shimmerX.setValue(-1);
+      Animated.loop(
+        Animated.timing(shimmerX, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      shimmerX.stopAnimation();
+      shimmerX.setValue(-1);
+    }
+  }, [isOff]);
+
+  // ── Check bounce on load complete ──
+  useEffect(() => {
+    if (!loading && !disabled) {
+      checkScale.setValue(0);
+      Animated.spring(checkScale, {
+        toValue: 1,
+        tension: 80,
+        friction: 5,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loading, disabled]);
+
+  // ── Background fade for disabled ──
+  useEffect(() => {
+    Animated.timing(bgOpacity, {
+      toValue: isOff ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isOff]);
+
+  const spin = spinnerRotate.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.4, 1],
-  });
-
-  const slideX = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-300, 400],
+  const shimmerTranslateX = shimmerX.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [-250, 450],
   });
 
   const pressIn = () =>
@@ -132,82 +140,90 @@ export function ConfirmarVentaBtn({
       speed: 20,
     }).start();
 
+  const spinnerColor = T.bg;
+
   return (
     <View style={styles.wrap}>
-      <Animated.View style={{ transform: [{ scale }] }}>
+      <Animated.View style={{ transform: [{ scale: Animated.multiply(scale, pulseAnim) }] }}>
         <TouchableOpacity
           activeOpacity={1}
           onPress={onConfirmar}
           onPressIn={pressIn}
           onPressOut={pressOut}
           disabled={isOff}
-          style={[styles.btn, isOff && styles.btnDisabled]}
+          style={[
+            styles.btn,
+            { backgroundColor: isOff ? T.surfaceAlt : T.accent },
+            isOff && { borderWidth: 1, borderColor: T.border },
+          ]}
         >
-          {/* SLIDE SHINE — línea que cruza */}
+          {/* Shimmer line */}
           {!isOff && (
             <Animated.View
               style={[
-                styles.shine,
-                { transform: [{ translateX: slideX }, { rotate: '15deg' }] },
+                styles.shimmer,
+                {
+                  transform: [{ translateX: shimmerTranslateX }, { rotate: '20deg' }],
+                },
               ]}
             />
           )}
 
-          {/* BLOQUE IZQUIERDO */}
-          <Animated.View
-            style={[
-              styles.leftBlock,
-              isOff && styles.leftBlockDisabled,
-              !isOff && { transform: [{ scale: pulseAnim }] },
-            ]}
-          >
+          {/* Disabled overlay */}
+          {isOff && (
+            <Animated.View
+              style={[styles.disabledOverlay, { opacity: bgOpacity, backgroundColor: T.surfaceAlt }]}
+            />
+          )}
+
+          {/* Icon */}
+          <View style={[
+            styles.iconWrap,
+            { backgroundColor: isOff ? T.surface : 'rgba(255,255,255,0.18)' },
+          ]}>
             {loading ? (
-              <Animated.View style={{ transform: [{ rotate: spinInterpolate }] }}>
-                <Icon name="loading" size={24} color="#0A0A0A" />
+              <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                <Icon name="loading" size={22} color={spinnerColor} />
               </Animated.View>
+            ) : isOff ? (
+              <Icon name="cart-outline" size={22} color={T.textMuted} />
             ) : (
-              <Icon
-                name={isOff ? 'cart-off' : 'check-bold'}
-                size={24}
-                color={isOff ? T.textMuted : '#0A0A0A'}
-              />
+              <Animated.View style={{ transform: [{ scale: checkScale }] }}>
+                <Icon name="check" size={22} color={T.bg} strokeWidth={3} />
+              </Animated.View>
             )}
-          </Animated.View>
+          </View>
 
-          {/* CENTRO */}
-          <View style={styles.center}>
-            <Animated.Text
-              style={[
-                styles.label,
-                isOff && styles.labelDisabled,
-                !isOff && { opacity: glowOpacity },
-              ]}
-            >
-              {loading ? 'Procesando...' : 'Confirmar venta'}
-            </Animated.Text>
-
+          {/* Label */}
+          <View style={styles.labelWrap}>
+            <Text style={[
+              styles.label,
+              { color: isOff ? T.textMuted : T.bg },
+            ]}>
+              {loading ? 'Procesando...' : disabled ? 'Sin productos' : 'Confirmar venta'}
+            </Text>
             {!loading && (
-              <Text style={[styles.sub, isOff && { color: T.textDisabled }]}>
-                {isOff ? 'Agrega productos para continuar' : 'Toca para finalizar'}
+              <Text style={[styles.sub, { color: isOff ? T.textDisabled : 'rgba(255,255,255,0.55)' }]}>
+                {disabled ? 'Agrega items para continuar' : 'Desliza para finalizar'}
               </Text>
             )}
           </View>
 
-          {/* PRECIO */}
+          {/* Price */}
           {!loading && (
-            <Animated.View
-              style={[
-                styles.priceBlock,
-                !isOff && { opacity: glowOpacity },
-              ]}
-            >
-              <Text style={[styles.currency, isOff && styles.labelDisabled]}>
-                S/
-              </Text>
-              <Text style={[styles.amount, isOff && styles.labelDisabled]}>
+            <View style={styles.priceWrap}>
+              <Text style={[styles.currency, { color: isOff ? T.textDisabled : 'rgba(255,255,255,0.6)' }]}>S/</Text>
+              <Text style={[styles.amount, { color: isOff ? T.textMuted : T.bg }]}>
                 {total.toFixed(2)}
               </Text>
-            </Animated.View>
+            </View>
+          )}
+
+          {/* Arrow */}
+          {!isOff && (
+            <View style={styles.arrowWrap}>
+              <Icon name="arrow-right" size={18} color={T.bg} />
+            </View>
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -217,91 +233,86 @@ export function ConfirmarVentaBtn({
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 5,
-    paddingBottom: 20,
-    paddingTop: 5,
+    paddingTop: 4,
   },
 
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111111',
-    borderRadius: T.radiusLg,
+    borderRadius: 18,
+    minHeight: 64,
     overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: T.accent + '60',
-    minHeight: 70,
   },
 
-  btnDisabled: {
-    backgroundColor: T.surface,
-    borderColor: T.border,
+  disabledOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 18,
   },
 
-  shine: {
+  shimmer: {
     position: 'absolute',
-    width: 60,
+    width: 80,
     height: '300%',
-    backgroundColor: 'rgba(202,255,0,0.08)',
-    zIndex: 0,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    zIndex: 1,
   },
 
-  leftBlock: {
-    width: 70,
-    alignSelf: 'stretch',
-    backgroundColor: T.accent,
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
+    marginLeft: 16,
+    zIndex: 2,
   },
 
-  leftBlockDisabled: {
-    backgroundColor: T.surfaceAlt,
-  },
-
-  center: {
+  labelWrap: {
     flex: 1,
-    paddingHorizontal: 16,
-    gap: 3,
-    zIndex: 1,
+    marginLeft: 14,
+    zIndex: 2,
   },
 
   label: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#F2F2F2',
     letterSpacing: 0.2,
-  },
-
-  labelDisabled: {
-    color: T.textMuted,
   },
 
   sub: {
     fontSize: 11,
     fontWeight: '500',
-    color: T.textMuted,
+    marginTop: 2,
   },
 
-  priceBlock: {
+  priceWrap: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 2,
-    paddingRight: 18,
-    paddingBottom: 2,
-    zIndex: 1,
+    gap: 3,
+    marginRight: 8,
+    zIndex: 2,
   },
 
   currency: {
     fontSize: 13,
-    fontWeight: '700',
-    color: T.accent,
+    fontWeight: '600',
     marginBottom: 4,
   },
 
   amount: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '900',
-    color: T.accent,
+    letterSpacing: -0.5,
+  },
+
+  arrowWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+    zIndex: 2,
   },
 });

@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -7,6 +7,34 @@ interface Props {
 }
 
 export default function LoadingScreen({ text = 'Cargando...' }: Props) {
+    const { T } = useAppTheme();
+    const makeStyles = (T: any) => StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: T.bg,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        box: {
+            paddingVertical: 24,
+            paddingHorizontal: 28,
+            borderRadius: T.radiusLg,
+            backgroundColor: T.surface,
+            alignItems: 'center',
+            gap: 12,
+            borderWidth: 1,
+            borderColor: T.border,
+            ...T.shadowCard,
+        },
+        text: {
+            fontSize: 14,
+            color: T.textMuted,
+            fontWeight: '500',
+            letterSpacing: 0.3,
+        },
+    });
+    const styles = makeStyles(T);
+
     return (
         <View style={styles.container}>
             <View style={styles.box}>
@@ -16,31 +44,3 @@ export default function LoadingScreen({ text = 'Cargando...' }: Props) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: T.bg,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    box: {
-        paddingVertical: 24,
-        paddingHorizontal: 28,
-        borderRadius: T.radiusLg,
-        backgroundColor: T.surface,
-        alignItems: 'center',
-        gap: 12,
-        borderWidth: 1,
-        borderColor: T.border,
-        ...T.shadowCard,
-    },
-
-    text: {
-        fontSize: 14,
-        color: T.textMuted,
-        fontWeight: '500',
-        letterSpacing: 0.3,
-    },
-});

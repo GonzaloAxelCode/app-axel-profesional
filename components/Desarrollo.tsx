@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
@@ -12,9 +12,7 @@ import {
 
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
-
-// ── Pulsing ring ───────────────────────────────────────────────────────────
-const PulsingRing = ({ delay = 0 }: { delay?: number }) => {
+const PulsingRing = ({ delay = 0, color }: { delay?: number; color: string }) => {
     const scale = useRef(new Animated.Value(1)).current;
     const opacity = useRef(new Animated.Value(0.4)).current;
 
@@ -52,7 +50,7 @@ const PulsingRing = ({ delay = 0 }: { delay?: number }) => {
                 height: 56,
                 borderRadius: 28,
                 borderWidth: 1,
-                borderColor: T.accent3,
+                borderColor: color,
                 opacity,
                 transform: [{ scale }],
             }}
@@ -60,8 +58,7 @@ const PulsingRing = ({ delay = 0 }: { delay?: number }) => {
     );
 };
 
-// ── Drum icon ──────────────────────────────────────────────────────────────
-const DrumIcon = () => {
+const DrumIcon = ({ styles }: { styles: any }) => {
     const spin = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -82,8 +79,8 @@ const DrumIcon = () => {
 
     return (
         <View style={styles.iconContainer}>
-            <PulsingRing delay={0} />
-            <PulsingRing delay={1200} />
+            <DrumIconRing delay={0} color={styles.drumRing.borderColor} />
+            <DrumIconRing delay={1200} color={styles.drumRing.borderColor} />
 
             <View style={styles.iconCircle}>
                 <Animated.View style={[styles.drumRing, { transform: [{ rotate }] }]}>
@@ -109,8 +106,53 @@ const DrumIcon = () => {
     );
 };
 
-// ── Blinking status dot ────────────────────────────────────────────────────
-const StatusDot = () => {
+const DrumIconRing = ({ delay = 0, color }: { delay?: number; color: string }) => {
+    const scale = useRef(new Animated.Value(1)).current;
+    const opacity = useRef(new Animated.Value(0.4)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.delay(delay),
+                Animated.parallel([
+                    Animated.timing(scale, {
+                        toValue: 1.7,
+                        duration: 2400,
+                        easing: Easing.out(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                        toValue: 0,
+                        duration: 2400,
+                        easing: Easing.out(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                ]),
+                Animated.parallel([
+                    Animated.timing(scale, { toValue: 1, duration: 0, useNativeDriver: true }),
+                    Animated.timing(opacity, { toValue: 0.4, duration: 0, useNativeDriver: true }),
+                ]),
+            ]),
+        ).start();
+    }, []);
+
+    return (
+        <Animated.View
+            style={{
+                position: 'absolute',
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                borderWidth: 1,
+                borderColor: color,
+                opacity,
+                transform: [{ scale }],
+            }}
+        />
+    );
+};
+
+const StatusDot = ({ color }: { color: string }) => {
     const opacity = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
@@ -122,11 +164,10 @@ const StatusDot = () => {
         ).start();
     }, []);
 
-    return <Animated.View style={[styles.statusDot, { opacity }]} />;
+    return <Animated.View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color, opacity }} />;
 };
 
-// ── Progress bar ───────────────────────────────────────────────────────────
-const ProgressBar = () => {
+const ProgressBar = ({ styles }: { styles: any }) => {
     const progress = useRef(new Animated.Value(0)).current;
     const [pct, setPct] = React.useState(0);
 
@@ -172,7 +213,6 @@ const ProgressBar = () => {
     );
 };
 
-// ── Staggered fade-in hook ─────────────────────────────────────────────────
 const useFadeIn = (delay: number) => {
     const opacity = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(14)).current;
@@ -190,30 +230,27 @@ const useFadeIn = (delay: number) => {
     return { opacity, transform: [{ translateY }] };
 };
 
-// ── Main ───────────────────────────────────────────────────────────────────
 export default function UnderDevelopment() {
+    const { T } = useAppTheme();
+    const styles = makeStyles(T);
     const s0 = useFadeIn(80);
     const s1 = useFadeIn(240);
     const s2 = useFadeIn(400);
     const s3 = useFadeIn(540);
     const s4 = useFadeIn(660);
     const router = useRouter();
+
     return (
-
         <View style={styles.card}>
-
-            {/* Status pill */}
             <Animated.View style={[styles.pill, s0]}>
-                <StatusDot />
+                <StatusDot color={T.green} />
                 <Text style={styles.pillText}>EN DESARROLLO</Text>
             </Animated.View>
 
-            {/* Icon with rings */}
             <Animated.View style={[styles.iconWrap, s1]}>
-                <DrumIcon />
+                <DrumIcon styles={styles} />
             </Animated.View>
 
-            {/* Headline */}
             <Animated.View style={[styles.textBlock, s2]}>
                 <Text style={styles.headline}>Módulo en</Text>
                 <Text style={[styles.headline, styles.headlineAccent]}>construcción</Text>
@@ -222,13 +259,10 @@ export default function UnderDevelopment() {
                 </Text>
             </Animated.View>
 
-            {/* Divider + Progress */}
             <Animated.View style={[styles.fullWidth, s3]}>
                 <View style={styles.divider} />
-
             </Animated.View>
 
-            {/* Meta row */}
             <Animated.View style={[styles.metaRow, s4]}>
                 {[
                     { label: 'UI', color: T.accent3 },
@@ -251,11 +285,10 @@ export default function UnderDevelopment() {
                 <Icon name="arrow-left" size={18} color={T.textPrimary} />
             </TouchableOpacity>
         </View>
-
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (T: any) => StyleSheet.create({
     card: {
         flex: 1,
         width: "100%",
@@ -284,7 +317,6 @@ const styles = StyleSheet.create({
         zIndex: 10,
         ...T.shadowCard,
     },
-    // pill
     pill: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -296,20 +328,12 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         backgroundColor: T.surfaceElevated,
     },
-    statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: T.green,
-    },
     pillText: {
         fontSize: 10,
         fontWeight: '700',
         letterSpacing: 1.5,
         color: T.textMuted,
     },
-
-    // icon
     iconWrap: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -346,8 +370,6 @@ const styles = StyleSheet.create({
         borderRadius: 2.5,
         backgroundColor: T.accent3,
     },
-
-    // text
     textBlock: {
         alignItems: 'center',
         gap: 4,
@@ -371,8 +393,6 @@ const styles = StyleSheet.create({
         lineHeight: 21,
         letterSpacing: 0.1,
     },
-
-    // divider
     fullWidth: { width: '100%' },
     divider: {
         width: '100%',
@@ -380,8 +400,6 @@ const styles = StyleSheet.create({
         backgroundColor: T.border,
         marginBottom: 20,
     },
-
-    // progress
     progressSection: {
         width: '100%',
         gap: 10,
@@ -415,8 +433,6 @@ const styles = StyleSheet.create({
         backgroundColor: T.accent3,
         borderRadius: T.radiusFull,
     },
-
-    // meta
     metaRow: {
         flexDirection: 'row',
         gap: 20,

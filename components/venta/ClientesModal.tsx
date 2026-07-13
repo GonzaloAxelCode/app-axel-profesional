@@ -1,6 +1,6 @@
 import { useClientes as useClientesHook } from '@/State/hooks/useClientes';
 import { Cliente } from '@/State/models/cliente.models';
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -13,9 +13,6 @@ import {
     View,
 } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
-
-// ─────────────────────────────────────────────
-const AVATAR_COLORS = [T.accent, T.accent2, T.accent3, T.accent5];
 
 type ClienteFilterKey = 'dni' | 'ruc';
 
@@ -32,6 +29,129 @@ export function ClientesModal({
     onClienteEncontrado,
     tipodoc,
 }: ClienteModalProps) {
+    const { T } = useAppTheme();
+    const AVATAR_COLORS = [T.accent, T.accent2, T.accent3, T.accent5];
+
+    const makeStyles = (T: any) => StyleSheet.create({
+        safeArea: {
+            flex: 1,
+            backgroundColor: T.bg,
+        },
+        navbar: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            borderBottomWidth: 1,
+            borderBottomColor: T.border,
+            backgroundColor: T.bg,
+        },
+        navTitleBlock: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+        },
+        title: {
+            fontSize: 20,
+            fontWeight: '800',
+            color: T.textPrimary,
+        },
+        countBadge: {
+            backgroundColor: T.surfaceAlt,
+            borderRadius: 999,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+        },
+        countText: {
+            fontSize: 12,
+            fontWeight: '700',
+            color: T.textSecondary,
+        },
+        closeBtn: {
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: T.surfaceAlt,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        container: {
+            padding: 16,
+            paddingBottom: 60,
+        },
+        search: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: T.surface,
+            borderRadius: T.radiusMd,
+            paddingHorizontal: 12,
+            marginBottom: 14,
+            borderWidth: 1,
+            borderColor: T.border,
+        },
+        input: {
+            flex: 1,
+            paddingVertical: 12,
+            color: T.textPrimary,
+        },
+        apiBtn: {
+            backgroundColor: T.accent,
+            padding: 14,
+            borderRadius: T.radiusFull,
+            alignItems: 'center',
+            marginBottom: 12,
+        },
+        apiText: {
+            color: T.bg,
+            fontWeight: '700',
+        },
+        card: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            padding: 14,
+            borderRadius: T.radiusLg,
+            backgroundColor: T.surface,
+            marginBottom: 10,
+            borderWidth: 1,
+            borderColor: T.border,
+            ...T.shadowCard,
+        },
+        avatar: {
+            width: 46,
+            height: 46,
+            borderRadius: T.radiusMd,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        avatarText: {
+            fontWeight: '800',
+            fontSize: 16,
+        },
+        name: {
+            fontSize: 15,
+            fontWeight: '700',
+            color: T.textPrimary,
+        },
+        doc: {
+            fontSize: 12,
+            color: T.textSecondary,
+            marginTop: 2,
+        },
+        badge: {
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: T.radiusSm,
+        },
+        empty: {
+            textAlign: 'center',
+            marginTop: 40,
+            color: T.textMuted,
+        },
+    });
+    const styles = makeStyles(T);
+
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<ClienteFilterKey>(
         tipodoc === 'ruc' ? 'ruc' : 'dni',
@@ -209,127 +329,6 @@ export function ClientesModal({
     );
 }
 
-// ─────────────────────────────────────────────
-const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: T.bg,
-    },
-    navbar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderBottomWidth: 1,
-        borderBottomColor: T.border,
-        backgroundColor: T.bg,
-    },
-    navTitleBlock: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: T.textPrimary,
-    },
-    countBadge: {
-        backgroundColor: T.surfaceAlt,
-        borderRadius: 999,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-    },
-    countText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: T.textSecondary,
-    },
-    closeBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: T.surfaceAlt,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    container: {
-        padding: 16,
-        paddingBottom: 60,
-    },
-    search: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: T.surface,
-        borderRadius: T.radiusMd,
-        paddingHorizontal: 12,
-        marginBottom: 14,
-        borderWidth: 1,
-        borderColor: T.border,
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 12,
-        color: T.textPrimary,
-    },
-    apiBtn: {
-        backgroundColor: T.accent,
-        padding: 14,
-        borderRadius: T.radiusFull,
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    apiText: {
-        color: T.bg,
-        fontWeight: '700',
-    },
-    card: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        padding: 14,
-        borderRadius: T.radiusLg,
-        backgroundColor: T.surface,
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: T.border,
-        ...T.shadowCard,
-    },
-    avatar: {
-        width: 46,
-        height: 46,
-        borderRadius: T.radiusMd,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    avatarText: {
-        fontWeight: '800',
-        fontSize: 16,
-    },
-    name: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: T.textPrimary,
-    },
-    doc: {
-        fontSize: 12,
-        color: T.textSecondary,
-        marginTop: 2,
-    },
-    badge: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: T.radiusSm,
-    },
-    empty: {
-        textAlign: 'center',
-        marginTop: 40,
-        color: T.textMuted,
-    },
-});
-
-// ─────────────────────────────────────────────
 const getInitials = (nombre: string) =>
     nombre
         .trim()

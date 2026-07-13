@@ -141,7 +141,7 @@ export const useVentaStore = create<VentaStore>((set, get) => ({
     loadVentas: async (page = 1, page_size = 10) => {
         set({ loadingLoadVentas: true, error: null });
         try {
-            const res = await fetchWithAuth(`${URLS.VENTAS_POR_TIENA}?page=${page}&page_size=${page_size}`);
+            const res = await fetchWithAuth(`${URLS.VENTAS_POR_TIENDA}?page=${page}&page_size=${page_size}`);
             set({
                 ventas: res.results,
                 count: res.count,

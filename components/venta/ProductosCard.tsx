@@ -1,5 +1,5 @@
 
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { InventarioCart } from '@/State/models/inventario.models';
 import { URLS } from '@/State/utils/endpoints';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -22,6 +22,167 @@ const getImagenProducto = (p: InventarioCart) =>
     ? URLS.BASE + p.imagen_producto
     : URLS.IMAGE_URL_PLACEHOLDER;
 
+const makeStyles = (T: any) => StyleSheet.create({
+  card: {
+    backgroundColor: T.surface,
+    borderRadius: T.radiusLg,
+    borderWidth: 1,
+    borderColor: T.border,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderBottomWidth: 0,
+    borderBottomColor: T.border,
+  },
+  title: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: T.textMuted,
+    letterSpacing: 1.2,
+  },
+  addBtn: {
+    flexDirection: 'row',
+    gap: 6,
+    backgroundColor: T.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: T.radiusFull,
+    alignItems: 'center',
+  },
+  addText: {
+    color: T.bg,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  empty: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  emptyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: T.radiusFull,
+    borderWidth: 0,
+    borderColor: T.border,
+    backgroundColor: T.surfaceAlt,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: T.textMuted,
+    fontSize: 14,
+  },
+  list: {
+    paddingVertical: 6,
+  },
+  sep: {
+    height: 1,
+    backgroundColor: T.border,
+    marginHorizontal: 16,
+  },
+  row: {
+    padding: 14,
+    gap: 10,
+  },
+  image: {
+    width: 68,
+    height: 68,
+    borderRadius: T.radiusMd,
+    backgroundColor: T.surfaceAlt,
+  },
+  info: {
+    flex: 1,
+    gap: 3,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: T.textPrimary,
+  },
+  skuRow: {
+    flexDirection: 'row',
+    gap: 5,
+    alignItems: 'center',
+  },
+  sku: {
+    fontSize: 11,
+    color: T.textMuted,
+  },
+  price: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: T.accent,
+  },
+  close: {
+    position: 'absolute',
+    right: 14,
+    top: 14,
+    width: 28,
+    height: 28,
+    borderRadius: T.radiusSm,
+    backgroundColor: T.red + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  controls: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  block: {
+    flex: 1,
+    gap: 6,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: T.textMuted,
+    textTransform: 'uppercase',
+  },
+  stepper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: T.radiusMd,
+    backgroundColor: T.surfaceAlt,
+    borderWidth: 1,
+    borderColor: T.border,
+  },
+  stepBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: T.radiusSm,
+    backgroundColor: T.surface,
+    borderWidth: 1,
+    borderColor: T.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepText: {
+    fontWeight: '700',
+    color: T.textPrimary,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  totalLabel: {
+    fontSize: 12,
+    color: T.textMuted,
+    fontWeight: '600',
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: T.accent,
+  },
+});
+
 // ─────────────────────────────────────────────
 // ROW
 // ─────────────────────────────────────────────
@@ -31,7 +192,9 @@ function ProductRow({
   onRemove,
   onChangeDiscount,
   onImagePress,
+  T,
 }: any) {
+  const styles = makeStyles(T);
   const [discountText, setDiscountText] = useState(
     item.descuento ? String(item.descuento) : '0'
   );
@@ -146,6 +309,8 @@ export function ProductosCard({
   onRemove,
   onChangeDiscount,
 }: ProductosCardProps) {
+  const { T } = useAppTheme();
+  const styles = makeStyles(T);
   const [visible, setVisible] = useState(false);
   const [img, setImg] = useState('');
 
@@ -185,6 +350,7 @@ export function ProductosCard({
                     setImg(u);
                     setVisible(true);
                   }}
+                  T={T}
                 />
 
                 {i < cart.length - 1 && <View style={styles.sep} />}
@@ -203,196 +369,3 @@ export function ProductosCard({
     </>
   );
 }
-
-// ─────────────────────────────────────────────
-// STYLES (T SYSTEM)
-// ─────────────────────────────────────────────
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: T.surface,
-    borderRadius: T.radiusLg,
-    borderWidth: 0,
-    borderColor: T.border,
-    overflow: 'hidden',
-    ...T.shadowCard,
-  },
-
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 14,
-    borderBottomWidth: 0,
-    borderBottomColor: T.border,
-
-  },
-
-  title: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: T.textMuted,
-    letterSpacing: 1.2,
-  },
-
-  addBtn: {
-    flexDirection: 'row',
-    gap: 6,
-    backgroundColor: T.accent,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: T.radiusFull,
-    alignItems: 'center',
-  },
-
-  addText: {
-    color: T.bg,
-    fontWeight: '700',
-    fontSize: 14,
-  },
-
-  empty: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-
-  emptyIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: T.radiusFull,
-    borderWidth: 0,
-    borderColor: T.border,
-    backgroundColor: T.surfaceAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  emptyText: {
-    color: T.textMuted,
-    fontSize: 14,
-  },
-
-  list: {
-    paddingVertical: 6,
-  },
-
-  sep: {
-    height: 1,
-    backgroundColor: T.border,
-    marginHorizontal: 16,
-  },
-
-  // ROW
-  row: {
-    padding: 14,
-    gap: 10,
-  },
-
-  image: {
-    width: 68,
-    height: 68,
-    borderRadius: T.radiusMd,
-    backgroundColor: T.surfaceAlt,
-  },
-
-  info: {
-    flex: 1,
-    gap: 3,
-  },
-
-  name: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: T.textPrimary,
-  },
-
-  skuRow: {
-    flexDirection: 'row',
-    gap: 5,
-    alignItems: 'center',
-  },
-
-  sku: {
-    fontSize: 11,
-    color: T.textMuted,
-  },
-
-  price: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: T.accent,
-  },
-
-  close: {
-    position: 'absolute',
-    right: 14,
-    top: 14,
-    width: 28,
-    height: 28,
-    borderRadius: T.radiusSm,
-    backgroundColor: T.red + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  controls: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-
-  block: {
-    flex: 1,
-    gap: 6,
-  },
-
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: T.textMuted,
-    textTransform: 'uppercase',
-  },
-
-  stepper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: T.radiusMd,
-    backgroundColor: T.surfaceAlt,
-    borderWidth: 1,
-    borderColor: T.border,
-  },
-
-  stepBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: T.radiusSm,
-    backgroundColor: T.surface,
-    borderWidth: 1,
-    borderColor: T.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  stepText: {
-    fontWeight: '700',
-    color: T.textPrimary,
-  },
-
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-
-  totalLabel: {
-    fontSize: 12,
-    color: T.textMuted,
-    fontWeight: '600',
-  },
-
-  totalValue: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: T.accent,
-  },
-});

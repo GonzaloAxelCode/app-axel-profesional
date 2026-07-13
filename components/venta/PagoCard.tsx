@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 
@@ -36,6 +36,84 @@ interface PagoCardProps {
 }
 
 export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
+  const { T } = useAppTheme();
+  const makeStyles = (T: any) => StyleSheet.create({
+    wrapper: {
+      gap: 10,
+      backgroundColor: T.surfaceAlt,
+      borderRadius: T.radiusLg,
+      padding: 14,
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: T.textMuted,
+      paddingHorizontal: 2,
+    },
+    list: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+  card: {
+    flex: 1,
+    position: 'relative',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: T.surface,
+    borderRadius: T.radiusMd,
+    borderWidth: 1.5,
+    borderColor: T.border,
+    padding: 14,
+  },
+    cardActive: {
+      borderColor: T.accent,
+      backgroundColor: T.accentDim,
+    },
+    iconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: T.radiusMd,
+      backgroundColor: T.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconBoxActive: {
+      backgroundColor: T.accent,
+    },
+    textBox: {
+      alignItems: 'center',
+      gap: 2,
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: T.textPrimary,
+      textAlign: 'center',
+    },
+    labelActive: {
+      color: T.textPrimary,
+    },
+    description: {
+      fontSize: 10,
+      color: T.textMuted,
+      lineHeight: 14,
+      textAlign: 'center',
+    },
+    check: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: T.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
+  const styles = makeStyles(T);
+
   return (
     <View style={styles.wrapper}>
       <Text style={styles.sectionTitle}>Método de pago</Text>
@@ -81,88 +159,3 @@ export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: 10,
-  },
-
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: T.textMuted,
-    paddingHorizontal: 2,
-  },
-
-  list: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-
-  card: {
-    flex: 1,
-    position: 'relative',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: T.surface,
-    borderRadius: T.radiusLg,
-    borderWidth: 1.5,
-    borderColor: T.border,
-    padding: 14,
-    ...T.shadowCard,
-  },
-
-  cardActive: {
-    borderColor: T.accent,
-    backgroundColor: T.accentDim,
-  },
-
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: T.radiusMd,
-    backgroundColor: T.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  iconBoxActive: {
-    backgroundColor: T.accent,
-  },
-
-  textBox: {
-    alignItems: 'center',
-    gap: 2,
-  },
-
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: T.textPrimary,
-    textAlign: 'center',
-  },
-
-  labelActive: {
-    color: T.textPrimary,
-  },
-
-  description: {
-    fontSize: 10,
-    color: T.textMuted,
-    lineHeight: 14,
-    textAlign: 'center',
-  },
-
-  check: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: T.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

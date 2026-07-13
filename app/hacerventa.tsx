@@ -10,7 +10,7 @@ import {
 
 import { ComprobanteCardSelect, ComprobanteMethod } from '@/components/venta/ComprobanteCardSelect';
 import VentaDetalleModal from '@/components/venta/VentaDetailModal';
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { Cliente } from '@/State/models/cliente.models';
 import { useVentaStore } from '@/State/store/useVentaStore';
 
@@ -26,6 +26,7 @@ import { ResumenCard } from '../components/venta/ResumenCard';
 import { VentaHeader } from '../components/venta/VentaHeader';
 
 function HacerVentaScreen() {
+  const { T } = useAppTheme();
   const { productos, isLoading } = useInventario();
   const { createVenta, temporaryVenta, showVentaDetailTemporary, loadingCreateVenta } = useVentaStore();
   const [visibleProductosModal, setVisibleProductosModal] = useState(false);
@@ -128,17 +129,17 @@ function HacerVentaScreen() {
   }, []);
 
   return (
-    <View style={styles.screen}>
+    <View style={makeStyles(T).screen}>
 
       {/* ── Header fijo fuera del scroll ── */}
-      <View style={styles.headerWrapper}>
+      <View style={makeStyles(T).headerWrapper}>
         <VentaHeader />
       </View>
 
       {/* ── Contenido scrolleable ── */}
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        style={makeStyles(T).scroll}
+        contentContainerStyle={makeStyles(T).scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -169,7 +170,7 @@ function HacerVentaScreen() {
 
         <ResumenCard subtotal={subtotal} descuento={descuentoTotal} total={total} igv={igv} />
         {/* ── Botón fijo abajo ── */}
-        <View style={styles.footer}>
+        <View style={makeStyles(T).footer}>
           <ConfirmarVentaBtn
             loading={loadingCreateVenta}
             total={total}
@@ -204,7 +205,7 @@ function HacerVentaScreen() {
 
 export default HacerVentaScreen;
 
-const styles = StyleSheet.create({
+const makeStyles = (T: any) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: T.bg,

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Platform, Pressable, StatusBar, StyleSheet, View } from 'react-native';
-import { MD3LightTheme, Provider as PaperProvider, Text } from 'react-native-paper';
-
+import { Text } from 'react-native-paper';
 
 import ConfiguracionScreen from './configuracion';
 import InicioScreen from './inicio';
@@ -9,31 +8,12 @@ import { ProductosScreen } from './productos';
 import VentasScreen from './ventas';
 
 import LoadingScreen from '@/components/LoadScreen';
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { useAuthStore } from '@/State/store/useAuthStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HacerVentaScreen from '../hacerventa';
-
-// ─── Paper Theme ──────────────────────────────────────────────────────────────
-const paperTheme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: T.accent,
-    secondary: T.accent2,
-    background: T.bg,
-    surface: T.surface,
-    surfaceVariant: T.surfaceAlt,
-    onSurface: T.textPrimary,
-    onSurfaceVariant: T.textMuted,
-    secondaryContainer: T.accentDim,
-    onSecondaryContainer: T.accent,
-    outline: T.border,
-    error: T.red,
-  },
-};
 
 // ─── Tab Context ──────────────────────────────────────────────────────────────
 export const TabContext = React.createContext<(key: string) => void>(() => { });
@@ -69,6 +49,7 @@ export default function TabLayout() {
   const [index, setIndex] = React.useState(0);
   const { loading, isAuthenticated } = useAuthStore();
   const insets = useSafeAreaInsets();
+  const { T } = useAppTheme();
 
   const navigateToTab = React.useCallback((key: string) => {
     const i = ROUTES.findIndex(r => r.key === key);
@@ -83,88 +64,71 @@ export default function TabLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider theme={paperTheme}>
-        <StatusBar barStyle="light-content" backgroundColor={T.bg} />
-        <TabContext.Provider value={navigateToTab}>
-          <View style={styles.root}>
+      <StatusBar barStyle={T.bg === '#050505' ? 'light-content' : 'dark-content'} backgroundColor={T.bg} />
+      <TabContext.Provider value={navigateToTab}>
+        <View style={{ flex: 1, backgroundColor: T.bg }}>
 
-            {/* CONTENIDO */}
-            <View style={styles.scene}>
-              {SceneComponent ? <SceneComponent /> : null}
-            </View>
+          {/* CONTENIDO */}
+          <View style={{ flex: 1 }}>
+            {SceneComponent ? <SceneComponent /> : null}
+          </View>
 
-            {/* BARRA CUSTOM */}
-            <View style={[styles.barWrapper, { paddingBottom: insets.bottom || 12 }]}>
-              <View style={styles.bar}>
-                {ROUTES.map((route: any, i) => {
-                  const focused = index === i;
+          {/* BARRA CUSTOM */}
+          <View style={[styles.barWrapper, { paddingBottom: insets.bottom || 0, backgroundColor: T.surface, borderTopColor: T.border, borderTopWidth: 1 }]}>
+            <View style={[styles.bar, { backgroundColor: T.surface }]}>
+              {ROUTES.map((route: any, i) => {
+                const focused = index === i;
 
-                  // ── FAB central ──────────────────────────────────────────────
-                  if (route.isFab) {
-                    return (
-                      <Pressable
-                        key={route.key}
-                        onPress={() => setIndex(i)}
-                        style={styles.fabBtn}
-                        android_ripple={null}
-                      >
-                        <View style={styles.fab}>
-                          <MaterialCommunityIcons
-                            name="cart"
-                            size={24}
-                            color={T.bg}
-                          />
-                        </View>
-                      </Pressable>
-                    );
-                  }
-
-                  // ── Tab normal ───────────────────────────────────────────────
+                if (route.isFab) {
                   return (
                     <Pressable
                       key={route.key}
                       onPress={() => setIndex(i)}
-                      style={styles.tab}
+                      style={styles.fabBtn}
                       android_ripple={null}
                     >
-                      <MaterialCommunityIcons
-                        name={route.icon}
-                        size={24}
-                        color={focused ? '#FFFFFF' : T.textMuted}
-                      />
-                      <Text
-                        style={[
-                          styles.label,
-                          { color: focused ? '#FFFFFF' : T.textMuted },
-                          focused && styles.labelActive,
-                        ]}
-                      >
-                        {route.title}
-                      </Text>
+                      <View style={[styles.fab, { backgroundColor: T.accent }]}>
+                        <MaterialCommunityIcons name="cart" size={24} color={T.bg} />
+                      </View>
                     </Pressable>
                   );
-                })}
-              </View>
-            </View>
+                }
 
+                return (
+                  <Pressable
+                    key={route.key}
+                    onPress={() => setIndex(i)}
+                    style={styles.tab}
+                    android_ripple={null}
+                  >
+                    <MaterialCommunityIcons
+                      name={route.icon}
+                      size={24}
+                      color={focused ? T.accent : T.textMuted}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: focused ? '700' : '500',
+                        color: focused ? T.accent : T.textMuted,
+                      }}
+                    >
+                      {route.title}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </TabContext.Provider>
-      </PaperProvider>
+
+        </View>
+      </TabContext.Provider>
     </GestureHandlerRootView>
   );
 }
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: T.bg,
-  },
-
-  scene: {
-    flex: 1,
-  },
-
   barWrapper: {
     position: 'absolute',
     bottom: 0,
@@ -172,26 +136,15 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 0,
-    backgroundColor: T.bg,
   },
 
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "transparent",
-    borderRadius: 16,
-    paddingVertical: 10,
+    borderRadius: 0,
+    paddingVertical: 8,
     paddingHorizontal: 8,
     width: '100%',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
-        shadowRadius: 20,
-      },
-      android: { elevation: 16 },
-    }),
   },
 
   tab: {
@@ -202,15 +155,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
 
-  label: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-
-  labelActive: {
-    fontWeight: '700',
-  },
-
   fabBtn: {
     flex: 1,
     alignItems: 'center',
@@ -218,20 +162,10 @@ const styles = StyleSheet.create({
   },
 
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 56,
-    backgroundColor: T.accent,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: T.accent,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.55,
-        shadowRadius: 16,
-      },
-      android: { elevation: 10 },
-    }),
   },
 });

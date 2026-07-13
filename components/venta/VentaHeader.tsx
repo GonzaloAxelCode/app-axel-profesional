@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
@@ -7,6 +7,41 @@ interface VentaHeaderProps {
 }
 
 export function VentaHeader({ fecha = new Date() }: VentaHeaderProps) {
+  const { T } = useAppTheme();
+  const makeStyles = (T: any) => StyleSheet.create({
+    header: {
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingTop: 32,
+      paddingBottom: 12,
+      backgroundColor: T.bg,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    content: {
+      marginTop: 10,
+    },
+    title: {
+      fontSize: 30,
+      fontWeight: '900',
+      color: T.textPrimary,
+      letterSpacing: -0.8,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: T.textSecondary,
+      marginTop: 6,
+    },
+  });
+  const styles = makeStyles(T);
+
   const fechaFormateada = fecha.toLocaleDateString('es-PE', {
     day: 'numeric',
     month: 'short',
@@ -21,7 +56,6 @@ export function VentaHeader({ fecha = new Date() }: VentaHeaderProps) {
   return (
     <View style={styles.header}>
 
-
       {/* CONTENT */}
       <View style={styles.content}>
         <Text style={styles.title}>Nueva venta</Text>
@@ -32,43 +66,3 @@ export function VentaHeader({ fecha = new Date() }: VentaHeaderProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-
-    gap: 8,
-
-    paddingTop: 32,
-    paddingBottom: 12,
-    backgroundColor: T.bg,
-  },
-
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-
-  },
-
-  content: {
-    marginTop: 10,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: '900',
-    color: T.textPrimary,
-    letterSpacing: -0.8,
-  },
-
-  subtitle: {
-    fontSize: 14,
-    color: T.textSecondary,
-    marginTop: 6,
-  },
-});

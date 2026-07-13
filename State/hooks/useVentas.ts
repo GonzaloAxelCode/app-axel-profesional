@@ -152,8 +152,17 @@ export const useVentas = () => {
         ventasPorRangoFechasTienda: ventasPorRangoQuery.data,
         // MANUAL REFETCH
         refreshVentasPorTienda: ventasPorTiendaQuery.refetch,
+        refreshAll: async () => {
+            await Promise.all([
+                ventasHoyQuery.refetch(),
+                resumenVentasQuery.refetch(),
+                topProductosQuery.refetch(),
+                ventasPorTiendaQuery.refetch(),
+                ventasPorRangoQuery.refetch(),
+            ]);
+        },
         // LOADING
-        loadingVentasHoy: ventasPorTiendaQuery.isLoading,
+        loadingVentasHoy: ventasHoyQuery.isLoading,
         loadingResumenVentas: resumenVentasQuery.isLoading,
         loadingTopProductosHoy: topProductosQuery.isLoading,
         loadingVentasPorRango: ventasPorRangoQuery.isLoading,

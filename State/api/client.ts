@@ -1,5 +1,6 @@
 // api/client.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { URL_BASE } from '../utils/endpoints';
 
 type FetchOptions = RequestInit & {
     auth?: boolean; // permitir llamadas sin token
@@ -41,7 +42,7 @@ export const fetchWithAuth = async (url: string, options: FetchOptions = {}) => 
 
 
         try {
-            const refreshRes = await fetch('http://10.200.250.246:8000/api/token/refresh/', {
+            const refreshRes = await fetch(`${URL_BASE}/api/token/refresh/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh: refreshToken }),

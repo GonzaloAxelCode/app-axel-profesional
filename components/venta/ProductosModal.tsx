@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { useInventario } from '@/State/hooks/useInventarios';
 import { InventarioCart } from '@/State/models/inventario.models';
 import { URLS } from '@/State/utils/endpoints';
@@ -26,12 +26,6 @@ function getStockStatus(cantidad: number): StockStatus {
   return 'in_stock';
 }
 
-const STOCK_CONFIG: Record<StockStatus, { label: string; color: string }> = {
-  in_stock: { label: 'En stock', color: T.green },
-  low_stock: { label: 'Stock bajo', color: T.amber },
-  no_stock: { label: 'Agotado', color: T.red },
-};
-
 type FilterKey = 'todos' | 'disponible' | 'poco' | 'agotado';
 
 interface Props {
@@ -49,6 +43,177 @@ export function ProductosModal({
   onSelectProducto,
   loadMore,
 }: Props) {
+  const { T } = useAppTheme();
+  const STOCK_CONFIG: Record<StockStatus, { label: string; color: string }> = {
+    in_stock: { label: 'En stock', color: T.green },
+    low_stock: { label: 'Stock bajo', color: T.amber },
+    no_stock: { label: 'Agotado', color: T.red },
+  };
+
+  const makeStyles = (T: any) => StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: T.bg,
+    },
+    navbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: T.border,
+      backgroundColor: T.bg,
+    },
+    navTitleBlock: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: T.textPrimary,
+    },
+    countBadge: {
+      backgroundColor: T.surfaceAlt,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    countText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: T.textSecondary,
+    },
+    closeBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: T.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    container: {
+      padding: 16,
+      paddingBottom: 60,
+    },
+    search: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: T.surface,
+      borderRadius: T.radiusMd,
+      borderWidth: 1,
+      borderColor: T.border,
+      paddingHorizontal: 12,
+      marginBottom: 12,
+    },
+    input: {
+      flex: 1,
+      paddingVertical: 12,
+      color: T.textPrimary,
+    },
+    tabs: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 12,
+    },
+    tab: {
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: T.radiusFull,
+      backgroundColor: T.surfaceAlt,
+    },
+    tabText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: T.textSecondary,
+    },
+    tabTextActive: {
+      color: '#fff',
+    },
+    tabActiveCategoria: {
+      backgroundColor: T.purple,
+    },
+    sectionLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: T.textMuted,
+      marginBottom: 6,
+      marginTop: 4,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    card: {
+      flexDirection: 'row',
+      gap: 12,
+      padding: 12,
+      borderRadius: T.radiusLg,
+      backgroundColor: T.surface,
+      borderWidth: 0,
+      borderColor: T.border,
+      marginBottom: 10,
+      ...T.shadowCard,
+    },
+    image: {
+      width: 72,
+      height: 72,
+      borderRadius: T.radiusMd,
+      backgroundColor: T.surfaceAlt,
+    },
+    body: {
+      flex: 1,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    name: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '700',
+      color: T.textPrimary,
+    },
+    sku: {
+      fontSize: 11,
+      color: T.textMuted,
+      marginTop: 2,
+    },
+    price: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: T.accent,
+      marginTop: 6,
+    },
+    badge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: T.radiusSm,
+    },
+    stats: {
+      flexDirection: 'row',
+      marginTop: 10,
+    },
+    stat: {
+      flex: 1,
+    },
+    statValue: {
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    statLabel: {
+      fontSize: 9,
+      color: T.textMuted,
+    },
+    empty: {
+      textAlign: 'center',
+      marginTop: 40,
+      color: T.textMuted,
+    },
+  });
+  const styles = makeStyles(T);
+
   let { productos, isLoading } = useInventario();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
@@ -148,10 +313,10 @@ export function ProductosModal({
             <Text style={styles.price}>S/ {venta}</Text>
 
             <View style={styles.stats}>
-              <Stat label="Stock" value={item.cantidad ?? 0} color={T.blue} />
-              <Stat label="Compra" value={`S/ ${compra}`} color={T.purple} />
-              <Stat label="Ganancia" value={`S/ ${ganancia}`} color={T.green} />
-              <Stat label="Margen" value={`${margen}%`} color={T.accent} />
+              <Stat label="Stock" value={item.cantidad ?? 0} color={T.blue} styles={styles} />
+              <Stat label="Compra" value={`S/ ${compra}`} color={T.purple} styles={styles} />
+              <Stat label="Ganancia" value={`S/ ${ganancia}`} color={T.green} styles={styles} />
+              <Stat label="Margen" value={`${margen}%`} color={T.accent} styles={styles} />
             </View>
           </View>
         </TouchableOpacity>
@@ -251,173 +416,9 @@ export function ProductosModal({
 }
 
 // ─────────────────────────────────────────────
-const Stat = ({ label, value, color }: { label: string; value: any; color: string }) => (
+const Stat = ({ label, value, color, styles }: { label: string; value: any; color: string; styles: any }) => (
   <View style={styles.stat}>
     <Text style={[styles.statValue, { color }]}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
   </View>
 );
-
-// ─────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: T.bg,
-  },
-  navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: T.border,
-    backgroundColor: T.bg,
-  },
-  navTitleBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: T.textPrimary,
-  },
-  countBadge: {
-    backgroundColor: T.surfaceAlt,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  countText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: T.textSecondary,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: T.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  container: {
-    padding: 16,
-    paddingBottom: 60,
-  },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: T.surface,
-    borderRadius: T.radiusMd,
-    borderWidth: 1,
-    borderColor: T.border,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    color: T.textPrimary,
-  },
-  tabs: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: T.radiusFull,
-    backgroundColor: T.surfaceAlt,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: T.textSecondary,
-  },
-  tabTextActive: {
-    color: '#fff',
-  },
-  tabActiveCategoria: {
-    backgroundColor: T.purple,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: T.textMuted,
-    marginBottom: 6,
-    marginTop: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  card: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 12,
-    borderRadius: T.radiusLg,
-    backgroundColor: T.surface,
-    borderWidth: 0,
-    borderColor: T.border,
-    marginBottom: 10,
-    ...T.shadowCard,
-  },
-  image: {
-    width: 72,
-    height: 72,
-    borderRadius: T.radiusMd,
-    backgroundColor: T.surfaceAlt,
-  },
-  body: {
-    flex: 1,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  name: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    color: T.textPrimary,
-  },
-  sku: {
-    fontSize: 11,
-    color: T.textMuted,
-    marginTop: 2,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: T.accent,
-    marginTop: 6,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: T.radiusSm,
-  },
-  stats: {
-    flexDirection: 'row',
-    marginTop: 10,
-  },
-  stat: {
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  statLabel: {
-    fontSize: 9,
-    color: T.textMuted,
-  },
-  empty: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: T.textMuted,
-  },
-});

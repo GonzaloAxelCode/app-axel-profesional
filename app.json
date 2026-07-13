@@ -22,7 +22,11 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.gonzaloaxelcode.appinventario",
       "permissions": [
-         "BLUETOOTH",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH",
         "BLUETOOTH_ADMIN",
         "BLUETOOTH_CONNECT",
         "BLUETOOTH_SCAN"
@@ -35,7 +39,6 @@
     },
     "plugins": [
       "expo-router",
-      
       [
         "expo-splash-screen",
         {
@@ -58,6 +61,12 @@
       "eas": {
         "projectId": "5b7719d3-a732-4840-af1f-5228ab9b298a"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5b7719d3-a732-4840-af1f-5228ab9b298a"
     }
   }
 }

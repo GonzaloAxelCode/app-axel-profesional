@@ -1,4 +1,4 @@
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { Cliente } from '@/State/models/cliente.models';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -12,22 +12,173 @@ interface ClienteCardProps {
 const initials = (name: string) =>
   name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
-const AVATAR_COLORS = [
-  { bg: T.accent, text: T.bg },
-  { bg: T.blue, text: T.bg },
-  { bg: T.purple, text: T.bg },
-  { bg: T.amber, text: T.bg },
-  { bg: T.green, text: T.bg },
-  { bg: T.accent6, text: T.bg },
-];
-
-const getAvatarColor = (seed: string) =>
+const getAvatarColor = (seed: string, AVATAR_COLORS: { bg: string; text: string }[]) =>
   AVATAR_COLORS[(seed?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 
 export function ClienteCard({ cliente, onBuscar }: ClienteCardProps) {
+  const { T } = useAppTheme();
+  const AVATAR_COLORS = [
+    { bg: T.accent, text: T.bg },
+    { bg: T.blue, text: T.bg },
+    { bg: T.purple, text: T.bg },
+    { bg: T.amber, text: T.bg },
+    { bg: T.green, text: T.bg },
+    { bg: T.accent6, text: T.bg },
+  ];
+
+  const makeStyles = (T: any) => StyleSheet.create({
+    card: {
+      backgroundColor: T.surface,
+      borderRadius: T.radiusXl,
+      borderWidth: 1,
+      borderColor: T.border,
+      overflow: 'hidden',
+    },
+    accentLine: {
+      height: 1,
+      opacity: 0.35,
+    },
+    head: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 12,
+    },
+    label: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 2,
+      color: T.textMuted,
+    },
+    btnBuscar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: T.accent,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: T.radiusFull,
+    },
+    btnBuscarText: {
+      color: T.bg,
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 0.3,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: T.borderMedium,
+      marginHorizontal: 16,
+      opacity: 0.6,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      gap: 12,
+    },
+    avatar: {
+      width: 46,
+      height: 46,
+      borderRadius: T.radiusFull,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexShrink: 0,
+    },
+    avatarText: {
+      fontWeight: '900',
+      fontSize: 14,
+      letterSpacing: 0.5,
+    },
+    info: {
+      flex: 1,
+      minWidth: 0,
+    },
+    name: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: T.textPrimary,
+    },
+    docRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: 4,
+    },
+    docPill: {
+      backgroundColor: T.surfaceElevated,
+      borderRadius: 6,
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: '#252525',
+    },
+    docPillText: {
+      fontSize: 11,
+      color: T.textSecondary,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+    },
+    badgeOk: {
+      width: 28,
+      height: 28,
+      borderRadius: T.radiusSm,
+      backgroundColor: T.green + '1A',
+      borderWidth: 1,
+      borderColor: T.green + '38',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexShrink: 0,
+    },
+    footer: {
+      flexDirection: 'row',
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingBottom: 14,
+      paddingTop: 2,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: T.surfaceElevated,
+      borderWidth: 1,
+      borderColor: '#222',
+      borderRadius: T.radiusFull,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    chipText: {
+      fontSize: 11,
+      color: T.textSecondary,
+      fontWeight: '600',
+    },
+    avatarEmpty: {
+      width: 46,
+      height: 46,
+      borderRadius: T.radiusFull,
+      backgroundColor: T.surfaceAlt,
+      borderWidth: 1,
+      borderColor: '#282828',
+      borderStyle: 'dashed',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexShrink: 0,
+    },
+    emptyText: {
+      flex: 1,
+      color: T.textMuted,
+      fontSize: 14,
+    },
+  });
+  const styles = makeStyles(T);
+
   const hasCliente = cliente && (cliente.fullname !== '' || cliente.document !== '');
   const avatarScheme = hasCliente
-    ? getAvatarColor(cliente?.fullname || '')
+    ? getAvatarColor(cliente?.fullname || '', AVATAR_COLORS)
     : null;
 
   return (
@@ -111,183 +262,3 @@ export function ClienteCard({ cliente, onBuscar }: ClienteCardProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  /* ── Card shell ── */
-  card: {
-    backgroundColor: T.surface,
-    borderRadius: T.radiusXl,
-    borderWidth: 0,
-    borderColor: T.accent2,
-    overflow: 'hidden',
-
-    ...T.shadowCard,
-  },
-
-  accentLine: {
-    height: 1,
-
-    opacity: 0.35,
-  },
-
-  /* ── Header ── */
-  head: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 12,
-  },
-
-  label: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 2,
-    color: T.textMuted,
-  },
-
-  btnBuscar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: T.accent,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: T.radiusFull,
-  },
-
-  btnBuscarText: {
-    color: T.bg,
-    fontWeight: '800',
-    fontSize: 12,
-    letterSpacing: 0.3,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: T.borderMedium,
-    marginHorizontal: 16,
-    opacity: 0.6,
-  },
-
-  /* ── Row (filled & empty share this) ── */
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 12,
-  },
-
-  /* ── Avatar (filled) ── */
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: T.radiusFull,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-
-  avatarText: {
-    fontWeight: '900',
-    fontSize: 14,
-    letterSpacing: 0.5,
-  },
-
-  /* ── Client info ── */
-  info: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  name: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: T.textPrimary,
-  },
-
-  docRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 4,
-  },
-
-  docPill: {
-    backgroundColor: T.surfaceElevated,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: '#252525',
-  },
-
-  docPillText: {
-    fontSize: 11,
-    color: T.textSecondary,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-
-  /* ── OK badge ── */
-  badgeOk: {
-    width: 28,
-    height: 28,
-    borderRadius: T.radiusSm,
-    backgroundColor: T.green + '1A',
-    borderWidth: 1,
-    borderColor: T.green + '38',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-
-  /* ── Footer chips ── */
-  footer: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    paddingTop: 2,
-  },
-
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: T.surfaceElevated,
-    borderWidth: 1,
-    borderColor: '#222',
-    borderRadius: T.radiusFull,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-
-  chipText: {
-    fontSize: 11,
-    color: T.textSecondary,
-    fontWeight: '600',
-  },
-
-  /* ── Avatar (empty) ── */
-  avatarEmpty: {
-    width: 46,
-    height: 46,
-    borderRadius: T.radiusFull,
-    backgroundColor: T.surfaceAlt,
-    borderWidth: 1,
-    borderColor: '#282828',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-
-  emptyText: {
-    flex: 1,
-    color: T.textMuted,
-    fontSize: 14,
-  },
-});

@@ -6,15 +6,15 @@ import TopProductsHoy from '@/components/InicioComponents/TopProductsHoy';
 import { fmt } from '@/components/InicioComponents/utils';
 import VentaRow from '@/components/InicioComponents/VentaRow';
 import { VentasChart } from '@/components/venta/VentasChart';
-import { VentasChart2 } from '@/components/venta/VentasChart copy';
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import { useVentas } from '@/State/hooks/useVentas';
 import { useAuthStore } from '@/State/store/useAuthStore';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import React, { useState, useCallback } from 'react';
 import {
     Platform,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -25,9 +25,21 @@ import { useTabRouter } from './_layout';
 
 export default function InicioScreen() {
     const router = useRouter();
-    const { resumenVentas, ventasHoy, } = useVentas();
+    const { T } = useAppTheme();
+    const { resumenVentas, ventasHoy, refreshAll } = useVentas();
+    const [refreshing, setRefreshing] = useState(false);
 
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refreshAll();
+        setRefreshing(false);
+    }, [refreshAll]);
 
+    useFocusEffect(
+        useCallback(() => {
+            refreshAll();
+        }, [refreshAll])
+    );
 
     const navigateToTab = useTabRouter();
 
@@ -35,101 +47,98 @@ export default function InicioScreen() {
     const weekSales = resumenVentas?.thisWeekSales ?? 0;
     const monthSales = resumenVentas?.thisMonthSales ?? 0;
 
-
     const today = new Date().toLocaleDateString('es-PE', {
         weekday: 'long', day: 'numeric', month: 'long',
     });
     const ventasDeHoy = ventasHoy?.slice(0, 8) ?? [];
-    const { user, tienda } = useAuthStore()
+    const { user, tienda } = useAuthStore();
+
+    const st = styles(T);
+
     return (
         <ScrollView
-            style={styles.root}
-            contentContainerStyle={styles.content}
+            style={st.root}
+            contentContainerStyle={st.content}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor={T.accent}
+                    colors={[T.accent]}
+                    progressBackgroundColor={T.surface}
+                />
+            }
         >
-
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <View style={styles.locationRow}>
+            <View style={st.header}>
+                <View style={st.headerLeft}>
+                    <View style={st.locationRow}>
                         <Icon name="map-marker-outline" size={12} color={T.textSecondary} />
-                        <Text style={styles.locationText}>Puente Pieda, Lima, Perú</Text>
+                        <Text style={st.locationText}>Puente Pieda, Lima, Perú</Text>
                     </View>
-                    <View style={styles.greetingRow}>
-                        <Text style={styles.greeting}>Hola, </Text>
-                        <Text style={styles.greetingBold}>Bienvenido 👋</Text>
+                    <View style={st.greetingRow}>
+                        <Text style={st.greeting}>Hola, </Text>
+                        <Text style={st.greetingBold}>Bienvenido 👋</Text>
                     </View>
                 </View>
-                <View style={styles.headerRight}>
-
+                <View style={st.headerRight}>
                     <TouchableOpacity
-                        style={styles.avatarBtn}
+                        style={st.avatarBtn}
                         onPress={() => navigateToTab('configuracion')}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.avatarBtnText}>MT</Text>
+                        <Text style={st.avatarBtnText}>MT</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            {/* ── Store name ── */}
-            <View style={styles.storeNameWrap}>
-                <Text style={styles.storeName}> {tienda?.nombre}</Text>
-
-                <Text style={styles.storeSubtitle}>{tienda?.direccion} · {today}</Text>
+            <View style={st.storeNameWrap}>
+                <Text style={st.storeName}> {tienda?.nombre}</Text>
+                <Text style={st.storeSubtitle}>{tienda?.direccion} · {today}</Text>
             </View>
 
-            {/* ── Hero card ── */}
-            <View style={styles.heroCard}>
-                <View style={styles.heroGlow} />
-                <View style={styles.heroTopRow}>
+            <View style={st.heroCard}>
+                <View style={st.heroGlow} />
+                <View style={st.heroTopRow}>
                     <View>
-                        <Text style={styles.heroLabel}>Ventas de Hoy</Text>
-                        <Text style={styles.heroValue}>{fmt(todaySales)}</Text>
+                        <Text style={st.heroLabel}>Ventas de Hoy</Text>
+                        <Text style={st.heroValue}>{fmt(todaySales)}</Text>
                     </View>
-                    <View style={styles.heroLiveBadge}>
-                        <View style={styles.heroLiveDot} />
-                        <Text style={styles.heroLiveText}>En vivo</Text>
+                    <View style={st.heroLiveBadge}>
+                        <View style={st.heroLiveDot} />
+                        <Text style={st.heroLiveText}>En vivo</Text>
                     </View>
                 </View>
-                <Text style={styles.heroSub}>Actualizado ahora mismo</Text>
-                <View style={styles.heroRule} />
-                <View style={styles.heroStats}>
+                <Text style={st.heroSub}>Actualizado ahora mismo</Text>
+                <View style={st.heroRule} />
+                <View style={st.heroStats}>
                     <StatPill label="Hoy" value={fmt(todaySales)} />
-                    <View style={styles.heroStatDivider} />
+                    <View style={st.heroStatDivider} />
                     <StatPill label="Semana" value={fmt(weekSales)} />
-                    <View style={styles.heroStatDivider} />
+                    <View style={st.heroStatDivider} />
                     <StatPill label="Mes" value={fmt(monthSales)} />
                 </View>
             </View>
-
 
             <SectionHeader title="Servicios rápidos" />
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.servicesScroll}
+                contentContainerStyle={st.servicesScroll}
                 style={{ marginBottom: 24 }}
             >
-
-
                 <ServiceChip icon="cart-plus" label="Nueva Venta" time="Rápido" onPress={() => router.push('/hacerventa')} />
                 <ServiceChip icon="package-variant" label="Productos" time="Inventario" onPress={() => navigateToTab('productos')} />
                 <ServiceChip icon="account-group" label="Clientes" time="Registros" onPress={() => navigateToTab('clientes')} />
                 <ServiceChip icon="chart-line" label="Perfil" time="Perfil" onPress={() => navigateToTab('configuracion')} />
             </ScrollView>
 
-            {/* ── Chart ── */}
             <SectionHeader title="Estadísticas 30 días" />
-            <View style={styles.card}>
+            <View style={st.card}>
                 <VentasChart />
-                <VentasChart2 />
-
             </View>
 
-
-
             <TopProductsHoy />
-
 
             <SectionHeader
                 title="Ventas de hoy"
@@ -138,19 +147,19 @@ export default function InicioScreen() {
             />
 
             {ventasDeHoy.length === 0 ? (
-                <View style={styles.emptyState}>
-                    <View style={styles.emptyIconWrap}>
+                <View style={st.emptyState}>
+                    <View style={st.emptyIconWrap}>
                         <Icon name="receipt-text-outline" size={28} color={T.accent} />
                     </View>
-                    <Text style={styles.emptyText}>Sin ventas hoy todavía</Text>
-                    <Text style={styles.emptySubText}>Las ventas aparecerán aquí</Text>
+                    <Text style={st.emptyText}>Sin ventas hoy todavía</Text>
+                    <Text style={st.emptySubText}>Las ventas aparecerán aquí</Text>
                 </View>
             ) : (
-                <View style={[styles.card, { marginBottom: 110 }]}>
+                <View style={[st.card, { marginBottom: 110 }]}>
                     {ventasDeHoy.map((v, i) => (
                         <React.Fragment key={v.id}>
                             <VentaRow venta={v} />
-                            {i < ventasDeHoy.length - 1 && <View style={styles.rowDivider} />}
+                            {i < ventasDeHoy.length - 1 && <View style={st.rowDivider} />}
                         </React.Fragment>
                     ))}
                 </View>
@@ -159,12 +168,10 @@ export default function InicioScreen() {
     );
 }
 
-
-const styles = StyleSheet.create({
+const styles = (T: any) => StyleSheet.create({
     root: { flex: 1, backgroundColor: T.bg },
     content: { paddingTop: Platform.OS === 'ios' ? 56 : 24, paddingBottom: 24 },
 
-    // Header
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         paddingHorizontal: 20, paddingTop: 16, marginBottom: 8,
@@ -176,16 +183,6 @@ const styles = StyleSheet.create({
     greetingRow: { flexDirection: 'row', alignItems: 'baseline' },
     greeting: { fontSize: 22, color: T.textSecondary, fontWeight: '500' },
     greetingBold: { fontSize: 22, color: T.textPrimary, fontWeight: '800', letterSpacing: -0.5 },
-    iconBtn: {
-        width: 40, height: 40, borderRadius: 12,
-        backgroundColor: T.surface, borderWidth: 1, borderColor: T.border,
-        alignItems: 'center', justifyContent: 'center',
-    },
-    notifDot: {
-        position: 'absolute', top: 8, right: 8,
-        width: 7, height: 7, borderRadius: 4,
-        backgroundColor: T.red, borderWidth: 1.5, borderColor: T.bg,
-    },
     avatarBtn: {
         width: 40, height: 40, borderRadius: 12,
         backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '40',
@@ -193,12 +190,10 @@ const styles = StyleSheet.create({
     },
     avatarBtnText: { fontSize: 13, fontWeight: '800', color: T.accent },
 
-    // Store name
     storeNameWrap: { paddingHorizontal: 20, marginBottom: 20 },
     storeName: { fontSize: 32, fontWeight: '900', color: T.textPrimary, letterSpacing: -1.5 },
     storeSubtitle: { fontSize: 18, color: T.textMuted, marginTop: 4, textTransform: 'capitalize' },
 
-    // Hero
     heroCard: {
         marginHorizontal: 20, backgroundColor: T.surface,
         borderRadius: 24, padding: 22, marginBottom: 28,
@@ -226,62 +221,16 @@ const styles = StyleSheet.create({
     heroStats: { flexDirection: 'row' },
     heroStatDivider: { width: 1, backgroundColor: T.border },
 
-
-    // Services
     servicesScroll: { paddingLeft: 20, paddingRight: 8, gap: 10 },
-    serviceChip: {
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        backgroundColor: T.surface, borderRadius: 16,
-        borderWidth: 1, borderColor: T.border,
-        paddingHorizontal: 14, paddingVertical: 12,
-    },
-    serviceIconWrap: {
-        width: 36, height: 36, borderRadius: 10,
-        backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '30',
-        alignItems: 'center', justifyContent: 'center',
-    },
-    serviceTime: { fontSize: 9, color: T.accent, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-    serviceLabel: { fontSize: 13, fontWeight: '600', color: T.textPrimary, marginTop: 1 },
 
-
-    // Card
     card: {
         marginHorizontal: 20, backgroundColor: T.surface,
         borderRadius: 20, padding: 16, marginBottom: 24,
         borderWidth: 1, borderColor: T.border,
     },
 
-    // Recent card (PureSpin-style)
-    recentCard: {
-        marginHorizontal: 20, backgroundColor: T.surface,
-        borderRadius: 20, padding: 16, marginBottom: 24,
-        borderWidth: 1, borderColor: T.border,
-    },
-    recentCardHeader: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: 14,
-    },
-    recentCardDate: { fontSize: 11, color: T.textMuted, fontWeight: '500', textTransform: 'capitalize' },
-    recentCardBadge: {
-        flexDirection: 'row', alignItems: 'center', gap: 4,
-        backgroundColor: T.accentDim, borderRadius: 20,
-        paddingHorizontal: 8, paddingVertical: 3,
-    },
-    recentCardBadgeText: { fontSize: 11, color: T.accent, fontWeight: '700' },
-
-    // List
-    listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
     rowDivider: { height: 1, backgroundColor: T.border },
 
-
-
-    // Text
-    listName: { fontSize: 13, fontWeight: '600', color: T.textPrimary },
-    listSub: { fontSize: 11, color: T.textSecondary, marginTop: 2 },
-    listAmt: { fontSize: 14, fontWeight: '700', color: T.textPrimary },
-    estadoDot: { width: 6, height: 6, borderRadius: 3 },
-
-    // Empty
     emptyState: {
         alignItems: 'center', justifyContent: 'center',
         gap: 8, paddingVertical: 48, marginBottom: 110,

@@ -7,7 +7,7 @@
    - Productos estilo app premium
 ────────────────────────────────────────────────────────────── */
 
-import T from "@/constants/THEME";
+import { useAppTheme } from "@/State/context/ThemeContext";
 import { Venta } from "@/State/models/venta.models";
 import { useVentaStore } from '@/State/store/useVentaStore';
 import { URLS } from "@/State/utils/endpoints";
@@ -40,24 +40,6 @@ const formatFecha = (fecha: string) => {
     });
 };
 
-const estadoMap: any = {
-    aceptado: {
-        bg: T.green + '15',
-        color: T.green,
-        icon: 'check-decagram',
-    },
-    pendiente: {
-        bg: T.amber + '15',
-        color: T.amber,
-        icon: 'clock-outline',
-    },
-    anulado: {
-        bg: T.red + '15',
-        color: T.red,
-        icon: 'cancel',
-    },
-};
-
 export default function VentaDetalleModal({
     venta,
     visible,
@@ -67,6 +49,423 @@ export default function VentaDetalleModal({
     visible: boolean;
     onClose: () => void;
 }) {
+    const { T } = useAppTheme();
+
+    const estadoMap: any = {
+        aceptado: {
+            bg: T.green + '15',
+            color: T.green,
+            icon: 'check-decagram',
+        },
+        pendiente: {
+            bg: T.amber + '15',
+            color: T.amber,
+            icon: 'clock-outline',
+        },
+        anulado: {
+            bg: T.red + '15',
+            color: T.red,
+            icon: 'cancel',
+        },
+    };
+
+    const makeStyles = (T: any) => StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: T.bg,
+        },
+        scroll: {
+            padding: 18,
+            paddingBottom: 13,
+            gap: 18,
+        },
+        hero: {
+            backgroundColor: T.surface,
+            borderRadius: 30,
+            padding: 22,
+            borderWidth: 1,
+            borderColor: T.border,
+            overflow: 'hidden',
+        },
+        heroTop: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        iconBtn: {
+            width: 42,
+            height: 42,
+            borderRadius: 14,
+            backgroundColor: T.surfaceAlt,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        estado: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderRadius: 100,
+        },
+        estadoText: {
+            fontSize: 12,
+            fontWeight: '800',
+            textTransform: 'capitalize',
+        },
+        serie: {
+            fontSize: 19,
+            fontWeight: '700',
+            color: T.textSecondary,
+            marginTop: 28,
+        },
+        total: {
+            fontSize: 52,
+            fontWeight: '900',
+            color: T.accent,
+            letterSpacing: -3,
+            marginTop: 4,
+        },
+        metaRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 18,
+            backgroundColor: T.surfaceAlt,
+            borderRadius: 18,
+            padding: 14,
+        },
+        metaItem: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 7,
+            justifyContent: 'center',
+        },
+        metaDivider: {
+            width: 1,
+            height: 20,
+            backgroundColor: T.border,
+        },
+        metaText: {
+            fontSize: 12,
+            color: T.textSecondary,
+            fontWeight: '600',
+        },
+        section: {
+            gap: 12,
+        },
+        sectionTitle: {
+            fontSize: 12,
+            fontWeight: '800',
+            color: T.textMuted,
+            letterSpacing: 1.2,
+            textTransform: 'uppercase',
+        },
+        actionsRow: {
+            flexDirection: 'row',
+            gap: 10,
+        },
+        actionCard: {
+            flex: 1,
+            alignItems: 'center',
+            backgroundColor: T.surface,
+            borderRadius: 22,
+            paddingVertical: 16,
+            borderWidth: 1,
+            borderColor: T.border,
+            gap: 8,
+        },
+        actionIcon: {
+            width: 46,
+            height: 46,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        actionLabel: {
+            fontSize: 11,
+            fontWeight: '700',
+            color: T.textSecondary,
+        },
+        card: {
+            backgroundColor: T.surface,
+            borderRadius: 24,
+            paddingTop: 13,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+            borderWidth: 0,
+            borderColor: T.border,
+        },
+        avatar: {
+            width: 54,
+            height: 54,
+            borderRadius: 18,
+            backgroundColor: T.accent + '15',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        avatarText: {
+            fontSize: 20,
+            fontWeight: '900',
+            color: T.accent,
+        },
+        clientName: {
+            fontSize: 15,
+            fontWeight: '800',
+            color: T.textPrimary,
+        },
+        clientDoc: {
+            marginTop: 3,
+            fontSize: 12,
+            color: T.textMuted,
+        },
+        whatsappRow: {
+            flexDirection: 'row',
+            gap: 10,
+        },
+        inputWrap: {
+            flex: 1,
+            backgroundColor: T.surface,
+            borderRadius: 20,
+            paddingHorizontal: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            borderWidth: 1,
+            borderColor: T.border,
+        },
+        input: {
+            flex: 1,
+            color: T.textPrimary,
+            paddingVertical: 14,
+            fontSize: 14,
+        },
+        sendBtn: {
+            width: 56,
+            borderRadius: 18,
+            backgroundColor: T.accent,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        productsHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        productsCount: {
+            fontSize: 13,
+            color: T.textMuted,
+            fontWeight: '700',
+        },
+        productCard: {
+            backgroundColor: T.surface,
+            borderRadius: 24,
+            padding: 12,
+            flexDirection: 'row',
+            gap: 12,
+            borderWidth: 1,
+            borderColor: T.border,
+        },
+        productImage: {
+            width: 68,
+            height: 68,
+            borderRadius: 18,
+        },
+        productImageEmpty: {
+            backgroundColor: T.surfaceAlt,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        productName: {
+            fontSize: 14,
+            fontWeight: '700',
+            color: T.textPrimary,
+            marginBottom: 10,
+        },
+        productBottom: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        qty: {
+            backgroundColor: T.accent + '15',
+            borderRadius: 100,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+        },
+        qtyText: {
+            fontSize: 11,
+            fontWeight: '800',
+            color: T.accent,
+        },
+        productPrice: {
+            fontSize: 15,
+            fontWeight: '900',
+            color: T.textPrimary,
+        },
+        footer: {
+            marginTop: 8,
+            backgroundColor: T.surface,
+            borderRadius: 28,
+            padding: 20,
+            borderWidth: 1,
+            borderColor: T.border,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        footerLabel: {
+            fontSize: 12,
+            color: T.textMuted,
+            fontWeight: '700',
+        },
+        footerTotal: {
+            marginTop: 2,
+            fontSize: 32,
+            fontWeight: '900',
+            color: T.accent,
+            letterSpacing: -2,
+        },
+        cancelGlassBtn: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: T.red + '08',
+            borderWidth: 1,
+            borderColor: T.red + '18',
+            borderRadius: 28,
+            paddingVertical: 16,
+            paddingHorizontal: 18,
+        },
+        cancelGlassLeft: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+            flex: 1,
+        },
+        cancelGlassBadge: {
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            backgroundColor: T.red,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: T.red,
+            shadowOpacity: 0.25,
+            shadowRadius: 14,
+            shadowOffset: {
+                width: 0,
+                height: 6,
+            },
+            elevation: 8,
+        },
+        cancelGlassTitle: {
+            fontSize: 15,
+            fontWeight: '900',
+            color: T.red,
+        },
+        cancelGlassSub: {
+            marginTop: 3,
+            fontSize: 12,
+            color: T.textMuted,
+        },
+        cancelGlassArrow: {
+            width: 38,
+            height: 38,
+            borderRadius: 14,
+            backgroundColor: T.surface,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: T.red + '15',
+        },
+        productsGridHeader: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 4,
+        },
+        productsGridCount: {
+            fontSize: 12,
+            fontWeight: '800',
+            color: T.textMuted,
+        },
+        productsGrid: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            gap: 12,
+        },
+        productGridCard: {
+            width: '48%',
+            backgroundColor: T.surface,
+            borderRadius: 28,
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: T.surfaceAlt,
+        },
+        productGridFull: {
+            width: '100%',
+        },
+        productGridImage: {
+            width: '100%',
+            height: 140,
+        },
+        productGridImageEmpty: {
+            width: '100%',
+            height: 140,
+            backgroundColor: T.surfaceAlt,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        productGridContent: {
+            padding: 14,
+        },
+        productGridTop: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 10,
+        },
+        productGridName: {
+            fontSize: 15,
+            fontWeight: '900',
+            color: T.textPrimary,
+        },
+        productGridQty: {
+            marginTop: 4,
+            fontSize: 12,
+            color: T.textMuted,
+        },
+        productGridBadge: {
+            backgroundColor: T.accent + '15',
+            borderRadius: 999,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+        },
+        productGridBadgeText: {
+            fontSize: 11,
+            fontWeight: '800',
+            color: T.accent,
+        },
+        productGridBottom: {
+            marginTop: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
+        productGridMini: {
+            fontSize: 11,
+            color: T.textMuted,
+        },
+        productGridPrice: {
+            marginTop: 2,
+            fontSize: 18,
+            fontWeight: '900',
+            color: T.textPrimary,
+        },
+    });
+    const s = makeStyles(T);
 
     const { anularVenta, temporaryVenta, loadingNotaCredito } = useVentaStore();
 
@@ -474,494 +873,3 @@ export default function VentaDetalleModal({
         </Modal>
     );
 }
-
-const s = StyleSheet.create({
-
-    container: {
-        flex: 1,
-        backgroundColor: T.bg,
-    },
-
-    scroll: {
-        padding: 18,
-        paddingBottom: 13,
-        gap: 18,
-    },
-
-    hero: {
-        backgroundColor: T.surface,
-        borderRadius: 30,
-        padding: 22,
-        borderWidth: 1,
-        borderColor: T.border,
-        overflow: 'hidden',
-    },
-
-    heroTop: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-
-    iconBtn: {
-        width: 42,
-        height: 42,
-        borderRadius: 14,
-        backgroundColor: T.surfaceAlt,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    estado: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 100,
-    },
-
-    estadoText: {
-        fontSize: 12,
-        fontWeight: '800',
-        textTransform: 'capitalize',
-    },
-
-    serie: {
-        fontSize: 19,
-        fontWeight: '700',
-        color: T.textSecondary,
-        marginTop: 28,
-    },
-
-    total: {
-        fontSize: 52,
-        fontWeight: '900',
-        color: T.accent,
-        letterSpacing: -3,
-        marginTop: 4,
-    },
-
-    metaRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 18,
-        backgroundColor: T.surfaceAlt,
-        borderRadius: 18,
-        padding: 14,
-    },
-
-    metaItem: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 7,
-        justifyContent: 'center',
-    },
-
-    metaDivider: {
-        width: 1,
-        height: 20,
-        backgroundColor: T.border,
-    },
-
-    metaText: {
-        fontSize: 12,
-        color: T.textSecondary,
-        fontWeight: '600',
-    },
-
-    section: {
-        gap: 12,
-    },
-
-    sectionTitle: {
-        fontSize: 12,
-        fontWeight: '800',
-        color: T.textMuted,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
-    },
-
-    actionsRow: {
-        flexDirection: 'row',
-        gap: 10,
-    },
-
-    actionCard: {
-        flex: 1,
-        alignItems: 'center',
-        backgroundColor: T.surface,
-        borderRadius: 22,
-        paddingVertical: 16,
-        borderWidth: 1,
-        borderColor: T.border,
-        gap: 8,
-    },
-
-    actionIcon: {
-        width: 46,
-        height: 46,
-        borderRadius: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    actionLabel: {
-        fontSize: 11,
-        fontWeight: '700',
-        color: T.textSecondary,
-    },
-
-    card: {
-        backgroundColor: T.surface,
-        borderRadius: 24,
-        paddingTop: 13,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-        borderWidth: 0,
-        borderColor: T.border,
-    },
-
-    avatar: {
-        width: 54,
-        height: 54,
-        borderRadius: 18,
-        backgroundColor: T.accent + '15',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    avatarText: {
-        fontSize: 20,
-        fontWeight: '900',
-        color: T.accent,
-    },
-
-    clientName: {
-        fontSize: 15,
-        fontWeight: '800',
-        color: T.textPrimary,
-    },
-
-    clientDoc: {
-        marginTop: 3,
-        fontSize: 12,
-        color: T.textMuted,
-    },
-
-    whatsappRow: {
-        flexDirection: 'row',
-        gap: 10,
-    },
-
-    inputWrap: {
-        flex: 1,
-        backgroundColor: T.surface,
-        borderRadius: 20,
-        paddingHorizontal: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        borderWidth: 1,
-        borderColor: T.border,
-    },
-
-    input: {
-        flex: 1,
-        color: T.textPrimary,
-        paddingVertical: 14,
-        fontSize: 14,
-    },
-
-    sendBtn: {
-        width: 56,
-        borderRadius: 18,
-        backgroundColor: T.accent,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    productsHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-
-    productsCount: {
-        fontSize: 13,
-        color: T.textMuted,
-        fontWeight: '700',
-    },
-
-    productCard: {
-        backgroundColor: T.surface,
-        borderRadius: 24,
-        padding: 12,
-        flexDirection: 'row',
-        gap: 12,
-        borderWidth: 1,
-        borderColor: T.border,
-    },
-
-    productImage: {
-        width: 68,
-        height: 68,
-        borderRadius: 18,
-    },
-
-    productImageEmpty: {
-        backgroundColor: T.surfaceAlt,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    productName: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: T.textPrimary,
-        marginBottom: 10,
-    },
-
-    productBottom: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-
-    qty: {
-        backgroundColor: T.accent + '15',
-        borderRadius: 100,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-    },
-
-    qtyText: {
-        fontSize: 11,
-        fontWeight: '800',
-        color: T.accent,
-    },
-
-    productPrice: {
-        fontSize: 15,
-        fontWeight: '900',
-        color: T.textPrimary,
-    },
-
-    footer: {
-        marginTop: 8,
-        backgroundColor: T.surface,
-        borderRadius: 28,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: T.border,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-
-    footerLabel: {
-        fontSize: 12,
-        color: T.textMuted,
-        fontWeight: '700',
-    },
-
-    footerTotal: {
-        marginTop: 2,
-        fontSize: 32,
-        fontWeight: '900',
-        color: T.accent,
-        letterSpacing: -2,
-    },
-
-    /// Cancel
-
-    cancelGlassBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-
-        backgroundColor: T.red + '08',
-
-        borderWidth: 1,
-        borderColor: T.red + '18',
-
-        borderRadius: 28,
-
-        paddingVertical: 16,
-        paddingHorizontal: 18,
-    },
-
-    cancelGlassLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-
-        flex: 1,
-    },
-
-    cancelGlassBadge: {
-        width: 48,
-        height: 48,
-
-        borderRadius: 16,
-
-        backgroundColor: T.red,
-
-        justifyContent: 'center',
-        alignItems: 'center',
-
-        shadowColor: T.red,
-        shadowOpacity: 0.25,
-        shadowRadius: 14,
-        shadowOffset: {
-            width: 0,
-            height: 6,
-        },
-
-        elevation: 8,
-    },
-
-    cancelGlassTitle: {
-        fontSize: 15,
-        fontWeight: '900',
-        color: T.red,
-    },
-
-    cancelGlassSub: {
-        marginTop: 3,
-        fontSize: 12,
-        color: T.textMuted,
-    },
-
-    cancelGlassArrow: {
-        width: 38,
-        height: 38,
-
-        borderRadius: 14,
-
-        backgroundColor: T.surface,
-
-        justifyContent: 'center',
-        alignItems: 'center',
-
-        borderWidth: 1,
-        borderColor: T.red + '15',
-    },
-    //product
-    productsGridHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-
-        marginBottom: 4,
-    },
-
-    productsGridCount: {
-        fontSize: 12,
-        fontWeight: '800',
-        color: T.textMuted,
-    },
-
-    productsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-
-        gap: 12,
-    },
-
-    productGridCard: {
-        width: '48%',
-
-        backgroundColor: T.surface,
-
-        borderRadius: 28,
-
-        overflow: 'hidden',
-
-        borderWidth: 1,
-        borderColor: T.surfaceAlt,
-    },
-
-    productGridFull: {
-        width: '100%',
-    },
-
-    productGridImage: {
-        width: '100%',
-        height: 140,
-
-    },
-
-    productGridImageEmpty: {
-        width: '100%',
-        height: 140,
-
-        backgroundColor: T.surfaceAlt,
-
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    productGridContent: {
-        padding: 14,
-    },
-
-    productGridTop: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-
-        gap: 10,
-    },
-
-    productGridName: {
-        fontSize: 15,
-        fontWeight: '900',
-        color: T.textPrimary,
-    },
-
-    productGridQty: {
-        marginTop: 4,
-
-        fontSize: 12,
-        color: T.textMuted,
-    },
-
-    productGridBadge: {
-        backgroundColor: T.accent + '15',
-
-        borderRadius: 999,
-
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-    },
-
-    productGridBadgeText: {
-        fontSize: 11,
-        fontWeight: '800',
-        color: T.accent,
-    },
-
-    productGridBottom: {
-        marginTop: 18,
-
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-
-    productGridMini: {
-        fontSize: 11,
-        color: T.textMuted,
-    },
-
-    productGridPrice: {
-        marginTop: 2,
-
-        fontSize: 18,
-        fontWeight: '900',
-        color: T.textPrimary,
-    },
-});

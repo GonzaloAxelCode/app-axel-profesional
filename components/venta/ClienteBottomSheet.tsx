@@ -1,6 +1,6 @@
 import { useClientes as useClientesHook } from '@/State/hooks/useClientes';
 import { Cliente } from '@/State/models/cliente.models';
-import T from '@/constants/THEME';
+import { useAppTheme } from '@/State/context/ThemeContext';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -11,16 +11,6 @@ import {
   View,
 } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
-
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
-const AVATAR_COLORS = [
-  T.accent,
-  T.accent2,
-  T.accent3,
-  T.accent5,
-];
 
 type ClienteFilterKey = 'dni' | 'ruc';
 
@@ -35,6 +25,127 @@ export function ClienteBottomSheet({
   onClienteEncontrado,
   tipodoc,
 }: ClienteBottomSheetProps) {
+  const { T } = useAppTheme();
+  const AVATAR_COLORS = [
+    T.accent,
+    T.accent2,
+    T.accent3,
+    T.accent5,
+  ];
+
+  const makeStyles = (T: any) => StyleSheet.create({
+    container: {
+      padding: 16,
+      paddingBottom: 60,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: T.textPrimary,
+    },
+    counter: {
+      fontSize: 14,
+      color: T.textSecondary,
+    },
+    tabs: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 12,
+    },
+    tab: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: T.radiusFull,
+      backgroundColor: T.surfaceAlt,
+    },
+    tabActive: {
+      backgroundColor: T.accent,
+    },
+    tabText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: T.textSecondary,
+    },
+    tabTextActive: {
+      color: '#fff',
+    },
+    search: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: T.surface,
+      borderRadius: T.radiusMd,
+      paddingHorizontal: 12,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: T.border,
+    },
+    input: {
+      flex: 1,
+      paddingVertical: 12,
+      color: T.textPrimary,
+    },
+    apiBtn: {
+      backgroundColor: T.accent,
+      padding: 14,
+      borderRadius: T.radiusMd,
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    apiText: {
+      color: '#fff',
+      fontWeight: '700',
+    },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      padding: 14,
+      borderRadius: T.radiusLg,
+      backgroundColor: T.surface,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: T.border,
+      ...T.shadowCard,
+    },
+    avatar: {
+      width: 46,
+      height: 46,
+      borderRadius: T.radiusMd,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      fontWeight: '800',
+      fontSize: 16,
+    },
+    name: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: T.textPrimary,
+    },
+    doc: {
+      fontSize: 12,
+      color: T.textSecondary,
+      marginTop: 2,
+    },
+    badge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: T.radiusSm,
+    },
+    empty: {
+      textAlign: 'center',
+      marginTop: 40,
+      color: T.textMuted,
+    },
+  });
+  const styles = makeStyles(T);
+
   const snapPoints = useMemo(() => ['90%'], []);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<ClienteFilterKey>(
@@ -243,141 +354,6 @@ export function ClienteBottomSheet({
   );
 }
 
-// ─────────────────────────────────────────────
-// STYLES
-// ─────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    paddingBottom: 60,
-  },
-
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: T.textPrimary,
-  },
-
-  counter: {
-    fontSize: 14,
-    color: T.textSecondary,
-  },
-
-  tabs: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-
-  tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: T.radiusFull,
-    backgroundColor: T.surfaceAlt,
-  },
-
-  tabActive: {
-    backgroundColor: T.accent,
-  },
-
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: T.textSecondary,
-  },
-
-  tabTextActive: {
-    color: '#fff',
-  },
-
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: T.surface,
-    borderRadius: T.radiusMd,
-    paddingHorizontal: 12,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: T.border,
-  },
-
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    color: T.textPrimary,
-  },
-
-  apiBtn: {
-    backgroundColor: T.accent,
-    padding: 14,
-    borderRadius: T.radiusMd,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-
-  apiText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: T.radiusLg,
-    backgroundColor: T.surface,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...T.shadowCard,
-  },
-
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: T.radiusMd,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  avatarText: {
-    fontWeight: '800',
-    fontSize: 16,
-  },
-
-  name: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: T.textPrimary,
-  },
-
-  doc: {
-    fontSize: 12,
-    color: T.textSecondary,
-    marginTop: 2,
-  },
-
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: T.radiusSm,
-  },
-
-  empty: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: T.textMuted,
-  },
-});
-
-// ─────────────────────────────────────────────
 const getInitials = (nombre: string) =>
   nombre
     .trim()
