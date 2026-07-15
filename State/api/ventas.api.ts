@@ -147,3 +147,63 @@ export async function generarComprobanteVenta(ventaId: number): Promise<Venta> {
         body: JSON.stringify({ venta_id: ventaId }),
     });
 }
+
+// ── Dashboard Charts API ──
+
+export interface SatisfaccionResponse {
+    mes_a: { year: number; month: number; ventas: number };
+    mes_b: { year: number; month: number; ventas: number };
+    porcentaje: number;
+    variacion: number;
+}
+
+export interface MetodoPagoResponse {
+    year: number;
+    month: number;
+    total_ventas: number;
+    metodos_pago: {
+        metodo_pago: string;
+        cantidad: number;
+        porcentaje: number;
+    }[];
+}
+
+export interface TopProductsMonthResponse {
+    year: number;
+    month: number;
+    results: { nombre: string; cantidad_total_vendida: number }[];
+}
+
+export interface DailyTrendResponse {
+    results: { fecha: string; total: number }[];
+}
+
+export async function getSatisfaccion(
+    yearA: number, monthA: number, yearB: number, monthB: number
+): Promise<SatisfaccionResponse> {
+    return fetchWithAuth(`${API_URL}/sales/satisfaction/`, {
+        method: 'POST',
+        body: JSON.stringify({ year_a: yearA, month_a: monthA, year_b: yearB, month_b: monthB }),
+    });
+}
+
+export async function getMetodosPago(year: number, month: number): Promise<MetodoPagoResponse> {
+    return fetchWithAuth(`${API_URL}/sales/payment-methods/`, {
+        method: 'POST',
+        body: JSON.stringify({ year, month }),
+    });
+}
+
+export async function getTopProductsMonth(month: string): Promise<TopProductsMonthResponse> {
+    return fetchWithAuth(`${API_URL}/sales/top-products-month/`, {
+        method: 'POST',
+        body: JSON.stringify({ month }),
+    });
+}
+
+export async function getDailyTrend(days: number = 20): Promise<DailyTrendResponse> {
+    return fetchWithAuth(`${API_URL}/sales/daily-trend/`, {
+        method: 'POST',
+        body: JSON.stringify({ days }),
+    });
+}

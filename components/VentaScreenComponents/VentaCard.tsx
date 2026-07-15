@@ -1,17 +1,27 @@
 
 import { useAppTheme } from "@/State/context/ThemeContext";
 import { Venta } from "@/State/models/venta.models";
+import { URLS } from "@/State/utils/endpoints";
+import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { useState } from "react";
 import {
     StyleSheet,
     TouchableOpacity,
     View
 } from "react-native";
+import ImageViewing from "react-native-image-viewing";
 import { Text } from "react-native-paper";
 import { formatFecha, getAvatarColor, getEstado, getInitial, getTipoLabel } from "./utils";
 
 
 function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
     const { T } = useAppTheme();
+
+    const [imageViewerVisible, setImageViewerVisible] = useState(false);
+    const [selectedImages, setSelectedImages] = useState<{ uri: string }[]>([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+
     const makeStyles = (T: any) => StyleSheet.create({
         list: { paddingBottom: 120 },
         card: {
@@ -67,38 +77,56 @@ function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
             fontWeight: '900',
             color: T.accent,
         },
-        dividerWrap: {
+        productsSection: {
+            marginTop: 12,
+        },
+        productsLabel: {
+            fontSize: 10,
+            color: T.textMuted,
+            textTransform: 'uppercase',
+            marginBottom: 8,
+            fontWeight: '700',
+        },
+        productsGrid: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 8,
+        },
+        productCard: {
+            backgroundColor: T.surfaceAlt,
+            borderRadius: 14,
+            overflow: 'hidden',
+            width: '48%',
+        },
+        productImg: {
+            width: '100%',
+            height: 80,
+        },
+        productImgPlaceholder: {
+            width: '100%',
+            height: 80,
+            backgroundColor: T.surface,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        productInfo: {
+            padding: 8,
             flexDirection: 'row',
             alignItems: 'center',
-            marginVertical: 18,
-            gap: 10,
-            paddingHorizontal: 20,
+            justifyContent: 'space-between',
         },
-        line: { flex: 1, height: 1, backgroundColor: T.border },
-        dividerText: { fontSize: 12, color: T.textSecondary },
-        count: {
-            backgroundColor: T.accentDim,
-            borderRadius: 10,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
-        },
-        countText: { fontSize: 10, color: T.accent, fontWeight: '700' },
-        loadingWrap: {
+        productName: {
+            fontSize: 11,
+            fontWeight: '600',
+            color: T.textSecondary,
             flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: T.bg,
-            gap: 10,
         },
-        loadingText: { color: T.textSecondary },
-        emptyWrap: { alignItems: 'center', paddingTop: 60, gap: 10 },
-        emptyIcon: {
-            width: 64, height: 64, borderRadius: 20,
-            backgroundColor: T.accentDim, borderWidth: 1, borderColor: T.accent + '30',
-            alignItems: 'center', justifyContent: 'center',
+        productQty: {
+            fontSize: 10,
+            fontWeight: '800',
+            color: T.accent,
+            marginLeft: 4,
         },
-        emptyText: { fontSize: 15, color: T.textSecondary, fontWeight: '600' },
-        emptySub: { fontSize: 12, color: T.textMuted },
     });
     const styles = makeStyles(T);
 
@@ -106,17 +134,36 @@ function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
     const tipoLabel = getTipoLabel(venta.comprobante?.tipo_comprobante ?? venta.tipo_comprobante);
     const serie = venta.comprobante?.serie ?? '—';
     const correlativo = venta.comprobante?.correlativo ?? '—';
-    const avatarColor = getAvatarColor(venta.nombre_cliente ?? '');
+    const isAnonima = !venta.nombre_cliente || venta.nombre_cliente.toLowerCase() === 'anonimo' || venta.nombre_cliente.trim() === '';
+    const avatarColor = isAnonima ? T.textMuted : getAvatarColor(venta.nombre_cliente ?? '');
+
+    const productos = venta.productos ?? [];
+    const count = productos.length;
+
+    const hasImage = (img?: string) => img && img.trim() !== '';
+
+    const openImageViewer = (index: number) => {
+        const imagesWithUri = productos
+            .filter(p => hasImage(p.producto_imagen))
+            .map(p => ({ uri: URLS.BASE + p.producto_imagen }));
+        setSelectedImages(imagesWithUri);
+        setSelectedIndex(index);
+        setImageViewerVisible(true);
+    };
 
     return (
         <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
 
             {/* TOP */}
             <View style={styles.topRow}>
-                <View style={[styles.avatar, { backgroundColor: avatarColor + '25' }]}>
-                    <Text style={[styles.avatarText, { color: avatarColor }]}>
-                        {getInitial(venta.nombre_cliente)}
-                    </Text>
+                <View style={[styles.avatar, { backgroundColor: isAnonima ? T.surfaceAlt : avatarColor + '25' }]}>
+                    {isAnonima ? (
+                        <Icon name="account-question" size={24} color={T.textMuted} />
+                    ) : (
+                        <Text style={[styles.avatarText, { color: avatarColor }]}>
+                            {getInitial(venta.nombre_cliente)}
+                        </Text>
+                    )}
                 </View>
 
                 <View style={{ flex: 1 }}>
@@ -125,8 +172,8 @@ function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
                         {serie}-{correlativo || "-"}
                     </Text>
 
-                    <Text style={styles.serie}>
-                        {venta.nombre_cliente || 'Anónimo'}
+                    <Text style={[styles.serie, isAnonima && { fontStyle: 'italic' }]}>
+                        {isAnonima ? 'Cliente anónimo' : venta.nombre_cliente}
                     </Text>
                 </View>
 
@@ -158,6 +205,51 @@ function VentaCard({ venta, onPress }: { venta: Venta; onPress: () => void }) {
                     <Text style={styles.total}>S/ {venta.total}</Text>
                 </View>
             </View>
+
+            {/* PRODUCTS GRID */}
+            {count > 0 && (
+                <View style={styles.productsSection}>
+                    <Text style={styles.productsLabel}>PRODUCTOS ({count})</Text>
+                    <View style={styles.productsGrid}>
+                        {productos.map((p, i) => {
+                            const imgIndex = productos.slice(0, i + 1).filter(pp => hasImage(pp.producto_imagen)).length - 1;
+                            return (
+                                <View key={i} style={styles.productCard}>
+                                    {hasImage(p.producto_imagen) ? (
+                                        <TouchableOpacity
+                                            activeOpacity={0.85}
+                                            onPress={() => openImageViewer(imgIndex)}
+                                        >
+                                            <Image
+                                                source={{ uri: URLS.BASE + p.producto_imagen }}
+                                                style={styles.productImg}
+                                                contentFit="cover"
+                                            />
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <View style={styles.productImgPlaceholder}>
+                                            <Icon name="package-variant-closed" size={22} color={T.textMuted} />
+                                        </View>
+                                    )}
+                                    <View style={styles.productInfo}>
+                                        <Text numberOfLines={1} style={styles.productName}>
+                                            {p.producto_nombre}
+                                        </Text>
+                                        <Text style={styles.productQty}>x{p.cantidad}</Text>
+                                    </View>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
+            )}
+
+            <ImageViewing
+                images={selectedImages}
+                imageIndex={selectedIndex}
+                visible={imageViewerVisible}
+                onRequestClose={() => setImageViewerVisible(false)}
+            />
         </TouchableOpacity>
     );
 }

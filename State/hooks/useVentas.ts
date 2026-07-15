@@ -20,7 +20,15 @@ import {
     getVentasPorRangoFechasTienda,
     getVentasPorTienda,
     obtenerResumenVentas,
+    getSatisfaccion,
+    getMetodosPago,
+    getTopProductsMonth,
+    getDailyTrend,
     VentaResponse,
+    SatisfaccionResponse,
+    MetodoPagoResponse,
+    TopProductsMonthResponse,
+    DailyTrendResponse,
 } from '../api/ventas.api';
 
 // 🔥 KEY CENTRALIZADA (MUY IMPORTANTE)
@@ -31,6 +39,14 @@ const ventasKeys = {
     top: () => [...ventasKeys.all, 'top'] as const,
     tienda: () => [...ventasKeys.all, 'tienda'] as const,
     rango: () => [...ventasKeys.all, 'rango'] as const,
+    satisfaccion: (yearA: number, monthA: number, yearB: number, monthB: number) =>
+        [...ventasKeys.all, 'satisfaccion', yearA, monthA, yearB, monthB] as const,
+    metodosPago: (year: number, month: number) =>
+        [...ventasKeys.all, 'metodosPago', year, month] as const,
+    topProductosMonth: (month: string) =>
+        [...ventasKeys.all, 'topProductosMonth', month] as const,
+    dailyTrend: (days: number) =>
+        [...ventasKeys.all, 'dailyTrend', days] as const,
 };
 
 interface SearchVentasVariables {
@@ -79,6 +95,34 @@ export const useVentas = () => {
                 new Date(2025, 1, 1),
                 new Date(2027, 1, 1)
             ),
+    });
+
+    // ─── CHART QUERIES ───────────────────────────────
+
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+    const satisfaccionQuery = useQuery({
+        queryKey: ventasKeys.satisfaccion(currentYear, currentMonth, prevYear, prevMonth),
+        queryFn: () => getSatisfaccion(currentYear, currentMonth, prevYear, prevMonth),
+    });
+
+    const metodosPagoQuery = useQuery({
+        queryKey: ventasKeys.metodosPago(currentYear, currentMonth),
+        queryFn: () => getMetodosPago(currentYear, currentMonth),
+    });
+
+    const topProductosMonthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    const topProductosMonthQuery = useQuery({
+        queryKey: ventasKeys.topProductosMonth(topProductosMonthStr),
+        queryFn: () => getTopProductsMonth(topProductosMonthStr),
+    });
+
+    const dailyTrendQuery = useQuery({
+        queryKey: ventasKeys.dailyTrend(20),
+        queryFn: () => getDailyTrend(20),
     });
 
     // ─── MUTACIONES ─────────────────────────────────
@@ -150,6 +194,13 @@ export const useVentas = () => {
             ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [],
 
         ventasPorRangoFechasTienda: ventasPorRangoQuery.data,
+
+        // CHART DATA
+        satisfaccion: satisfaccionQuery.data,
+        metodosPago: metodosPagoQuery.data,
+        topProductosMonth: topProductosMonthQuery.data,
+        dailyTrend: dailyTrendQuery.data,
+
         // MANUAL REFETCH
         refreshVentasPorTienda: ventasPorTiendaQuery.refetch,
         refreshAll: async () => {
@@ -159,6 +210,10 @@ export const useVentas = () => {
                 topProductosQuery.refetch(),
                 ventasPorTiendaQuery.refetch(),
                 ventasPorRangoQuery.refetch(),
+                satisfaccionQuery.refetch(),
+                metodosPagoQuery.refetch(),
+                topProductosMonthQuery.refetch(),
+                dailyTrendQuery.refetch(),
             ]);
         },
         // LOADING
@@ -166,6 +221,10 @@ export const useVentas = () => {
         loadingResumenVentas: resumenVentasQuery.isLoading,
         loadingTopProductosHoy: topProductosQuery.isLoading,
         loadingVentasPorRango: ventasPorRangoQuery.isLoading,
+        loadingSatisfaccion: satisfaccionQuery.isLoading,
+        loadingMetodosPago: metodosPagoQuery.isLoading,
+        loadingTopProductosMonth: topProductosMonthQuery.isLoading,
+        loadingDailyTrend: dailyTrendQuery.isLoading,
 
         // INFINITE
         fetchNextVentasPage: ventasPorTiendaQuery.fetchNextPage,

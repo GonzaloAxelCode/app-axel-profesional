@@ -14,6 +14,7 @@ import { URLS } from "@/State/utils/endpoints";
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Image } from "expo-image";
 import { useState } from 'react';
+import { useVentas } from '@/State/hooks/useVentas';
 
 import {
     Linking,
@@ -467,7 +468,9 @@ export default function VentaDetalleModal({
     });
     const s = makeStyles(T);
 
-    const { anularVenta, temporaryVenta, loadingNotaCredito } = useVentaStore();
+    const { temporaryVenta } = useVentaStore();
+    const { anularVenta: anularVentaQuery } = useVentas();
+    const [loadingAnulacion, setLoadingAnulacion] = useState(false);
 
     const [whatsappNum, setWhatsappNum] = useState('');
 
@@ -495,11 +498,30 @@ export default function VentaDetalleModal({
     };
 
     const handleAnular = () => {
-        anularVenta(temporaryVenta.id, {
-            venta_id: temporaryVenta.id,
-            tipo_motivo: "01",
-            motivo: "Anulación de la operación",
-        });
+        setLoadingAnulacion(true);
+        anularVentaQuery(
+            {
+                ventaId: temporaryVenta.id,
+                motivo: "Anulación de la operación",
+                tipo_motivo: "01",
+                anonima: false,
+            },
+            {
+                onSuccess: (res) => {
+                    useVentaStore.setState({
+                        temporaryVenta: {
+                            ...temporaryVenta,
+                            estado: res?.venta_estado ?? 'Anulado',
+                            comprobante_nota_credito: res?.comprobante_nota_credito,
+                        },
+                    });
+                    setLoadingAnulacion(false);
+                },
+                onError: () => {
+                    setLoadingAnulacion(false);
+                },
+            }
+        );
     };
 
     const docs = [
@@ -827,7 +849,7 @@ export default function VentaDetalleModal({
                             <View style={s.cancelGlassLeft}>
 
                                 <View style={s.cancelGlassBadge}>
-                                    {loadingNotaCredito ? (
+                                    {loadingAnulacion ? (
                                         <ActivityIndicator
                                             size="small"
                                             color="#fff"

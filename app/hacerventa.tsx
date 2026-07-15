@@ -126,6 +126,10 @@ function HacerVentaScreen() {
       showVentaDetailTemporary: false,
       temporaryVenta: {} as Venta
     });
+    setCart([]);
+    setPayMethod('Efectivo');
+    setComprobanteMethod('Boleta');
+    setCliente({ document: '', fullname: '' });
   }, []);
 
   return (

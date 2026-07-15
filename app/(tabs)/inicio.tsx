@@ -6,6 +6,11 @@ import TopProductsHoy from '@/components/InicioComponents/TopProductsHoy';
 import { fmt } from '@/components/InicioComponents/utils';
 import VentaRow from '@/components/InicioComponents/VentaRow';
 import { VentasChart } from '@/components/venta/VentasChart';
+import { GaugeChart } from '@/components/InicioComponents/GaugeChart';
+import { DonutChart } from '@/components/InicioComponents/DonutChart';
+import { ProgressCircles } from '@/components/InicioComponents/ProgressCircles';
+import { TopProductsBar } from '@/components/InicioComponents/TopProductsBar';
+import { SparklineChart } from '@/components/InicioComponents/SparklineChart';
 import { useAppTheme } from '@/State/context/ThemeContext';
 import { useVentas } from '@/State/hooks/useVentas';
 import { useAuthStore } from '@/State/store/useAuthStore';
@@ -43,14 +48,19 @@ export default function InicioScreen() {
 
     const navigateToTab = useTabRouter();
 
-    const todaySales = resumenVentas?.todaySales ?? 0;
+    const isAccepted = (v: any) => {
+        const e = v?.estado?.toLowerCase();
+        return e === 'aceptado' || e === 'pendiente';
+    };
+
+    const todaySales = (ventasHoy ?? []).filter(isAccepted).reduce((sum, v) => sum + (v.total ?? 0), 0);
     const weekSales = resumenVentas?.thisWeekSales ?? 0;
     const monthSales = resumenVentas?.thisMonthSales ?? 0;
 
     const today = new Date().toLocaleDateString('es-PE', {
         weekday: 'long', day: 'numeric', month: 'long',
     });
-    const ventasDeHoy = ventasHoy?.slice(0, 8) ?? [];
+    const ventasDeHoy = (ventasHoy ?? []).filter(isAccepted).slice(0, 8);
     const { user, tienda } = useAuthStore();
 
     const st = styles(T);
@@ -118,6 +128,33 @@ export default function InicioScreen() {
                     <View style={st.heroStatDivider} />
                     <StatPill label="Mes" value={fmt(monthSales)} />
                 </View>
+            </View>
+
+            <SectionHeader title="Estadísticas generales" />
+
+            {/* Gauge */}
+            <View style={st.chartFull}>
+                <GaugeChart />
+            </View>
+
+            {/* Donut */}
+            <View style={st.chartFull}>
+                <DonutChart />
+            </View>
+
+            {/* Top Products */}
+            <View style={st.chartFull}>
+                <TopProductsBar />
+            </View>
+
+            {/* Sparkline */}
+            <View style={st.chartFull}>
+                <SparklineChart />
+            </View>
+
+            {/* Progress Circles */}
+            <View style={st.chartFull}>
+                <ProgressCircles />
             </View>
 
             <SectionHeader title="Servicios rápidos" />
@@ -222,6 +259,11 @@ const styles = (T: any) => StyleSheet.create({
     heroStatDivider: { width: 1, backgroundColor: T.border },
 
     servicesScroll: { paddingLeft: 20, paddingRight: 8, gap: 10 },
+
+    chartFull: {
+        paddingHorizontal: 20,
+        marginBottom: 12,
+    },
 
     card: {
         marginHorizontal: 20, backgroundColor: T.surface,
