@@ -81,25 +81,27 @@ export default function VentaDetalleModal({
             gap: 18,
         },
         hero: {
-            backgroundColor: T.surface,
-            borderRadius: 30,
-            padding: 22,
-            borderWidth: 1,
-            borderColor: T.border,
+            backgroundColor: 'transparent',
+            borderRadius: 15,
+            padding: 6,
+            borderWidth: 0,
+            borderColor: 'transparent',
             overflow: 'hidden',
         },
         heroTop: {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
+            marginBottom: 8,
         },
         iconBtn: {
-            width: 42,
-            height: 42,
+            width: 52,
+            height: 52,
             borderRadius: 14,
-            backgroundColor: T.surfaceAlt,
+            backgroundColor: 'transparent',
             justifyContent: 'center',
             alignItems: 'center',
+            marginLeft: -8,
         },
         estado: {
             flexDirection: 'row',
@@ -131,6 +133,7 @@ export default function VentaDetalleModal({
             flexDirection: 'row',
             alignItems: 'center',
             marginTop: 18,
+            marginBottom: 8,
             backgroundColor: T.surfaceAlt,
             borderRadius: 18,
             padding: 14,
@@ -170,7 +173,7 @@ export default function VentaDetalleModal({
             flex: 1,
             alignItems: 'center',
             backgroundColor: T.surface,
-            borderRadius: 22,
+            borderRadius: 15,
             paddingVertical: 16,
             borderWidth: 1,
             borderColor: T.border,
@@ -189,36 +192,37 @@ export default function VentaDetalleModal({
             color: T.textSecondary,
         },
         card: {
-            backgroundColor: T.surface,
-            borderRadius: 24,
-            paddingTop: 13,
+            backgroundColor: T.surfaceAlt,
+            borderRadius: 15,
+            padding: 14,
+            marginTop: 14,
             flexDirection: 'row',
             alignItems: 'center',
             gap: 14,
-            borderWidth: 0,
+            borderWidth: 1,
             borderColor: T.border,
         },
         avatar: {
-            width: 54,
-            height: 54,
-            borderRadius: 18,
-            backgroundColor: T.accent + '15',
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            backgroundColor: T.accent + '20',
             justifyContent: 'center',
             alignItems: 'center',
         },
         avatarText: {
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: '900',
             color: T.accent,
         },
         clientName: {
-            fontSize: 15,
-            fontWeight: '800',
+            fontSize: 14,
+            fontWeight: '700',
             color: T.textPrimary,
         },
         clientDoc: {
-            marginTop: 3,
-            fontSize: 12,
+            marginTop: 2,
+            fontSize: 11,
             color: T.textMuted,
         },
         whatsappRow: {
@@ -308,7 +312,7 @@ export default function VentaDetalleModal({
         footer: {
             marginTop: 8,
             backgroundColor: T.surface,
-            borderRadius: 28,
+            borderRadius: 15,
             padding: 20,
             borderWidth: 1,
             borderColor: T.border,
@@ -335,7 +339,7 @@ export default function VentaDetalleModal({
             backgroundColor: T.red + '08',
             borderWidth: 1,
             borderColor: T.red + '18',
-            borderRadius: 28,
+            borderRadius: 0,
             paddingVertical: 16,
             paddingHorizontal: 18,
         },
@@ -401,7 +405,7 @@ export default function VentaDetalleModal({
         productGridCard: {
             width: '48%',
             backgroundColor: T.surface,
-            borderRadius: 28,
+            borderRadius: 15,
             overflow: 'hidden',
             borderWidth: 1,
             borderColor: T.surfaceAlt,
@@ -464,6 +468,107 @@ export default function VentaDetalleModal({
             fontSize: 18,
             fontWeight: '900',
             color: T.textPrimary,
+        },
+        receiptSection: {
+            gap: 12,
+        },
+        receiptContainer: {
+            backgroundColor: '#FFFFFF',
+            borderRadius: 0,
+            borderWidth: 1,
+            borderColor: T.border,
+            overflow: 'hidden',
+        },
+        receiptInner: {
+            padding: 24,
+            paddingBottom: 40,
+            backgroundColor: '#FFFFFF',
+        },
+        receiptCenter: {
+            fontSize: 16,
+            fontWeight: '900',
+            color: '#000000',
+            textAlign: 'center',
+            marginBottom: 4,
+        },
+        receiptCenterBold: {
+            fontSize: 13,
+            fontWeight: '800',
+            color: '#000000',
+            textAlign: 'center',
+            marginBottom: 2,
+        },
+        receiptCenterSmall: {
+            fontSize: 10,
+            color: '#333333',
+            textAlign: 'center',
+            marginBottom: 2,
+        },
+        receiptLine: {
+            fontSize: 11,
+            color: '#000000',
+            marginBottom: 2,
+        },
+        receiptDivider: {
+            height: 1,
+            backgroundColor: '#000000',
+            marginVertical: 8,
+        },
+        receiptDividerDotted: {
+            height: 1,
+            borderTopWidth: 1,
+            borderTopColor: '#000000',
+            borderStyle: 'dashed',
+            marginVertical: 6,
+        },
+        receiptProductsHeader: {
+            flexDirection: 'row',
+            marginBottom: 4,
+        },
+        receiptProductCol: {
+            fontSize: 10,
+            fontWeight: '700',
+            color: '#000000',
+        },
+        receiptProductRow: {
+            flexDirection: 'row',
+            marginBottom: 2,
+        },
+        receiptTotalRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginBottom: 2,
+        },
+        receiptTotalLabel: {
+            fontSize: 11,
+            color: '#000000',
+        },
+        receiptTotalValue: {
+            fontSize: 11,
+            color: '#000000',
+        },
+        receiptTotalBold: {
+            fontSize: 14,
+            fontWeight: '900',
+            color: '#000000',
+        },
+        receiptSunatContainer: {
+            marginTop: 16,
+            alignItems: 'center',
+            paddingVertical: 12,
+            borderTopWidth: 2,
+            borderTopColor: '#000000',
+        },
+        receiptSunatText: {
+            fontSize: 12,
+            fontWeight: '900',
+            color: '#000000',
+            marginBottom: 4,
+        },
+        receiptSunatSmall: {
+            fontSize: 9,
+            color: '#333333',
+            textAlign: 'center',
         },
     });
     const s = makeStyles(T);
@@ -585,7 +690,7 @@ export default function VentaDetalleModal({
                             >
                                 <Icon
                                     name="arrow-left"
-                                    size={20}
+                                    size={28}
                                     color={T.textPrimary}
                                 />
                             </TouchableOpacity>
@@ -647,6 +752,46 @@ export default function VentaDetalleModal({
                                     {venta.metodo_pago}
                                 </Text>
                             </View>
+
+                        </View>
+
+                        {/* ───────────────── ACTIONS ───────────────── */}
+
+                        <View style={s.actionsRow}>
+
+                            {docs.map((d) => (
+
+                                <TouchableOpacity
+                                    key={d.label}
+                                    style={[
+                                        s.actionCard,
+                                        !d.url && { opacity: 0.35 }
+                                    ]}
+                                    onPress={() =>
+                                        d.url && Linking.openURL(d.url)
+                                    }
+                                >
+
+                                    <View
+                                        style={[
+                                            s.actionIcon,
+                                            { backgroundColor: d.color + '15' }
+                                        ]}
+                                    >
+                                        <Icon
+                                            name={d.icon as any}
+                                            size={20}
+                                            color={d.color}
+                                        />
+                                    </View>
+
+                                    <Text style={s.actionLabel}>
+                                        {d.label}
+                                    </Text>
+
+                                </TouchableOpacity>
+
+                            ))}
 
                         </View>
 
@@ -767,12 +912,6 @@ export default function VentaDetalleModal({
 
                                                     </View>
 
-                                                    <Icon
-                                                        name="chevron-right"
-                                                        size={18}
-                                                        color={T.textMuted}
-                                                    />
-
                                                 </View>
 
                                             </View>
@@ -789,54 +928,93 @@ export default function VentaDetalleModal({
 
                     </View>
 
-                    {/* ───────────────── ACTIONS ───────────────── */}
+                    {/* ───────────────── COMPROBANTE PREVIEW ───────────────── */}
 
-                    <View style={{ ...s.section, }}>
+                    <View style={s.receiptSection}>
+                        <Text style={s.sectionTitle}>Comprobante</Text>
+                        <View style={s.receiptContainer}>
+                            <View style={s.receiptInner}>
+                                {/* Header */}
+                                <Text style={s.receiptCenter}>MI TIENDA S.A.C.</Text>
+                                <Text style={s.receiptCenterSmall}>Av. Principal 123, Lima - Lima</Text>
+                                <Text style={s.receiptCenterSmall}>Tel: (01) 123-4567 / 999 888 777</Text>
+                                <Text style={s.receiptCenterSmall}>RUC: 20123456789</Text>
+                                <Text style={s.receiptCenterSmall}>ventas@mitienda.com</Text>
 
-                        <Text style={s.sectionTitle}>
-                            Acciones rápidas
-                        </Text>
+                                <View style={s.receiptDivider} />
 
-                        <View style={s.actionsRow}>
+                                {/* Tipo de comprobante */}
+                                <Text style={s.receiptCenterBold}>
+                                    {cp?.tipo_comprobante === '01' ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA'}
+                                </Text>
+                                <Text style={s.receiptCenterBold}>{cp?.serie}-{cp?.correlativo}</Text>
 
-                            {docs.map((d) => (
+                                <View style={s.receiptDivider} />
 
-                                <TouchableOpacity
-                                    key={d.label}
-                                    style={[
-                                        s.actionCard,
-                                        !d.url && { opacity: 0.35 }
-                                    ]}
-                                    onPress={() =>
-                                        d.url && Linking.openURL(d.url)
-                                    }
-                                >
+                                {/* Datos del cliente */}
+                                <Text style={s.receiptLine}>Cliente: {cp?.nombre_cliente || 'Cliente General'}</Text>
+                                <Text style={s.receiptLine}>Doc: {cp?.numero_documento_cliente || '-'}</Text>
+                                <Text style={s.receiptLine}>Fecha: {formatFecha(venta.fecha_hora)}</Text>
+                                <Text style={s.receiptLine}>Pago: {venta.metodo_pago}</Text>
+                                <Text style={s.receiptLine}>Cajero: Admin</Text>
 
-                                    <View
-                                        style={[
-                                            s.actionIcon,
-                                            { backgroundColor: d.color + '15' }
-                                        ]}
-                                    >
-                                        <Icon
-                                            name={d.icon as any}
-                                            size={20}
-                                            color={d.color}
-                                        />
-                                    </View>
+                                <View style={s.receiptDivider} />
 
-                                    <Text style={s.actionLabel}>
-                                        {d.label}
-                                    </Text>
+                                {/* Productos */}
+                                <View style={s.receiptProductsHeader}>
+                                    <Text style={[s.receiptProductCol, { flex: 2 }]}>DESCRIPCIÓN</Text>
+                                    <Text style={[s.receiptProductCol, { textAlign: 'center' }]}>QTY</Text>
+                                    <Text style={[s.receiptProductCol, { textAlign: 'right' }]}>P.U.</Text>
+                                    <Text style={[s.receiptProductCol, { textAlign: 'right' }]}>TOTAL</Text>
+                                </View>
 
-                                </TouchableOpacity>
+                                <View style={s.receiptDividerDotted} />
 
-                            ))}
+                                {venta.productos?.map((p, i) => {
+                                    const precio = (p.precio_unitario ?? p.valor_unitario).toFixed(2);
+                                    const totalProd = ((p.precio_unitario ?? p.valor_unitario) * p.cantidad).toFixed(2);
+                                    return (
+                                        <View key={i} style={s.receiptProductRow}>
+                                            <Text style={[s.receiptProductCol, { flex: 2 }]} numberOfLines={1}>{p.producto_nombre}</Text>
+                                            <Text style={[s.receiptProductCol, { textAlign: 'center' }]}>{p.cantidad}</Text>
+                                            <Text style={[s.receiptProductCol, { textAlign: 'right' }]}>{precio}</Text>
+                                            <Text style={[s.receiptProductCol, { textAlign: 'right' }]}>{totalProd}</Text>
+                                        </View>
+                                    );
+                                })}
 
+                                <View style={s.receiptDividerDotted} />
+
+                                {/* Totales */}
+                                <View style={s.receiptTotalRow}>
+                                    <Text style={s.receiptTotalLabel}>SUBTOTAL</Text>
+                                    <Text style={s.receiptTotalValue}>S/ {(Number(venta.total) / 1.18).toFixed(2)}</Text>
+                                </View>
+                                <View style={s.receiptTotalRow}>
+                                    <Text style={s.receiptTotalLabel}>IGV (18%)</Text>
+                                    <Text style={s.receiptTotalValue}>S/ {(Number(venta.total) - Number(venta.total) / 1.18).toFixed(2)}</Text>
+                                </View>
+                                <View style={s.receiptDivider} />
+                                <View style={s.receiptTotalRow}>
+                                    <Text style={s.receiptTotalBold}>TOTAL</Text>
+                                    <Text style={s.receiptTotalBold}>S/ {total}</Text>
+                                </View>
+
+                                <View style={s.receiptDivider} />
+
+                                {/* Footer */}
+                                <Text style={s.receiptCenterSmall}>¡Gracias por su compra!</Text>
+                                <Text style={s.receiptCenterSmall}>Representación impresa de la</Text>
+                                <Text style={s.receiptCenterSmall}>{cp?.tipo_comprobante === '01' ? 'Factura' : 'Boleta'} Electrónica</Text>
+
+                                <View style={s.receiptSunatContainer}>
+                                    <Text style={s.receiptSunatText}>AUTORIZADO POR SUNAT</Text>
+                                    <Text style={s.receiptSunatSmall}>Consulte su comprobante en</Text>
+                                    <Text style={s.receiptSunatSmall}>www.sunat.gob.pe</Text>
+                                </View>
+                            </View>
                         </View>
-
                     </View>
-
 
                     {venta.estado?.toLowerCase() !== 'anulada' && (
 

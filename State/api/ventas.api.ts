@@ -207,3 +207,285 @@ export async function getDailyTrend(days: number = 20): Promise<DailyTrendRespon
         body: JSON.stringify({ days }),
     });
 }
+
+// Top categorías más vendidas
+export interface TopCategoriasResponse {
+    month: number;
+    year: number;
+    total_categorias: number;
+    categorias: {
+        categoria_id: number;
+        nombre: string;
+        codigo: string;
+        total_unidades: number;
+        total_ingresos: number;
+    }[];
+}
+
+export async function getTopCategorias(month: number, year: number): Promise<TopCategoriasResponse> {
+    try {
+        // La API espera month 0-indexed (January = 0) como en la web
+        const response = await fetchWithAuth(`${API_URL}/reports/top-categories/`, {
+            method: 'POST',
+            body: JSON.stringify({ month, year }),
+        });
+        console.log('getTopCategorias API response:', JSON.stringify(response));
+        return response;
+    } catch (error) {
+        console.error('Error fetching top categories:', error);
+        // Retornar estructura vacía en caso de error
+        return { month, year, total_categorias: 0, categorias: [] };
+    }
+}
+
+// ── Daily Summary API ──
+
+export interface DailySummaryResponse {
+    fecha: string;
+    total_ventas: number;
+    comprobantes_emitidos: number;
+    clientes_atendidos: number;
+}
+
+export interface DailyPaymentMethod {
+    metodo_pago: string;
+    cantidad_transacciones: number;
+    total_soles: number;
+    porcentaje_transacciones: number;
+    porcentaje_monto: number;
+}
+
+export interface DailyPaymentMethodsResponse {
+    fecha: string;
+    total_transacciones: number;
+    total_general_soles: number;
+    metodos_pago: DailyPaymentMethod[];
+}
+
+export interface PeakHour {
+    hora: number;
+    label: string;
+    cantidad_ventas: number;
+    total_soles: number;
+}
+
+export interface DailyPeakHoursResponse {
+    fecha: string;
+    hora_pico_ventas: PeakHour;
+    hora_pico_monto: PeakHour;
+    horas: PeakHour[];
+}
+
+export interface DailyTopProduct {
+    posicion: number;
+    producto_id: number;
+    nombre: string;
+    sku: string;
+    cantidad_vendida: number;
+    total_neto: number;
+}
+
+export interface DailyTopProductsResponse {
+    fecha: string;
+    total_productos: number;
+    productos: DailyTopProduct[];
+}
+
+export interface DailyTopCategoria {
+    posicion: number;
+    categoria_id: number;
+    nombre: string;
+    codigo: string;
+    color: string;
+    total_unidades: number;
+    ingreso_neto: number;
+}
+
+export interface DailyTopCategoriesResponse {
+    fecha: string;
+    total_categorias: number;
+    categorias: DailyTopCategoria[];
+}
+
+export interface RecentSale {
+    venta_id: number;
+    numero_comprobante: string;
+    cliente: string;
+    hora: string;
+    monto: number;
+    cantidad_productos: number;
+    metodo_pago: string;
+}
+
+export interface DailyRecentSalesResponse {
+    fecha: string;
+    ventas_recientes: RecentSale[];
+}
+
+export interface DailyCustomersResponse {
+    fecha: string;
+    total_clientes: number;
+    clientes_nuevos: number;
+    clientes_recurrentes: number;
+    porcentaje_nuevos: number;
+    porcentaje_recurrentes: number;
+    tasa_retencion: number;
+}
+
+export async function getDailySummary(): Promise<DailySummaryResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-summary/`);
+}
+
+export async function getDailyPaymentMethods(): Promise<DailyPaymentMethodsResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-payment-methods/`);
+}
+
+export async function getDailyPeakHours(): Promise<DailyPeakHoursResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-peak-hours/`);
+}
+
+export async function getDailyTopProducts(): Promise<DailyTopProductsResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-top-products/`);
+}
+
+export async function getDailyTopCategories(): Promise<DailyTopCategoriesResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-top-categories/`);
+}
+
+export async function getDailyRecentSales(): Promise<DailyRecentSalesResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-recent-sales/`);
+}
+
+export async function getDailyCustomers(): Promise<DailyCustomersResponse> {
+    return fetchWithAuth(`${API_URL}/reports/daily-customers/`);
+}
+
+// ── Low Stock API ──
+
+export interface LowStockProduct {
+    item: {
+        id: number;
+        nombre: string;
+        sku: string;
+        categoria: number;
+        categoria_nombre: string;
+        imagen: string;
+    };
+    inventario: {
+        id: number;
+        cantidad: number;
+        stock_minimo: number;
+        stock_maximo: number;
+        costo_compra: number;
+        costo_venta: number;
+        estado: string;
+        producto_nombre: string;
+        categoria_nombre: string;
+        tienda_nombre: string;
+    };
+}
+
+export interface LowStockResponse {
+    lowStockProducts: LowStockProduct[];
+}
+
+export async function getLowStockProducts(): Promise<LowStockResponse> {
+    return fetchWithAuth(`${API_URL}/productos-menor-stock/`);
+}
+
+// ── Pedidos API ──
+
+export interface PedidoProducto {
+    id?: number;
+    producto?: number;
+    producto_nombre?: string;
+    cantidad: number;
+    stock_disponible?: boolean;
+    valor_unitario: number;
+    precio_unitario: number;
+    costo_original?: number;
+    descuento?: number;
+}
+
+export interface Pedido {
+    id: number;
+    numero_pedido: string;
+    fecha_hora: string;
+    fecha_realizacion?: string;
+    fecha_cancelacion?: string;
+    metodo_pago: string;
+    estado: 'COTIZADO' | 'PENDIENTE' | 'REALIZADO' | 'CANCELADO';
+    activo: boolean;
+    total: number;
+    subtotal: number;
+    igv_total: number;
+    descuento_total: number;
+    tipo_documento_cliente?: string;
+    numero_documento_cliente?: string;
+    nombre_cliente: string;
+    email_cliente?: string;
+    telefono_cliente?: string;
+    direccion_cliente?: string;
+    observaciones?: string;
+    productos: PedidoProducto[];
+    date_created: string;
+}
+
+export interface PedidoResponse {
+    count: number;
+    results: Pedido[];
+}
+
+export interface PedidoSearchResponse {
+    count: number;
+    next: number | null;
+    previous: number | null;
+    index_page: number;
+    length_pages: number;
+    results: Pedido[];
+}
+
+export interface CreatePedido {
+    cliente?: {
+        tipo_documento: string;
+        numero: string;
+        nombre_completo: string;
+        correo_cliente?: string;
+        telefono_cliente?: string;
+        direccion_cliente?: string;
+    };
+    metodoPago: string;
+    observaciones?: string;
+    productos: {
+        inventarioId: number;
+        cantidad_final: number;
+        descuento?: number;
+    }[];
+}
+
+export async function getPedidos(fromDate: string, toDate: string): Promise<PedidoResponse> {
+    return fetchWithAuth(`${API_URL}/pedidos/lista/`, {
+        method: 'POST',
+        body: JSON.stringify({ from_date: fromDate, to_date: toDate }),
+    });
+}
+
+export async function searchPedidos(page: number, pageSize: number, query: any = {}): Promise<PedidoSearchResponse> {
+    return fetchWithAuth(`${API_URL}/pedidos/buscar/`, {
+        method: 'POST',
+        body: JSON.stringify({ page, page_size: pageSize, query }),
+    });
+}
+
+export async function createPedido(pedido: CreatePedido): Promise<Pedido> {
+    return fetchWithAuth(`${API_URL}/pedidos/crear/`, {
+        method: 'POST',
+        body: JSON.stringify(pedido),
+    });
+}
+
+export async function cancelPedido(pedidoId: number): Promise<Pedido> {
+    return fetchWithAuth(`${API_URL}/pedidos/cancelar/${pedidoId}/`, {
+        method: 'PUT',
+    });
+}

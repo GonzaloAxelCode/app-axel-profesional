@@ -1,11 +1,12 @@
 import T from '@/constants/THEME';
+import { buscarProductoPorSKU } from '@/State/api/inventario.api';
 import { useProductos } from '@/State/hooks/useProductos';
 import { Producto } from '@/State/models/producto.models';
 import { URLS } from '@/State/utils/endpoints';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -18,6 +19,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ImageViewing from 'react-native-image-viewing';
 import { Text } from 'react-native-paper';
+import Barcode from 'react-native-barcode-svg';
 
 const W = Dimensions.get('window').width;
 
@@ -29,31 +31,65 @@ const formatFecha = (fecha?: Date | string) => {
 };
 
 export default function ProductoDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, sku, fromScanner } = useLocalSearchParams<{ id: string; sku: string; fromScanner: string }>();
   const router = useRouter();
   const [imageVisible, setImageVisible] = useState(false);
   const { productos, isLoading } = useProductos(200);
+  const [productoFromSku, setProductoFromSku] = useState<any>(null);
+  const [loadingSku, setLoadingSku] = useState(false);
+  const [errorSku, setErrorSku] = useState<string | null>(null);
 
   const producto: Producto | undefined = useMemo(
     () => productos?.find((p) => p.id.toString() === id),
     [productos, id]
   );
 
+  useEffect(() => {
+    if (sku && fromScanner === 'true') {
+      setLoadingSku(true);
+      setErrorSku(null);
+      buscarProductoPorSKU(sku)
+        .then((data) => {
+          setProductoFromSku(data.producto);
+        })
+        .catch((err) => {
+          setErrorSku(err?.data?.error || 'Error al buscar producto');
+        })
+        .finally(() => {
+          setLoadingSku(false);
+        });
+    }
+  }, [sku, fromScanner]);
+
+  const currentProducto = productoFromSku || producto;
+
   const handleShare = async () => {
-    if (!producto) return;
-    await Share.share({ message: `${producto.nombre} — S/ ${producto.inventario?.costo_venta ?? '—'}` });
+    if (!currentProducto) return;
+    await Share.share({ message: `${currentProducto.nombre} — S/ ${currentProducto.inventario?.costo_venta ?? '—'}` });
   };
 
-  if (isLoading) {
+  if (isLoading || loadingSku) {
     return (
       <GestureHandlerRootView style={s.center}>
         <ActivityIndicator size="large" color={T.accent} />
-        <Text style={s.loadingText}>Cargando...</Text>
+        <Text style={s.loadingText}>{loadingSku ? 'Buscando producto por SKU...' : 'Cargando...'}</Text>
       </GestureHandlerRootView>
     );
   }
 
-  if (!producto) {
+  if (errorSku) {
+    return (
+      <GestureHandlerRootView style={s.center}>
+        <Icon name="alert-circle-outline" size={52} color={T.red} />
+        <Text style={s.emptyTitle}>{errorSku}</Text>
+        <TouchableOpacity style={s.backPill} onPress={() => router.back()}>
+          <Text style={s.backPillText}>Volver</Text>
+        </TouchableOpacity>
+      </GestureHandlerRootView>
+    );
+  }
+
+  if (!currentProducto) {
     return (
       <GestureHandlerRootView style={s.center}>
         <Icon name="package-variant-closed" size={52} color={T.textMuted} />
@@ -65,23 +101,23 @@ export default function ProductoDetailScreen() {
     );
   }
 
-  const inv = producto.inventario;
+  const inv = currentProducto.inventario;
   const precioVenta = inv?.costo_venta;
   const precioCompra = inv?.costo_compra;
   const stock = inv?.cantidad ?? null;
   const ganancia = precioVenta && precioCompra ? precioVenta - precioCompra : null;
   const margen = precioVenta && precioCompra ? Math.round(((precioVenta - precioCompra) / precioVenta) * 100) : null;
 
-  const getImg = (p: Producto) =>
+  const getImg = (p: any) =>
     p?.imagen ? URLS.BASE + p.imagen : URLS.IMAGE_URL_PLACEHOLDER;
 
   const infoRows = [
-    { label: 'SKU', value: producto.sku || '—', icon: 'barcode' },
-    { label: 'Marca', value: producto.marca || '—', icon: 'tag-outline' },
-    { label: 'Modelo', value: producto.modelo || '—', icon: 'cube-outline' },
+    { label: 'SKU', value: currentProducto.sku || '—', icon: 'barcode' },
+    { label: 'Marca', value: currentProducto.marca || '—', icon: 'tag-outline' },
+    { label: 'Modelo', value: currentProducto.modelo || '—', icon: 'cube-outline' },
     { label: 'Costo compra', value: precioCompra != null ? `S/ ${precioCompra}` : '—', icon: 'cart-outline' },
-    { label: 'Categoría', value: producto.categoria_nombre || '—', icon: 'shape-outline' },
-    { label: 'Creado', value: formatFecha(producto.fecha_creacion), icon: 'calendar-outline' },
+    { label: 'Categoría', value: currentProducto.categoria_nombre || '—', icon: 'shape-outline' },
+    { label: 'Creado', value: formatFecha(currentProducto.fecha_creacion), icon: 'calendar-outline' },
   ].filter(r => r.value !== '—');
 
   return (
@@ -91,7 +127,7 @@ export default function ProductoDetailScreen() {
       <View style={s.hero}>
         <TouchableOpacity activeOpacity={0.9} onPress={() => setImageVisible(true)} style={{ flex: 1 }}>
           <Image
-            source={{ uri: getImg(producto) }}
+            source={{ uri: getImg(currentProducto) }}
             style={s.heroImg}
             contentFit="cover"
           />
@@ -110,10 +146,10 @@ export default function ProductoDetailScreen() {
         </TouchableOpacity>
 
         {/* Estado badge */}
-        <View style={[s.estadoBadge, { backgroundColor: producto.activo ? T.green + '20' : T.red + '20' }]}>
-          <View style={[s.estadoDot, { backgroundColor: producto.activo ? T.green : T.red }]} />
-          <Text style={[s.estadoText, { color: producto.activo ? T.green : T.red }]}>
-            {producto.activo ? 'Activo' : 'Inactivo'}
+        <View style={[s.estadoBadge, { backgroundColor: currentProducto.activo ? T.green + '20' : T.red + '20' }]}>
+          <View style={[s.estadoDot, { backgroundColor: currentProducto.activo ? T.green : T.red }]} />
+          <Text style={[s.estadoText, { color: currentProducto.activo ? T.green : T.red }]}>
+            {currentProducto.activo ? 'Activo' : 'Inactivo'}
           </Text>
         </View>
       </View>
@@ -125,11 +161,11 @@ export default function ProductoDetailScreen() {
         {/* ── NOMBRE + PRECIO ── */}
         <View style={s.topSection}>
           <View style={{ flex: 1 }}>
-            <Text style={s.nombre}>{producto.nombre}</Text>
-            {producto.categoria_nombre && (
+            <Text style={s.nombre}>{currentProducto.nombre}</Text>
+            {currentProducto.categoria_nombre && (
               <View style={s.catChip}>
                 <Icon name="shape-outline" size={11} color={T.textMuted} />
-                <Text style={s.catText}>{producto.categoria_nombre}</Text>
+                <Text style={s.catText}>{currentProducto.categoria_nombre}</Text>
               </View>
             )}
           </View>
@@ -181,18 +217,18 @@ export default function ProductoDetailScreen() {
         )}
 
         {/* ── DESCRIPCIÓN ── */}
-        {producto.descripcion && (
+        {currentProducto.descripcion && (
           <View style={s.descCard}>
             <Text style={s.sectionLabel}>Descripción</Text>
-            <Text style={s.descripcion}>{producto.descripcion}</Text>
+            <Text style={s.descripcion}>{currentProducto.descripcion}</Text>
           </View>
         )}
 
         {/* ── CARACTERÍSTICAS ── */}
-        {producto.caracteristicas && Object.keys(producto.caracteristicas).length > 0 && (
+        {currentProducto.caracteristicas && Object.keys(currentProducto.caracteristicas).length > 0 && (
           <View style={s.infoCard}>
             <Text style={[s.sectionLabel, { paddingHorizontal: 16, paddingTop: 14 }]}>Características</Text>
-            {Object.entries(producto.caracteristicas).map(([key, val], i, arr) => (
+            {Object.entries(currentProducto.caracteristicas).map(([key, val], i, arr) => (
               <View key={key} style={[s.infoRow, i < arr.length - 1 && s.infoRowBorder]}>
                 <Text style={s.infoLabel}>{key}</Text>
                 <Text style={s.infoValue}>{String(val)}</Text>
@@ -200,10 +236,29 @@ export default function ProductoDetailScreen() {
             ))}
           </View>
         )}
+
+        {/* ── CÓDIGO DE BARRAS ── */}
+        {currentProducto.sku && (
+          <View style={s.barcodeCard}>
+            <Text style={s.sectionLabel}>Código de Barras</Text>
+            <View style={s.barcodeContainer}>
+              <Barcode
+                value={currentProducto.sku}
+                format="CODE128"
+                singleBarWidth={1.5}
+                height={60}
+                lineColor="#000000"
+                backgroundColor="#FFFFFF"
+                onError={(error: Error) => console.warn('Barcode error:', error)}
+              />
+              <Text style={s.barcodeText}>{currentProducto.sku}</Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       <ImageViewing
-        images={[{ uri: getImg(producto) }]}
+        images={[{ uri: getImg(currentProducto) }]}
         imageIndex={0}
         visible={imageVisible}
         onRequestClose={() => setImageVisible(false)}
@@ -286,4 +341,27 @@ const s = StyleSheet.create({
   },
   sectionLabel: { fontSize: 10, color: T.textMuted, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: '700' },
   descripcion: { fontSize: 14, lineHeight: 22, color: T.textSecondary },
+  barcodeCard: {
+    backgroundColor: T.surface, borderRadius: T.radiusLg,
+    borderWidth: 1, borderColor: T.border, padding: 16, gap: 12,
+  },
+  barcodeContainer: {
+    alignItems: 'center', gap: 12,
+    backgroundColor: '#FFFFFF', borderRadius: 12,
+    padding: 20, borderWidth: 1, borderColor: T.border,
+  },
+  barcodeVisual: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    height: 60,
+  },
+  barcodeLine: {
+    borderRadius: 1,
+  },
+  barcodeText: {
+    fontSize: 16, fontWeight: '800', color: T.textPrimary,
+    letterSpacing: 4, fontFamily: 'monospace',
+  },
 });

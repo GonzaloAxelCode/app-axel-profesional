@@ -3,6 +3,9 @@ import { fetchWithAuth } from '../api/client';
 
 import { Venta } from '../models/venta.models';
 import { URLS } from '../utils/endpoints';
+
+export type VentaFilterKey = 'todos' | 'aceptado' | 'pendiente' | 'anulado';
+
 export interface ProductsSales {
     producto_id: number;
     nombre: string;
@@ -56,6 +59,9 @@ interface VentaStore {
     temporaryVenta: Venta;
     showVentaDetailTemporary: boolean;
 
+    activeFilter: VentaFilterKey;
+    setActiveFilter: (filter: VentaFilterKey) => void;
+
     salesDateRangePerDay: [string, number][];
     todaySales: number;
     thisWeekSales: number;
@@ -107,6 +113,9 @@ export const useVentaStore = create<VentaStore>((set, get) => ({
     ventasToday: [],
     temporaryVenta: {} as Venta,
     showVentaDetailTemporary: false,
+
+    activeFilter: 'todos',
+    setActiveFilter: (filter) => set({ activeFilter: filter }),
 
     salesDateRangePerDay: [],
     todaySales: 0,

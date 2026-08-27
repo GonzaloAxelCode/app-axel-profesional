@@ -3,10 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import "../global.css";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppThemeProvider, useAppTheme } from '@/State/context/ThemeContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -44,6 +44,7 @@ function ThemedRoot() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
         <Stack.Screen name="productodetail" options={modalOptions} />
+        <Stack.Screen name="barcode-scanner" options={modalOptions} />
         <Stack.Screen name="settings/perfil" options={modalOptions} />
         <Stack.Screen name="settings/categorias" options={modalOptions} />
         <Stack.Screen name="settings/comprobantes" options={modalOptions} />

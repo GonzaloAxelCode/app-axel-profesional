@@ -1,6 +1,9 @@
 import { useAppTheme } from '@/State/context/ThemeContext';
+import { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 
 export type PayMethod = 'Efectivo' | 'PLIN' | 'YAPE';
 
@@ -37,6 +40,29 @@ interface PagoCardProps {
 
 export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
   const { T } = useAppTheme();
+  const [fotoComprobante, setFotoComprobante] = useState<string | null>(null);
+
+  const openCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      allowsEditing: false,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setFotoComprobante(result.assets[0].uri);
+    }
+  };
+
+  const removePhoto = () => {
+    setFotoComprobante(null);
+  };
+
+  const showCameraOption = payMethod === 'YAPE' || payMethod === 'PLIN';
+
   const makeStyles = (T: any) => StyleSheet.create({
     wrapper: {
       gap: 10,
@@ -54,18 +80,18 @@ export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
       flexDirection: 'row',
       gap: 8,
     },
-  card: {
-    flex: 1,
-    position: 'relative',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: T.surface,
-    borderRadius: T.radiusMd,
-    borderWidth: 1.5,
-    borderColor: T.border,
-    padding: 14,
-  },
+    card: {
+      flex: 1,
+      position: 'relative',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: T.surface,
+      borderRadius: T.radiusMd,
+      borderWidth: 1.5,
+      borderColor: T.border,
+      padding: 14,
+    },
     cardActive: {
       borderColor: T.accent,
       backgroundColor: T.accentDim,
@@ -108,6 +134,53 @@ export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
       height: 20,
       borderRadius: 10,
       backgroundColor: T.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cameraSection: {
+      backgroundColor: T.surface,
+      borderRadius: 12,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: T.border,
+    },
+    cameraHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 10,
+    },
+    cameraBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: T.surfaceAlt,
+      borderRadius: 12,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: T.border,
+      borderStyle: 'dashed',
+    },
+    photoPreview: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: T.border,
+    },
+    photo: {
+      width: '100%',
+      height: 200,
+      borderRadius: 12,
+    },
+    removeBtn: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: 'rgba(0,0,0,0.6)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -156,6 +229,45 @@ export function PagoCard({ payMethod, onSelect }: PagoCardProps) {
           );
         })}
       </View>
+
+      {/* Sección de cámara para YAPE/PLIN */}
+      {showCameraOption && (
+        <View style={styles.cameraSection}>
+          <View style={styles.cameraHeader}>
+            <Icon source="camera-outline" size={18} color={T.textMuted} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: T.textSecondary }}>
+              Captura de comprobante {payMethod}
+            </Text>
+          </View>
+
+          {fotoComprobante ? (
+            <View style={styles.photoPreview}>
+              <Image
+                source={{ uri: fotoComprobante }}
+                style={styles.photo}
+                contentFit="cover"
+              />
+              <TouchableOpacity
+                style={styles.removeBtn}
+                onPress={removePhoto}
+              >
+                <Icon source="close" size={16} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.cameraBtn}
+              onPress={openCamera}
+              activeOpacity={0.8}
+            >
+              <Icon source="camera" size={22} color={T.textMuted} />
+              <Text style={{ fontSize: 13, color: T.textMuted, fontWeight: '500' }}>
+                Abrir cámara
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </View>
   );
 }

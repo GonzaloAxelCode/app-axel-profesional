@@ -85,11 +85,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ loading: true });
         const access = await AsyncStorage.getItem('access');
         const refresh = await AsyncStorage.getItem('refresh');
+        const user = await AsyncStorage.getItem('user');
+        const tienda = await AsyncStorage.getItem('tienda');
 
 
         set({
             accessToken: access,
             refreshToken: refresh,
+            user: user ? JSON.parse(user) : null,
+            tienda: tienda ? JSON.parse(tienda) : null,
             isAuthenticated: !!access,
             loading: false,
         });

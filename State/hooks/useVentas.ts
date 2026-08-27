@@ -5,6 +5,7 @@ import {
     useQuery,
     useQueryClient,
 } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import {
     anularVenta,
@@ -30,6 +31,7 @@ import {
     TopProductsMonthResponse,
     DailyTrendResponse,
 } from '../api/ventas.api';
+import { VentaFilterKey } from '../store/useVentaStore';
 
 // 🔥 KEY CENTRALIZADA (MUY IMPORTANTE)
 const ventasKeys = {
@@ -55,7 +57,7 @@ interface SearchVentasVariables {
     page_size?: number;
 }
 
-export const useVentas = () => {
+export const useVentas = (activeFilter: VentaFilterKey = 'todos') => {
     const queryClient = useQueryClient();
 
     // ─── QUERIES ─────────────────────────────────────
@@ -76,7 +78,7 @@ export const useVentas = () => {
     });
 
     const ventasPorTiendaQuery = useInfiniteQuery({
-        queryKey: ventasKeys.tienda(),
+        queryKey: [...ventasKeys.tienda(), activeFilter],
         queryFn: ({ pageParam = 1 }) =>
             getVentasPorTienda([2025, 1, 1], [2027, 1, 1], pageParam, 30),
 
@@ -184,14 +186,47 @@ export const useVentas = () => {
 
     // ─── RETURN LIMPIO ──────────────────────────────
 
+    // Filtrar y deduplicar ventas
+    const ventasPorTienda = useMemo(() => {
+        const all = ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [];
+        
+        // Deduplicar por ID
+        const unique = new Map();
+        all.forEach(v => {
+            if (!unique.has(v.id)) {
+                unique.set(v.id, v);
+            }
+        });
+        
+        let filtered = Array.from(unique.values());
+        
+        // Aplicar filtro de estado
+        if (activeFilter !== 'todos') {
+            filtered = filtered.filter((v) => {
+                const estado = v.estado?.toLowerCase() || '';
+                if (activeFilter === 'anulado') {
+                    return estado.includes('anul') || estado.includes('cancel');
+                }
+                if (activeFilter === 'aceptado') {
+                    return estado.includes('acept') || estado.includes('aprob') || estado.includes('complet');
+                }
+                if (activeFilter === 'pendiente') {
+                    return estado.includes('pend') || estado.includes('proces');
+                }
+                return true;
+            });
+        }
+        
+        return filtered;
+    }, [ventasPorTiendaQuery.data, activeFilter]);
+
     return {
         // DATA
         ventasHoy: ventasHoyQuery.data?.results,
         resumenVentas: resumenVentasQuery.data,
         topProductosHoy: topProductosQuery.data?.topProductoMostSales,
 
-        ventasPorTienda:
-            ventasPorTiendaQuery.data?.pages?.flatMap(p => p?.results ?? []) ?? [],
+        ventasPorTienda,
 
         ventasPorRangoFechasTienda: ventasPorRangoQuery.data,
 

@@ -4,7 +4,7 @@ import VentaCard from "@/components/VentaScreenComponents/VentaCard";
 import { useAppTheme } from "@/State/context/ThemeContext";
 import { useVentas } from "@/State/hooks/useVentas";
 import { Venta } from "@/State/models/venta.models";
-import { useVentaStore } from "@/State/store/useVentaStore";
+import { useVentaStore, VentaFilterKey } from "@/State/store/useVentaStore";
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -13,12 +13,21 @@ import {
     FlatList,
     RefreshControl,
     StyleSheet,
+    TouchableOpacity,
     View
 } from "react-native";
 import { Text } from "react-native-paper";
 
+const FILTERS: { key: VentaFilterKey; label: string }[] = [
+    { key: 'todos', label: 'Todos' },
+    { key: 'aceptado', label: 'Aceptados' },
+    { key: 'pendiente', label: 'Pendientes' },
+    { key: 'anulado', label: 'Anulados' },
+];
+
 export default function VentasScreenPremium() {
     const { T } = useAppTheme();
+    const { temporaryVenta, showVentaDetailTemporary, activeFilter, setActiveFilter } = useVentaStore();
     const {
         ventasPorTienda,
         loadingVentasHoy,
@@ -26,11 +35,10 @@ export default function VentasScreenPremium() {
         hasNextVentasPage,
         isFetchingNextVentasPage,
         refreshVentasPorTienda,
-    } = useVentas();
+    } = useVentas(activeFilter);
 
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
-    const { temporaryVenta, showVentaDetailTemporary } = useVentaStore();
 
     const listData = useMemo(
         () => buildList(ventasPorTienda ?? []),
@@ -59,8 +67,27 @@ export default function VentasScreenPremium() {
             <View style={st.header}>
                 <View>
                     <Text style={st.title}>Ventas</Text>
-                    <Text style={st.subtitle}>{ventasPorTienda?.length ?? 0} registros</Text>
+                    <Text style={st.subtitle}>{listData.filter(i => i.type === 'venta').length} registros</Text>
                 </View>
+            </View>
+
+            {/* Filtros */}
+            <View style={st.filtersWrap}>
+                {FILTERS.map((f) => {
+                    const active = activeFilter === f.key;
+                    return (
+                        <TouchableOpacity
+                            key={f.key}
+                            onPress={() => setActiveFilter(f.key)}
+                            style={[st.filterBtn, active && st.filterBtnActive]}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[st.filterText, active && st.filterTextActive]}>
+                                {f.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
 
             <FlatList
@@ -74,7 +101,9 @@ export default function VentasScreenPremium() {
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={T.accent} />
                 }
                 onEndReached={() => {
-                    if (hasNextVentasPage && !isFetchingNextVentasPage) fetchNextVentasPage();
+                    if (hasNextVentasPage && !isFetchingNextVentasPage) {
+                        fetchNextVentasPage();
+                    }
                 }}
                 onEndReachedThreshold={0.3}
                 ListFooterComponent={
@@ -137,6 +166,29 @@ const styles = (T: any) => StyleSheet.create({
     },
     title: { fontSize: 28, fontWeight: '900', color: T.textPrimary },
     subtitle: { fontSize: 12, color: T.textSecondary },
+    filtersWrap: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        marginBottom: 12,
+        gap: 8,
+    },
+    filterBtn: {
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 10,
+        backgroundColor: T.surfaceAlt,
+    },
+    filterBtnActive: {
+        backgroundColor: T.accent,
+    },
+    filterText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: T.textSecondary,
+    },
+    filterTextActive: {
+        color: T.bg,
+    },
     list: { paddingBottom: 120 },
     dividerWrap: {
         flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingHorizontal: 20,

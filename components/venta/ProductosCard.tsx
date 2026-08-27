@@ -12,6 +12,7 @@ import { Text } from 'react-native-paper';
 interface ProductosCardProps {
   cart: InventarioCart[];
   onAgregar: () => void;
+  onEscanear: () => void;
   onChangeQty: (id: number, delta: number) => void;
   onRemove: (id: number) => void;
   onChangeDiscount: (id: number, discount: number) => void;
@@ -50,6 +51,14 @@ const makeStyles = (T: any) => StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: T.radiusFull,
+    alignItems: 'center',
+  },
+  scanBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: T.radiusFull,
+    backgroundColor: T.accent + '15',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   addText: {
@@ -305,6 +314,7 @@ function ProductRow({
 export function ProductosCard({
   cart,
   onAgregar,
+  onEscanear,
   onChangeQty,
   onRemove,
   onChangeDiscount,
@@ -321,20 +331,25 @@ export function ProductosCard({
         <View style={styles.header}>
           <Text style={styles.title}>PRODUCTOS</Text>
 
-          <TouchableOpacity style={styles.addBtn} onPress={onAgregar}>
-            <Icon name="plus" size={14} color={T.bg} />
-            <Text style={styles.addText}>Agregar</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity style={styles.scanBtn} onPress={onEscanear}>
+              <Icon name="barcode-scan" size={16} color={T.accent} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addBtn} onPress={onAgregar}>
+              <Icon name="plus" size={14} color={T.bg} />
+              <Text style={styles.addText}>Agregar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* EMPTY */}
         {cart.length === 0 ? (
-          <TouchableOpacity style={styles.empty} onPress={onAgregar}>
+          <TouchableOpacity style={styles.empty} onPress={onEscanear}>
             <View style={styles.emptyIcon}>
-              <Icon name="plus" size={16} color={T.textMuted} />
+              <Icon name="barcode-scan" size={20} color={T.textMuted} />
             </View>
             <Text style={styles.emptyText}>
-              Toca Agregar para añadir productos
+              Escanea el código de barras para agregar productos
             </Text>
           </TouchableOpacity>
         ) : (

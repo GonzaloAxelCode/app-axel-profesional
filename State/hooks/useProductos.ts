@@ -1,5 +1,6 @@
 // hooks/useProductos.ts
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { fetchWithAuth } from '../api/client';
 import { ProductosResponse } from '../models/producto.models';
 import { URLS } from '../utils/endpoints';
@@ -31,9 +32,17 @@ export const useProductos = (page_size = 10) => {
         },
     });
 
-    // 🔥 flatten
-    const productos =
-        productosQuery.data?.pages?.flatMap(p => p.results ?? []) ?? [];
+    // 🔥 flatten y eliminar duplicados
+    const productos = useMemo(() => {
+        const all = productosQuery.data?.pages?.flatMap(p => p.results ?? []) ?? [];
+        const unique = new Map();
+        all.forEach(p => {
+            if (!unique.has(p.id)) {
+                unique.set(p.id, p);
+            }
+        });
+        return Array.from(unique.values());
+    }, [productosQuery.data]);
 
     return {
         productos,

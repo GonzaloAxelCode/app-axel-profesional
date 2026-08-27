@@ -11,11 +11,12 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Icon, Text } from 'react-native-paper';
+import { Icon } from 'react-native-paper';
 
 // ─────────────────────────────────────────────
 type StockStatus = 'in_stock' | 'low_stock' | 'no_stock';
@@ -60,31 +61,30 @@ export function ProductosModal({
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: T.border,
+      paddingVertical: 12,
       backgroundColor: T.bg,
     },
     navTitleBlock: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 10,
     },
     title: {
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: '800',
       color: T.textPrimary,
+      letterSpacing: -0.5,
     },
     countBadge: {
-      backgroundColor: T.surfaceAlt,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
+      backgroundColor: T.accent + '20',
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
     },
     countText: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '700',
-      color: T.textSecondary,
+      color: T.accent,
     },
     closeBtn: {
       width: 36,
@@ -102,16 +102,17 @@ export function ProductosModal({
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: T.surface,
-      borderRadius: T.radiusMd,
+      borderRadius: 14,
       borderWidth: 1,
       borderColor: T.border,
-      paddingHorizontal: 12,
+      paddingHorizontal: 14,
       marginBottom: 12,
     },
     input: {
       flex: 1,
       paddingVertical: 12,
       color: T.textPrimary,
+      fontSize: 15,
     },
     tabs: {
       flexDirection: 'row',
@@ -121,7 +122,7 @@ export function ProductosModal({
     tab: {
       paddingVertical: 8,
       paddingHorizontal: 14,
-      borderRadius: T.radiusFull,
+      borderRadius: 10,
       backgroundColor: T.surfaceAlt,
     },
     tabText: {
@@ -133,13 +134,13 @@ export function ProductosModal({
       color: '#fff',
     },
     tabActiveCategoria: {
-      backgroundColor: T.purple,
+      backgroundColor: T.accent,
     },
     sectionLabel: {
       fontSize: 11,
       fontWeight: '700',
       color: T.textMuted,
-      marginBottom: 6,
+      marginBottom: 8,
       marginTop: 4,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
@@ -148,68 +149,70 @@ export function ProductosModal({
       flexDirection: 'row',
       gap: 12,
       padding: 12,
-      borderRadius: T.radiusLg,
+      borderRadius: 16,
       backgroundColor: T.surface,
-      borderWidth: 0,
+      borderWidth: 1,
       borderColor: T.border,
       marginBottom: 10,
-      ...T.shadowCard,
     },
     image: {
-      width: 72,
-      height: 72,
-      borderRadius: T.radiusMd,
+      width: 64,
+      height: 64,
+      borderRadius: 14,
       backgroundColor: T.surfaceAlt,
     },
     body: {
       flex: 1,
+      justifyContent: 'center',
     },
     row: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'flex-start',
       gap: 8,
     },
     name: {
       flex: 1,
-      fontSize: 14,
+      fontSize: 15,
+      fontWeight: '600',
+      color: T.textPrimary,
+      lineHeight: 20,
+    },
+    sku: {
+      fontSize: 12,
+      color: T.textMuted,
+      marginTop: 4,
+    },
+    bottomRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    price: {
+      fontSize: 18,
       fontWeight: '700',
       color: T.textPrimary,
     },
-    sku: {
-      fontSize: 11,
+    stock: {
+      fontSize: 12,
       color: T.textMuted,
-      marginTop: 2,
-    },
-    price: {
-      fontSize: 16,
-      fontWeight: '800',
-      color: T.accent,
-      marginTop: 6,
+      fontWeight: '500',
+      backgroundColor: T.surfaceAlt,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
     },
     badge: {
       paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: T.radiusSm,
-    },
-    stats: {
-      flexDirection: 'row',
-      marginTop: 10,
-    },
-    stat: {
-      flex: 1,
-    },
-    statValue: {
-      fontSize: 12,
-      fontWeight: '800',
-    },
-    statLabel: {
-      fontSize: 9,
-      color: T.textMuted,
+      paddingVertical: 4,
+      borderRadius: 8,
     },
     empty: {
       textAlign: 'center',
       marginTop: 40,
       color: T.textMuted,
+      fontSize: 15,
     },
   });
   const styles = makeStyles(T);
@@ -270,17 +273,14 @@ export function ProductosModal({
       const status = getStockStatus(item.cantidad ?? 0);
       const cfg = STOCK_CONFIG[status];
       const venta = item.costo_venta ?? 0;
-      const compra = item.costo_compra ?? 0;
-      const ganancia = venta - compra;
-      const margen = venta > 0 ? Math.round(((venta - compra) / venta) * 100) : 0;
 
       return (
         <TouchableOpacity
-          activeOpacity={0.9}
+          activeOpacity={0.8}
           style={styles.card}
           onPress={() => {
-            onClose();
             onSelectProducto(item);
+            onClose();
           }}
         >
           <Image
@@ -295,7 +295,7 @@ export function ProductosModal({
 
           <View style={styles.body}>
             <View style={styles.row}>
-              <Text style={styles.name} numberOfLines={2}>
+              <Text style={styles.name} numberOfLines={1}>
                 {item.producto_nombre}
               </Text>
               <View style={[styles.badge, { backgroundColor: cfg.color + '15' }]}>
@@ -310,13 +310,9 @@ export function ProductosModal({
               {item.categoria_nombre ? ` · ${item.categoria_nombre}` : ''}
             </Text>
 
-            <Text style={styles.price}>S/ {venta}</Text>
-
-            <View style={styles.stats}>
-              <Stat label="Stock" value={item.cantidad ?? 0} color={T.blue} styles={styles} />
-              <Stat label="Compra" value={`S/ ${compra}`} color={T.purple} styles={styles} />
-              <Stat label="Ganancia" value={`S/ ${ganancia}`} color={T.green} styles={styles} />
-              <Stat label="Margen" value={`${margen}%`} color={T.accent} styles={styles} />
+            <View style={styles.bottomRow}>
+              <Text style={styles.price}>S/ {venta}</Text>
+              <Text style={styles.stock}>Stock: {item.cantidad ?? 0}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -381,7 +377,7 @@ export function ProductosModal({
         {/* ── Navbar ── */}
         <View style={styles.navbar}>
           <View style={styles.navTitleBlock}>
-            <Text style={styles.title}>Productos</Text>
+            <Text style={styles.title}>Hacer una venta</Text>
             <View style={styles.countBadge}>
               <Text style={styles.countText}>{filtered.length}</Text>
             </View>
@@ -390,13 +386,13 @@ export function ProductosModal({
             <Icon source="close" size={22} color={T.textPrimary} />
           </TouchableOpacity>
         </View>
-        {ListHeaderComponent()}
+
         {/* ── Lista ── */}
         <FlatList
           data={filtered}
           keyExtractor={(item: InventarioCart) => item.id.toString()}
           renderItem={renderItem}
-
+          ListHeaderComponent={ListHeaderComponent()}
           contentContainerStyle={styles.container}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
@@ -414,11 +410,3 @@ export function ProductosModal({
     </Modal>
   );
 }
-
-// ─────────────────────────────────────────────
-const Stat = ({ label, value, color, styles }: { label: string; value: any; color: string; styles: any }) => (
-  <View style={styles.stat}>
-    <Text style={[styles.statValue, { color }]}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);

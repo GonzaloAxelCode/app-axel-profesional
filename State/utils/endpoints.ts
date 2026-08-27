@@ -3,7 +3,7 @@
 export const URL_DESA = 'http://192.168.18.5:8000';
 export const URL_PROD = 'https://inventarioaxel.duckdns.org';
 
-export const PRODUCTION = true; // Cambia a false para desarrollo
+export const PRODUCTION = false; // Cambia a false para desarrollo
 
 export const URL_BASE = PRODUCTION ? URL_PROD : URL_DESA;
 
@@ -36,5 +36,8 @@ export const URLS = {
     SEARCH_VENTAS: URL_BASE + '/api/sales/search/',
     ANULAR_VENTA: URL_BASE + '/api/nota-credito/registrar',
     GENERAR_COMPROBANTE: URL_BASE + '/api/ventas/generar-comprobante/',
+    
+    // Búsqueda por SKU
+    BUSCAR_POR_SKU: (sku: string) => URL_BASE + `/api/productos/buscar-por-sku/?sku=${encodeURIComponent(sku)}`,
 };
 

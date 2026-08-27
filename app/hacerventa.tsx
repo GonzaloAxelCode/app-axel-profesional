@@ -1,8 +1,9 @@
 import { useInventario } from '@/State/hooks/useInventarios';
 import { InventarioCart } from '@/State/models/inventario.models';
 import { Venta } from "@/State/models/venta.models";
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   View
@@ -23,16 +24,16 @@ import { ClientesModal } from '@/components/venta/ClientesModal';
 import { ProductosModal } from '@/components/venta/ProductosModal';
 import { ProductosCard } from '../components/venta/ProductosCard';
 import { ResumenCard } from '../components/venta/ResumenCard';
-import { VentaHeader } from '../components/venta/VentaHeader';
+import BarcodeScannerModal from '@/components/venta/BarcodeScannerModal';
+import { ComprobantePreview } from '@/components/venta/ComprobantePreview';
 
 function HacerVentaScreen() {
   const { T } = useAppTheme();
-  const { productos, isLoading } = useInventario();
+  const { productos } = useInventario();
   const { createVenta, temporaryVenta, showVentaDetailTemporary, loadingCreateVenta } = useVentaStore();
   const [visibleProductosModal, setVisibleProductosModal] = useState(false);
   const [visibleClientesModal, setVisibleClientesModal] = useState(false);
-  const bottomSheetRef = useRef<any>(null);
-  const bottomSheetRef2 = useRef<any>(null);
+  const [visibleBarcodeScanner, setVisibleBarcodeScanner] = useState(false);
 
   const [cart, setCart] = useState<InventarioCart[]>([]);
   const [payMethod, setPayMethod] = useState<PayMethod>('Efectivo');
@@ -47,6 +48,19 @@ function HacerVentaScreen() {
       return [...prev, { ...item, cantidad: 1 }];
     });
   }, []);
+
+  // ── Barcode scan handler ──
+  const handleBarcodeScan = useCallback((sku: string) => {
+    const producto = productos?.find((p) => p.producto_sku?.toLowerCase() === sku.toLowerCase());
+    if (producto) {
+      addToCart(producto);
+    }
+  }, [productos, addToCart]);
+
+  // ── Handle scanned SKU from barcode scanner modal ──
+  const handleScanFromModal = useCallback((sku: string) => {
+    handleBarcodeScan(sku);
+  }, [handleBarcodeScan]);
 
   const removeFromCart = useCallback((id: number) => {
     setCart((prev) => {
@@ -135,11 +149,6 @@ function HacerVentaScreen() {
   return (
     <View style={makeStyles(T).screen}>
 
-      {/* ── Header fijo fuera del scroll ── */}
-      <View style={makeStyles(T).headerWrapper}>
-        <VentaHeader />
-      </View>
-
       {/* ── Contenido scrolleable ── */}
       <ScrollView
         style={makeStyles(T).scroll}
@@ -165,14 +174,30 @@ function HacerVentaScreen() {
         <ProductosCard
           cart={cart}
           onAgregar={() => setVisibleProductosModal(true)}
+          onEscanear={() => setVisibleBarcodeScanner(true)}
           onChangeQty={changeQty}
           onRemove={removeFromCart}
           onChangeDiscount={changeDiscount}
         />
 
-        <PagoCard payMethod={payMethod} onSelect={setPayMethod} />
+        {cart.length > 0 && (
+          <>
+            <PagoCard payMethod={payMethod} onSelect={setPayMethod} />
 
-        <ResumenCard subtotal={subtotal} descuento={descuentoTotal} total={total} igv={igv} />
+            <ResumenCard subtotal={subtotal} descuento={descuentoTotal} total={total} igv={igv} />
+
+            <ComprobantePreview
+              cart={cart}
+              subtotal={subtotal}
+              descuento={descuentoTotal}
+              total={total}
+              igv={igv}
+              metodoPago={payMethod}
+              cliente={cliente}
+            />
+          </>
+        )}
+
         {/* ── Botón fijo abajo ── */}
         <View style={makeStyles(T).footer}>
           <ConfirmarVentaBtn
@@ -203,6 +228,13 @@ function HacerVentaScreen() {
         visible={showVentaDetailTemporary}
         onClose={handleCloseVentaDetail}
       />
+
+      <BarcodeScannerModal
+        visible={visibleBarcodeScanner}
+        onClose={() => setVisibleBarcodeScanner(false)}
+        onScan={handleScanFromModal}
+        productos={productos || []}
+      />
     </View>
   );
 }
@@ -215,17 +247,13 @@ const makeStyles = (T: any) => StyleSheet.create({
     backgroundColor: T.bg,
   },
 
-  headerWrapper: {
-    paddingHorizontal: 20,
-    backgroundColor: T.bg,
-  },
-
   scroll: {
     flex: 1,
   },
 
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 55,
     gap: 12,
     paddingBottom: 16,
   },
